@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "525573369424",
+    "project_id": "rummikub-f7021",
+    "storage_bucket": "rummikub-f7021.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:525573369424:android:ed8c08bda2b46182ad6b55",
+        "android_client_info": {
+          "package_name": "com.example.rummikub"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "525573369424-nc8v3f5u0efvd7tmr01k6djs4pfpm3e3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.rummikub",
+            "certificate_hash": "e999816a86e2d78cb2993b025b9e4cc66f82e2fa"
+          }
+        },
+        {
+          "client_id": "525573369424-2sndaj6cus1irctnt28ud35hpurh7j4d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjOY9kNpz3qdLyRcpt16pVWa1etn1DdYE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "525573369424-2sndaj6cus1irctnt28ud35hpurh7j4d.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

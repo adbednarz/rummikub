@@ -27,6 +27,26 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+<!-- Add all Firebase plugins you make use of -->
+<script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-storage.js"></script>
+
+<script>
+  // Your web apps Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyARSKIgO2McP8wX6n3NnZpzmTttwNATwv4",
+    authDomain: "rummikub-f7021.firebaseapp.com",
+    projectId: "rummikub-f7021",
+    storageBucket: "rummikub-f7021.appspot.com",
+    messagingSenderId: "525573369424",
+    appId: "1:525573369424:web:9d6f707e20dc161aad6b55",
+    measurementId: "G-QQ0GCRFTFG"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+</script>
   <!-- This script installs service_worker.js to provide PWA functionality to
        application. For more information, see:
        https://developers.google.com/web/fundamentals/primers/service-workers -->
