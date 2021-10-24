@@ -1,7 +1,10 @@
 import 'package:bloc/bloc.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:meta/meta.dart';
 import 'package:equatable/equatable.dart';
 import 'package:rummikub/data/repository.dart';
 import 'package:rummikub/data/firebase_repository.dart';
+import 'package:rummikub/shared/custom_exception.dart';
 
 part 'auth_state.dart';
 
@@ -15,10 +18,34 @@ class AuthCubit extends Cubit<AuthState> {
     required String username,
     required String password,
   }) async {
-    //emit(AuthLoading());
+    emit(AuthLoading());
+    try {
+      User user = await _firebaseRepository.signUp(email: email, username: username, password: password);
+      emit(AuthLoaded(user));
+    } on CustomException catch(error) {
+      emit(AuthFailure(error.cause));
+    }
+  }
 
-    _firebaseRepository.signUp(email: email, username: username, password: password);
+  Future<void> logIn({
+    required String email,
+    required String password,
+  }) async {
+    emit(AuthLoading());
+    try {
+      User user = await _firebaseRepository.logIn(email: email, password: password);
+      emit(AuthLoaded(user));
+    } on CustomException catch(error) {
+      emit(AuthFailure(error.cause));
+    }
+  }
 
-    //emit(AuthConnected(user));
+  Future<void> logOut() async {
+    emit(AuthLoading());
+    try {
+      _firebaseRepository.logOut();
+    } on CustomException catch(error) {
+      emit(AuthFailure(error.cause));
+    }
   }
 }

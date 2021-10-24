@@ -1,63 +1,52 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:rummikub/shared/custom_exception.dart';
 
 class AuthenticationProvider {
   final FirebaseAuth _firebaseAuth =  FirebaseAuth.instance;
 
-  Future<void> signUp({
+  Future<User> signUp({
     required String email,
     required String username,
     required String password})
   async {
     try {
-      await _firebaseAuth.createUserWithEmailAndPassword(
+      UserCredential result = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-    } catch (_) {
-      throw Exception();
+      User user = result.user!;
+      user.updateDisplayName(username);
+      return user;
+    } on FirebaseException catch (e) {
+      throw new CustomException(e.message ?? "Error occurred");
+    } catch(_) {
+      throw new CustomException("Error occurred");
     }
   }
 
-  Future<void> logIn({
+  Future<User> logIn({
     required String email,
     required String password})
   async {
     try {
-      await _firebaseAuth.signInWithEmailAndPassword(
+      UserCredential result = await _firebaseAuth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-    } on FirebaseAuthException catch (e) {
-      throw LogInFailure.fromCode(e.code);
-    } catch (_) {
-      throw Exception();
+      return result.user!;
+    }
+    on FirebaseException catch (e) {
+    throw new CustomException(e.message ?? "Error occurred");
+    } catch(_) {
+    throw new CustomException("Error occurred");
     }
   }
 
   Future<void> logOut() async {
     try {
       await _firebaseAuth.signOut();
-    } catch (_) {
-      throw Exception();
+    } catch(_) {
+      throw new CustomException("Error occurred");
     }
   }
-}
-
-class LogInFailure implements Exception {
-
-  const LogInFailure([
-    this.message = 'An exception occurred.',
-  ]);
-
-  factory LogInFailure.fromCode(String code) {
-    if (code == 'user-not-found' || code == 'invalid-email' || code == 'wrong-password') {
-      return const LogInFailure(
-        'Email or password are incorrect.',
-      );
-    } else {
-      return const LogInFailure();
-    }
-  }
-
-  final String message;
 }

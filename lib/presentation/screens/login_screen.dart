@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:rummikub/logic/auth_cubit.dart';
+import 'package:rummikub/shared/custom_error_dialog.dart';
 
 class LoginScreen extends StatelessWidget {
   final Color primaryColor = Color(0xff18203d);
@@ -19,13 +22,34 @@ class LoginScreen extends StatelessWidget {
           elevation: 0,
         ),
         backgroundColor: primaryColor,
-        body: Container(
-          alignment: Alignment.topCenter,
-          margin: EdgeInsets.symmetric(horizontal: 30),
-          child: SingleChildScrollView(
-            child: _buildForm(context),
-          ),
-        ));
+        body: BlocConsumer<AuthCubit, AuthState>(
+            listener: (context, state) {
+              if (state is AuthFailure) {
+                showDialog(
+                    context: context,
+                    builder: (context) => CustomErrorDialog("Error", state.errorMessage ?? "Error occurred")
+                );
+              } else if (state is AuthLoaded) {
+                Navigator.of(context).pop();
+                Navigator.of(context).pushNamed('/game');
+              }
+            },
+            builder: (context, state) {
+              if (state is AuthLoading) {
+                return Center(
+                    child: CircularProgressIndicator()
+                );
+              }
+              return Container(
+                alignment: Alignment.topCenter,
+                margin: EdgeInsets.symmetric(horizontal: 30),
+                child: SingleChildScrollView(
+                  child: _buildForm(context),
+                ),
+              );
+            }
+        )
+    );
   }
 
   _buildForm(BuildContext context) {
@@ -36,7 +60,7 @@ class LoginScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              _buildTextFormField(Icons.account_circle, 'Username'),
+              _buildTextFormField(Icons.account_circle, 'Email'),
               SizedBox(height: 20),
               _buildTextFormField(Icons.lock, 'Password'),
               SizedBox(height: 30),
@@ -53,15 +77,12 @@ class LoginScreen extends StatelessWidget {
       decoration: BoxDecoration(
           color: secondaryColor, border: Border.all(color: Colors.blue)),
       child: TextFormField(
-        controller: labelText == 'Username' ? emailController : passwordController,
+        controller: labelText == 'Email' ? emailController : passwordController,
+        obscureText: labelText == 'Password' ? true : false,
         autovalidateMode: AutovalidateMode.onUserInteraction,
         validator: (value) {
           if (value == null || value.isEmpty) {
             return '$labelText cannot be empty';
-          } else if (labelText == 'Username') {
-
-          } else {
-
           }
           return null;
         },
@@ -84,9 +105,9 @@ class LoginScreen extends StatelessWidget {
       height: 50,
       onPressed: () {
         if (_formKey.currentState!.validate()) {
-          Navigator.of(context).pushNamed(
-            '/',
-          );
+          BlocProvider.of<AuthCubit>(context).logIn(
+              email: emailController.text,
+              password: passwordController.text);
         }
       },
       color: logoGreen,

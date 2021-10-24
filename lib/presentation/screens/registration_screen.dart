@@ -2,15 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rummikub/logic/auth_cubit.dart';
+import 'package:rummikub/shared/custom_error_dialog.dart';
 
-class RegistrationScreen extends StatefulWidget {
-
-  @override
-  _RegistrationScreenState createState() => _RegistrationScreenState();
-
-}
-
-class _RegistrationScreenState extends State<RegistrationScreen> {
+class RegistrationScreen extends StatelessWidget {
 
   final Color primaryColor = Color(0xff18203d);
   final Color secondaryColor = Color(0xff232c51);
@@ -32,13 +26,34 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           elevation: 0,
         ),
         backgroundColor: primaryColor,
-        body: Container(
-          alignment: Alignment.topCenter,
-          margin: EdgeInsets.symmetric(horizontal: 30),
-          child: SingleChildScrollView(
-            child: _buildForm(context),
-          ),
-        ));
+        body: BlocConsumer<AuthCubit, AuthState>(
+          listener: (context, state) {
+            if (state is AuthFailure) {
+              showDialog(
+                  context: context,
+                  builder: (context) => CustomErrorDialog("Error", state.errorMessage ?? "Error occurred")
+              );
+            } else if (state is AuthLoaded) {
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed('/game');
+            }
+          },
+          builder: (context, state) {
+            if (state is AuthLoading) {
+              return Center(
+                child: CircularProgressIndicator()
+              );
+            }
+            return Container(
+              alignment: Alignment.topCenter,
+              margin: EdgeInsets.symmetric(horizontal: 30),
+              child: SingleChildScrollView(
+                child: _buildForm(context),
+              ),
+            );
+          }
+        )
+    );
   }
 
   _buildForm(BuildContext context) {
@@ -76,6 +91,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         validator: (value) {
           if (value == null || value.isEmpty) {
             return '$labelText cannot be empty';
+          } else if (labelText == 'Password' && value.length < 6) {
+            return 'At least 6 characters';
           } else if (labelText == 'Confirm Password') {
             if (passwordController.text != confirmPasswordController.text) {
               return 'Confirm password is different';
@@ -102,11 +119,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       height: 50,
       onPressed: () {
         if (_formKey.currentState!.validate()) {
-          BlocProvider.of<AuthCubit>(context).register(
-              email: emailController.text,
-              username: usernameController.text,
-              password: passwordController.text);
-          Navigator.of(context).pushNamed('/');
+            BlocProvider.of<AuthCubit>(context).register(
+                email: emailController.text,
+                username: usernameController.text,
+                password: passwordController.text);
         }
       },
       color: logoGreen,

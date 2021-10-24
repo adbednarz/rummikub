@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rummikub/logic/auth_cubit.dart';
+import 'package:rummikub/presentation/screens/game_screen.dart';
 import 'package:rummikub/presentation/screens/home_screen.dart';
 import 'package:rummikub/presentation/screens/login_screen.dart';
 import 'package:rummikub/presentation/screens/registration_screen.dart';
@@ -26,6 +27,10 @@ class AppRouter {
             child: LoginScreen(),
           )
         );
+      case '/game':
+        return MaterialPageRoute(
+            builder: (_) => GameScreen(),
+            );
       default:
         return null;
     }
