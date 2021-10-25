@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rummikub/logic/auth_cubit.dart';
+import 'package:rummikub/shared/custom_error_dialog.dart';
 
 class GameScreen extends StatelessWidget {
   final Color logoGreen = Color(0xff25bcbb);
@@ -9,15 +10,30 @@ class GameScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return WillPopScope(
         child: Scaffold(
-          body: Container(
-              margin: EdgeInsets.symmetric(horizontal: 30),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  _buildMaterialButton(context, 'play'),
-                ],
-              )
-          ),
+          body: BlocConsumer<AuthCubit, AuthState>(
+            listener: (context, state) {
+              if (state is AuthFailure) {
+                showDialog(
+                  context: context,
+                  builder: (context) =>
+                      CustomErrorDialog("Error", state.errorMessage ?? "Error occurred")
+                );
+              } else if (state is AuthLoggedOut) {
+                Navigator.of(context).pop();
+              }
+            },
+            builder: (context, state) {
+              return Container(
+                margin: EdgeInsets.symmetric(horizontal: 30),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    _buildMaterialButton(context, ''),
+                  ],
+                )
+              );
+            }
+          )
         ),
         onWillPop: () async {
           return _onWillPop(context);
@@ -39,25 +55,26 @@ class GameScreen extends StatelessWidget {
   }
 
   Future<bool> _onWillPop(BuildContext context) async {
-    return (await showDialog(
+    final AuthCubit authCubit = BlocProvider.of<AuthCubit>(context);
+    return await showDialog(
       context: context,
       builder: (context) => new AlertDialog(
         title: new Text('Are you sure?'),
         content: new Text('Do you want to exit an App'),
         actions: <Widget>[
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: () => Navigator.of(context).pop(),
             child: new Text('No'),
           ),
           TextButton(
             onPressed: () {
-              BlocProvider.of<AuthCubit>(context).logOut();
-              Navigator.of(context).pop(true);
+              Navigator.of(context).pop();
+              authCubit.logOut();
             },
             child: new Text('Yes'),
           ),
         ],
       ),
-    )) ?? false;
+    );
   }
 }

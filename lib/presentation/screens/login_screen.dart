@@ -29,7 +29,7 @@ class LoginScreen extends StatelessWidget {
                     context: context,
                     builder: (context) => CustomErrorDialog("Error", state.errorMessage ?? "Error occurred")
                 );
-              } else if (state is AuthLoaded) {
+              } else if (state is AuthLogged) {
                 Navigator.of(context).pop();
                 Navigator.of(context).pushNamed('/game');
               }

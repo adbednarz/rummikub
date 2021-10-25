@@ -7,6 +7,8 @@ import 'package:rummikub/presentation/screens/login_screen.dart';
 import 'package:rummikub/presentation/screens/registration_screen.dart';
 
 class AppRouter {
+  final AuthCubit _authCubit = AuthCubit();
+
   Route? onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case '/':
@@ -15,24 +17,31 @@ class AppRouter {
         );
       case '/registration':
         return MaterialPageRoute(
-            builder: (context) => BlocProvider(
-              create: (context) => AuthCubit(),
+            builder: (context) => BlocProvider.value(
+              value: _authCubit,
               child: RegistrationScreen(),
             )
         );
       case '/login':
         return MaterialPageRoute(
-          builder: (context) => BlocProvider(
-            create: (context) => AuthCubit(),
+          builder: (context) => BlocProvider.value(
+            value: _authCubit,
             child: LoginScreen(),
           )
         );
       case '/game':
         return MaterialPageRoute(
-            builder: (_) => GameScreen(),
-            );
+            builder: (context) => BlocProvider.value(
+              value: _authCubit,
+              child: GameScreen(),
+            )
+        );
       default:
         return null;
     }
+  }
+
+  void dispose() {
+    _authCubit.close();
   }
 }

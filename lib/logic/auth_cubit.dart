@@ -21,7 +21,7 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
     try {
       User user = await _firebaseRepository.signUp(email: email, username: username, password: password);
-      emit(AuthLoaded(user));
+      emit(AuthLogged(user));
     } on CustomException catch(error) {
       emit(AuthFailure(error.cause));
     }
@@ -34,7 +34,7 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
     try {
       User user = await _firebaseRepository.logIn(email: email, password: password);
-      emit(AuthLoaded(user));
+      emit(AuthLogged(user));
     } on CustomException catch(error) {
       emit(AuthFailure(error.cause));
     }
@@ -44,6 +44,7 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
     try {
       _firebaseRepository.logOut();
+      emit(AuthLoggedOut());
     } on CustomException catch(error) {
       emit(AuthFailure(error.cause));
     }
