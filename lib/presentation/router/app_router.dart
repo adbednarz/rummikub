@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rummikub/logic/auth_cubit.dart';
+import 'package:rummikub/presentation/screens/game_action_screen.dart';
 import 'package:rummikub/presentation/screens/game_screen.dart';
 import 'package:rummikub/presentation/screens/home_screen.dart';
 import 'package:rummikub/presentation/screens/login_screen.dart';
@@ -34,6 +35,20 @@ class AppRouter {
             builder: (context) => BlocProvider.value(
               value: _authCubit,
               child: GameScreen(),
+            )
+        );
+      case '/play':
+        return MaterialPageRoute(
+            builder: (context) => MultiBlocProvider(
+              providers: [
+                BlocProvider.value(
+                  value: _authCubit,
+                ),
+                BlocProvider.value(
+                  value: _authCubit,
+                ),
+              ],
+              child: GameActionScreen(),
             )
         );
       default:

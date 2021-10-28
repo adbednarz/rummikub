@@ -27,7 +27,7 @@ class LoginScreen extends StatelessWidget {
               if (state is AuthFailure) {
                 showDialog(
                     context: context,
-                    builder: (context) => CustomErrorDialog("Error", state.errorMessage ?? "Error occurred")
+                    builder: (context) => CustomErrorDialog("Error", state.errorMessage)
                 );
               } else if (state is AuthLogged) {
                 Navigator.of(context).pop();

@@ -12,14 +12,19 @@ class FirebaseRepository implements Repository {
 
   Future<User> signUp({required String email, required String username, required String password}) async {
     await _firestoreProvider.checkUniqueness(username);
-    return await _authenticationProvider.signUp(email: email, username: username, password: password);
+    User user = await _authenticationProvider.signUp(email: email, username: username, password: password);
+    _firestoreProvider.addUserData(username, user.uid);
+    return user;
   }
 
   Future<User> logIn({required String email, required String password}) async {
-      return await _authenticationProvider.logIn(email: email, password: password);
+      User user = await _authenticationProvider.logIn(email: email, password: password);
+      _firestoreProvider.changeUserActiveStatus(user.uid, true);
+      return user;
   }
 
-  Future<void> logOut() async {
+  Future<void> logOut({required String userID}) async {
     _authenticationProvider.logOut();
+    _firestoreProvider.changeUserActiveStatus(userID, false);
   }
 }

@@ -16,7 +16,7 @@ class GameScreen extends StatelessWidget {
                 showDialog(
                   context: context,
                   builder: (context) =>
-                      CustomErrorDialog("Error", state.errorMessage ?? "Error occurred")
+                      CustomErrorDialog("Error", state.errorMessage)
                 );
               } else if (state is AuthLoggedOut) {
                 Navigator.of(context).pop();
@@ -28,7 +28,7 @@ class GameScreen extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    _buildMaterialButton(context, ''),
+                    _buildMaterialButton(context, 'play'),
                   ],
                 )
               );

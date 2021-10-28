@@ -4,5 +4,5 @@ abstract class Repository {
 
   Future<User> signUp({required String email, required String username, required String password});
   Future<User> logIn({required String email, required String password});
-  Future<void> logOut();
+  Future<void> logOut({required String userID});
 }

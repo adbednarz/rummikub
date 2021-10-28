@@ -19,7 +19,8 @@ class AuthenticationProvider {
       return user;
     } on FirebaseException catch (e) {
       throw new CustomException(e.message ?? "Error occurred");
-    } catch(_) {
+    } catch(error) {
+      print(error);
       throw new CustomException("Error occurred");
     }
   }
@@ -37,15 +38,17 @@ class AuthenticationProvider {
     }
     on FirebaseException catch (e) {
     throw new CustomException(e.message ?? "Error occurred");
-    } catch(_) {
-    throw new CustomException("Error occurred");
+    } catch(error) {
+      print(error);
+      throw new CustomException("Error occurred");
     }
   }
 
   Future<void> logOut() async {
     try {
       await _firebaseAuth.signOut();
-    } catch(_) {
+    } catch(error) {
+      print(error);
       throw new CustomException("Error occurred");
     }
   }

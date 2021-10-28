@@ -41,12 +41,16 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> logOut() async {
-    emit(AuthLoading());
     try {
-      _firebaseRepository.logOut();
+      String userID = (state as AuthLogged) .user.uid;
+      emit(AuthLoading());
+      _firebaseRepository.logOut(userID: userID);
       emit(AuthLoggedOut());
     } on CustomException catch(error) {
       emit(AuthFailure(error.cause));
+    } catch (error) {
+      print(error);
+      emit(AuthFailure('Error occurred'));
     }
   }
 }
