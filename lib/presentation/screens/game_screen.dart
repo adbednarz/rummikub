@@ -28,7 +28,7 @@ class GameScreen extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    _buildMaterialButton(context, 'play'),
+                    _buildMaterialButton(context, 'game_settings', 'PLAY'),
                   ],
                 )
               );
@@ -41,7 +41,7 @@ class GameScreen extends StatelessWidget {
     );
   }
 
-  _buildMaterialButton(BuildContext context, String path) {
+  _buildMaterialButton(BuildContext context, String path, String text) {
     return MaterialButton(
       elevation: 0,
       minWidth: double.maxFinite,
@@ -50,7 +50,7 @@ class GameScreen extends StatelessWidget {
         Navigator.of(context).pushNamed('/' + path);
       },
       color: logoGreen,
-      child: Text(path.toUpperCase(), style: TextStyle(color: Colors.white, fontSize: 16)),
+      child: Text(text, style: TextStyle(color: Colors.white, fontSize: 16)),
     );
   }
 

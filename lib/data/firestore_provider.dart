@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:rummikub/shared/custom_exception.dart';
 
 class FirestoreProvider {
@@ -17,14 +16,20 @@ class FirestoreProvider {
     _firestore.collection('users')
         .doc(userID)
         .set({'name': nickname, 'active': true})
-        .catchError((onError) => throw new CustomException('Error while adding user data'));
+        .catchError((error) {
+          print(error);
+          throw new CustomException('Error occurred');
+        });
   }
 
   Future<void> changeUserActiveStatus(String userID, bool isActive) async {
     _firestore.collection('users')
         .doc(userID)
         .update({'active': isActive})
-        .catchError((onError) => throw new CustomException('Error while adding user data'));
+        .catchError((error) {
+          print(error);
+          throw new CustomException('Error occurred');
+        });
   }
 
 }

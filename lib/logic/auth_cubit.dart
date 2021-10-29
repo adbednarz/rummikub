@@ -53,4 +53,13 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthFailure('Error occurred'));
     }
   }
+
+  @override
+  Future<void> close() async {
+    if (state is AuthLogged) {
+      String userID = (state as AuthLogged).user.uid;
+      _firebaseRepository.logOut(userID: userID);
+    }
+    super.close();
+  }
 }
