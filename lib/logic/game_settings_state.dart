@@ -5,16 +5,16 @@ abstract class GameSettingsState {}
 
 class GameSettingsInitial extends GameSettingsState {}
 
-class Loading extends GameSettingsState {
-  @override
-  List<Object> get props => [];
-}
+class Loading extends GameSettingsState {}
+
+class Waiting extends GameSettingsState {}
+
+class GameFound extends GameSettingsState {}
 
 class Failure extends GameSettingsState {
   Failure(this.errorMessage);
 
   final String errorMessage;
 
-  @override
   List<Object> get props => [errorMessage];
 }

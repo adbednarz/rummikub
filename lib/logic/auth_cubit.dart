@@ -3,15 +3,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:meta/meta.dart';
 import 'package:equatable/equatable.dart';
 import 'package:rummikub/data/repository.dart';
-import 'package:rummikub/data/firebase_repository.dart';
 import 'package:rummikub/shared/custom_exception.dart';
 
 part 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
-  AuthCubit() : super(AuthInitial());
+  AuthCubit(this._firebaseRepository) : super(AuthInitial());
 
-  final Repository _firebaseRepository = FirebaseRepository();
+  final Repository _firebaseRepository;
 
   Future<void> register({
     required String email,

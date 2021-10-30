@@ -1,8 +1,15 @@
+import 'dart:io' show Platform;
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:rummikub/shared/custom_exception.dart';
 
 class AuthenticationProvider {
   final FirebaseAuth _firebaseAuth =  FirebaseAuth.instance;
+
+  AuthenticationProvider() {
+    String localhost = Platform.isAndroid ? '192.168.8.104' : 'localhost';
+    _firebaseAuth.useAuthEmulator(localhost, 9090);
+  }
 
   Future<User> signUp({
     required String email,

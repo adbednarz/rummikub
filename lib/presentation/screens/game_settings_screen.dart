@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:number_inc_dec/number_inc_dec.dart';
 import 'package:rummikub/logic/game_settings_cubit.dart';
+import 'package:rummikub/shared/custom_error_dialog.dart';
 
 class GameSettingsScreen extends StatelessWidget {
   final Color logoGreen = Color(0xff25bcbb);
@@ -10,17 +11,37 @@ class GameSettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-          margin: EdgeInsets.symmetric(horizontal: 30),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              _buildDropdownButton(context),
-              SizedBox(height: 20),
-              _buildMaterialButton(context),
-            ],
-          )
-      ),
+        body: BlocConsumer<GameSettingsCubit, GameSettingsState>(
+            listener: (context, state) {
+              if (state is Failure) {
+                showDialog(
+                    context: context,
+                    builder: (context) =>
+                        CustomErrorDialog("Error", state.errorMessage)
+                );
+              } else if (state is GameFound) {
+                Navigator.of(context).pop();
+              }
+            },
+            builder: (context, state) {
+              if (state is Loading) {
+                return Center(
+                    child: CircularProgressIndicator()
+                );
+              }
+              return Container(
+                  margin: EdgeInsets.symmetric(horizontal: 30),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      _buildDropdownButton(context),
+                      SizedBox(height: 20),
+                      _buildMaterialButton(context),
+                    ],
+                  )
+              );
+            }
+        )
     );
   }
 

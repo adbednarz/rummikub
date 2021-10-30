@@ -25,7 +25,7 @@ export const searchGame = functions.https.onCall((data, context) => {
               const players: string[] = [...game.players, playerID];
               const isFull: boolean = players.length == game.size;
               const newGameData: Game = {isFull, size: game.size, players};
-              transaction.set(gameSnapshot.ref, newGameData);
+              transaction.update(gameSnapshot.ref, newGameData);
               gameID = gameSnapshot.id;
             } else {
               const gameRef: FirebaseFirestore.DocumentReference =
@@ -34,6 +34,9 @@ export const searchGame = functions.https.onCall((data, context) => {
               transaction.set(gameRef, {isFull: false, size, players});
               gameID = gameRef.id;
             }
+            const userRef: FirebaseFirestore.DocumentReference =
+                firestore.collection("users").doc(playerID);
+            transaction.update(userRef, {"active": false});
           });
     })).then(() => {
     return {"gameID": gameID};
