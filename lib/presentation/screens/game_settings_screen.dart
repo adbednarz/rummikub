@@ -26,7 +26,18 @@ class GameSettingsScreen extends StatelessWidget {
             builder: (context, state) {
               if (state is Loading) {
                 return Center(
-                    child: CircularProgressIndicator()
+                  child:  CircularProgressIndicator()
+                );
+              } else if (state is Waiting) {
+                return Center(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      CircularProgressIndicator(),
+                      Text('Currently missing ${state.missingPlayersNumber} players'),
+                    ],
+                  ),
                 );
               }
               return Container(

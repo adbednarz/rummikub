@@ -39,4 +39,9 @@ class FirestoreProvider {
         });
   }
 
+  Stream<int> getMissingPlayersNumberToStartGame(String gameID) {
+    return _firestore.collection('games').doc(gameID).snapshots()
+              .map((snapshot) { return snapshot.data()?['size'] - snapshot.data()?['players'].length;});
+  }
+
 }

@@ -34,4 +34,9 @@ class FirebaseRepository implements Repository {
   Future<String> searchGame({required int playersNumber}) async {
     return await _functionsProvider.searchGame(playersNumber);
   }
+
+  @override
+  Stream<int> getMissingPlayersNumberToStartGame(String gameID) {
+    return _firestoreProvider.getMissingPlayersNumberToStartGame(gameID);
+  }
 }
