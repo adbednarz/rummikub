@@ -1,5 +1,5 @@
 export interface Game {
     isFull: boolean;
     size: number;
-    players: string[];
+    players: {[p: string]: boolean};
 }

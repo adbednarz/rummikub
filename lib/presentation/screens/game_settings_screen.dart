@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:number_inc_dec/number_inc_dec.dart';
-import 'package:rummikub/logic/game_settings_cubit.dart';
+import 'package:rummikub/logic/game_creating_cubit.dart';
 import 'package:rummikub/shared/custom_error_dialog.dart';
 
 class GameSettingsScreen extends StatelessWidget {
@@ -11,7 +11,7 @@ class GameSettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: BlocConsumer<GameSettingsCubit, GameSettingsState>(
+        body: BlocConsumer<GameCreatingCubit, GameCreatingState>(
             listener: (context, state) {
               if (state is Failure) {
                 showDialog(
@@ -72,7 +72,7 @@ class GameSettingsScreen extends StatelessWidget {
       minWidth: double.maxFinite,
       height: 50,
       onPressed: () {
-        BlocProvider.of<GameSettingsCubit>(context).searchGame(
+        BlocProvider.of<GameCreatingCubit>(context).searchGame(
             playersNumber: int.parse(incDecNumController.text)
         );
         //Navigator.of(context).pushNamed('/play');

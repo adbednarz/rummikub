@@ -5,10 +5,10 @@ import 'package:meta/meta.dart';
 import 'package:rummikub/data/repository.dart';
 import 'package:rummikub/shared/custom_exception.dart';
 
-part 'game_settings_state.dart';
+part 'game_creating_state.dart';
 
-class GameSettingsCubit extends Cubit<GameSettingsState> {
-  GameSettingsCubit(this._firebaseRepository) : super(GameSettingsInitial());
+class GameCreatingCubit extends Cubit<GameCreatingState> {
+  GameCreatingCubit(this._firebaseRepository) : super(GameCreatingInitial());
 
   final Repository _firebaseRepository;
   String? gameID;
@@ -22,9 +22,6 @@ class GameSettingsCubit extends Cubit<GameSettingsState> {
       gameID = await _firebaseRepository.searchGame(playersNumber: playersNumber);
       missingPlayersNumberSubscription?.cancel();
       missingPlayersNumberSubscription = _firebaseRepository.getMissingPlayersNumberToStartGame(gameID!).listen((change) {
-        if (state is Waiting)
-          (state as Waiting) .missingPlayersNumber = change.toString();
-        else
           emit(Waiting(change.toString()));
       });
     } on CustomException catch(error) {

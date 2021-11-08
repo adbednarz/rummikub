@@ -1,13 +1,12 @@
-import 'dart:io' show Platform;
-
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:rummikub/shared/custom_exception.dart';
 
 class FirestoreProvider {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   
   FirestoreProvider() {
-    String localhost = Platform.isAndroid ? '192.168.8.104' : 'localhost';
+    String localhost = kIsWeb ? 'localhost' : '156.17.235.49';
     _firestore.useFirestoreEmulator(localhost, 8080);
   }
 
