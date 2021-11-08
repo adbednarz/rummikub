@@ -11,7 +11,7 @@ class GameCreatingCubit extends Cubit<GameCreatingState> {
   GameCreatingCubit(this._firebaseRepository) : super(GameCreatingInitial());
 
   final Repository _firebaseRepository;
-  String? gameID;
+  String? gameId;
   StreamSubscription? missingPlayersNumberSubscription;
 
   Future<void> searchGame({
@@ -19,9 +19,9 @@ class GameCreatingCubit extends Cubit<GameCreatingState> {
   }) async {
     emit(Loading());
     try {
-      gameID = await _firebaseRepository.searchGame(playersNumber: playersNumber);
+      gameId = await _firebaseRepository.searchGame(playersNumber: playersNumber);
       missingPlayersNumberSubscription?.cancel();
-      missingPlayersNumberSubscription = _firebaseRepository.getMissingPlayersNumberToStartGame(gameID!).listen((change) {
+      missingPlayersNumberSubscription = _firebaseRepository.getMissingPlayersNumberToStartGame(gameId!).listen((change) {
           emit(Waiting(change.toString()));
       });
     } on CustomException catch(error) {

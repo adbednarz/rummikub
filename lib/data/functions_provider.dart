@@ -13,7 +13,7 @@ class FunctionsProvider {
   Future<String> searchGame(int playersNumber) async {
     try {
       final results = await _functions.httpsCallable('searchGame').call({"playersNumber": playersNumber});
-      return results.data['gameID'];
+      return results.data['gameId'];
     } catch(error) {
       print(error);
       throw new CustomException("Error occurred");

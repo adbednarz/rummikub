@@ -18,9 +18,9 @@ class FirestoreProvider {
             throw new CustomException('The nickname is already in use by another account.');
   }
 
-  Future<void> addUserData(String nickname, String userID) async {
+  Future<void> addUserData(String nickname, String userId) async {
     _firestore.collection('users')
-        .doc(userID)
+        .doc(userId)
         .set({'name': nickname, 'active': true})
         .catchError((error) {
           print(error);
@@ -28,9 +28,9 @@ class FirestoreProvider {
         });
   }
 
-  Future<void> changeUserActiveStatus(String userID, bool isActive) async {
+  Future<void> changeUserActiveStatus(String userId, bool isActive) async {
     _firestore.collection('users')
-        .doc(userID)
+        .doc(userId)
         .update({'active': isActive})
         .catchError((error) {
           print(error);
@@ -38,8 +38,8 @@ class FirestoreProvider {
         });
   }
 
-  Stream<int> getMissingPlayersNumberToStartGame(String gameID) {
-    return _firestore.collection('games').doc(gameID).snapshots()
+  Stream<int> getMissingPlayersNumberToStartGame(String gameId) {
+    return _firestore.collection('games').doc(gameId).snapshots()
               .map((snapshot) { return snapshot.data()?['size'] - snapshot.data()?['players'].length;});
   }
 

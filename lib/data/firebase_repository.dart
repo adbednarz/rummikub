@@ -25,9 +25,9 @@ class FirebaseRepository implements Repository {
   }
 
   @override
-  Future<void> logOut({required String userID}) async {
+  Future<void> logOut({required String userId}) async {
     _authenticationProvider.logOut();
-    _firestoreProvider.changeUserActiveStatus(userID, false);
+    _firestoreProvider.changeUserActiveStatus(userId, false);
   }
 
   @override
@@ -36,7 +36,7 @@ class FirebaseRepository implements Repository {
   }
 
   @override
-  Stream<int> getMissingPlayersNumberToStartGame(String gameID) {
-    return _firestoreProvider.getMissingPlayersNumberToStartGame(gameID);
+  Stream<int> getMissingPlayersNumberToStartGame(String gameId) {
+    return _firestoreProvider.getMissingPlayersNumberToStartGame(gameId);
   }
 }

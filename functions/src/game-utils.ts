@@ -1,16 +1,23 @@
 // import * as functions from "firebase-functions";
+import * as admin from "firebase-admin";
 import {firestore} from "./index";
-import {Game} from "./models/game";
+import {Game, Player} from "./models/game";
+import * as functions from "firebase-functions";
 
 export class GameUtils {
-  static createGame(
-      transaction: FirebaseFirestore.Transaction,
-      playerID: string, size: number): string {
-    const gameRef: FirebaseFirestore.DocumentReference =
-        firestore.collection("games").doc();
+  static checkAuthentication(playerId: string): void {
+    if (playerId === "") {
+      throw new functions.https.HttpsError("failed-precondition",
+          "The function must be called while authenticated.");
+    }
+  }
 
-    transaction.set(gameRef,
-        {isFull: false, size, players: {[playerID]: false}}
+  static createGame(transaction: FirebaseFirestore.Transaction, playerId: string, size: number): string {
+    const gameRef: FirebaseFirestore.DocumentReference = firestore.collection("games").doc();
+
+    transaction.set(
+        gameRef,
+        {isFull: false, size, players: {[playerId]: {currentTurn: false, initialMeld: false}}}
     );
 
     for (const color of ["black", "red", "orange", "blue"]) {
@@ -31,12 +38,12 @@ export class GameUtils {
     return gameRef.id;
   }
 
-  static addToGame(transaction: FirebaseFirestore.Transaction, playerID: string,
+  static addToGame(transaction: FirebaseFirestore.Transaction, playerId: string,
       gameResult: FirebaseFirestore.QuerySnapshot): [string, Game] {
     const gameSnapshot: FirebaseFirestore.DocumentSnapshot =
         gameResult.docs[0];
     const game: Game = <Game> gameSnapshot.data();
-    game.players[playerID] = false;
+    game.players[playerId] = {currentTurn: false, initialMeld: false};
     const isFull = Object.keys(game.players).length == game.size;
     const newGameData: Game = {
       isFull, size: game.size, players: game.players,
@@ -53,9 +60,9 @@ export class GameUtils {
         .limit(1);
   }
 
-  static startGame(gameID: string, game: Game): void {
+  static startGame(gameId: string, game: Game): void {
     firestore.runTransaction((transaction) => {
-      return transaction.get(firestore.collection("games/" + gameID + "/pool")
+      return transaction.get(firestore.collection("games/" + gameId + "/pool")
           .limit(14 * game.size))
           .then((titlesResult) => {
             let counter = 0;
@@ -64,18 +71,18 @@ export class GameUtils {
                 const titleDocument = titlesResult.docs[counter];
                 const tileNumber = Object.keys(titleDocument.data())[0];
                 const tileColor = Object.values(titleDocument.data())[0];
-                transaction.set(firestore.collection("games/" + gameID + "/playersTiles")
+                transaction.set(firestore.collection("games/" + gameId + "/playersTiles")
                     .doc(player).collection("titles").doc(), {[tileNumber]: tileColor});
                 transaction.delete(titleDocument.ref);
                 counter++;
               }
             }
           });
-    }).then(() => firestore.collection("games").doc(gameID).get()
+    }).then(() => firestore.collection("games").doc(gameId).get()
         .then((snap) => {
-          const players: {[p: string]: boolean} = snap.get("players");
-          players[Object.keys(players)[0]] = true;
-          snap.ref.update({players: players});
+          const players: {[p: string]: Player} = snap.get("players");
+          players[Object.keys(players)[0]] = {currentTurn: true, initialMeld: false};
+          snap.ref.update({players: players, timer: admin.firestore.FieldValue.serverTimestamp()});
         }));
   }
 }
