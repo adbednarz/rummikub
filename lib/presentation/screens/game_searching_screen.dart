@@ -1,26 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:number_inc_dec/number_inc_dec.dart';
-import 'package:rummikub/logic/game_creating_cubit.dart';
+import 'package:rummikub/logic/game_searching_cubit.dart';
 import 'package:rummikub/shared/custom_error_dialog.dart';
 
-class GameSettingsScreen extends StatelessWidget {
+class GameSearchingScreen extends StatelessWidget {
   final Color logoGreen = Color(0xff25bcbb);
   final TextEditingController incDecNumController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: BlocConsumer<GameCreatingCubit, GameCreatingState>(
+        body: BlocConsumer<GameSearchingCubit, GameSearchingState>(
             listener: (context, state) {
               if (state is Failure) {
                 showDialog(
                     context: context,
                     builder: (context) =>
-                        CustomErrorDialog("Error", state.errorMessage)
+                        CustomErrorDialog('Error', state.errorMessage)
                 );
               } else if (state is GameFound) {
-                Navigator.of(context).pop();
+                String playerId =  BlocProvider.of<GameSearchingCubit>(context).playerId;
+                Navigator.of(context).pushNamed('/play', arguments:
+                {'gameId': state.gameId, 'playerId': playerId});
               }
             },
             builder: (context, state) {
@@ -35,7 +37,7 @@ class GameSettingsScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       CircularProgressIndicator(),
-                      Text('Currently missing ${state.missingPlayersNumber} players'),
+                      Text('Currently missing ${state.missingPlayersNumber} player(s)'),
                     ],
                   ),
                 );
@@ -72,10 +74,9 @@ class GameSettingsScreen extends StatelessWidget {
       minWidth: double.maxFinite,
       height: 50,
       onPressed: () {
-        BlocProvider.of<GameCreatingCubit>(context).searchGame(
+        BlocProvider.of<GameSearchingCubit>(context).searchGame(
             playersNumber: int.parse(incDecNumController.text)
         );
-        //Navigator.of(context).pushNamed('/play');
       },
       color: logoGreen,
       child: Text('SEARCH GAME', style: TextStyle(color: Colors.white, fontSize: 16)),

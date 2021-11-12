@@ -40,7 +40,21 @@ class FirestoreProvider {
 
   Stream<int> getMissingPlayersNumberToStartGame(String gameId) {
     return _firestore.collection('games').doc(gameId).snapshots()
-              .map((snapshot) { return snapshot.data()?['size'] - snapshot.data()?['players'].length;});
+              .map((snapshot) {
+                return snapshot.data()?['size'] - snapshot.data()?['players'].length;
+              });
+  }
+
+  Stream<List<Map<String, int>>> getPlayerTiles(String gameId, String playerId) {
+    return _firestore.collection('games/' + gameId + '/playersTiles/' + playerId + '/tiles').snapshots()
+        .map((snapshot) {
+          print(snapshot.size);
+          List<Map<String, int>> tiles = [{}];
+          snapshot.docChanges.forEach((change) {
+            print(change.doc.data());
+          });
+          return tiles;
+        });
   }
 
 }

@@ -26,10 +26,7 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  Future<void> logIn({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> logIn({required String email, required String password}) async {
     emit(AuthLoading());
     try {
       User user = await _firebaseRepository.logIn(email: email, password: password);
@@ -51,14 +48,5 @@ class AuthCubit extends Cubit<AuthState> {
       print(error);
       emit(AuthFailure('Error occurred'));
     }
-  }
-
-  @override
-  Future<void> close() async {
-    if (state is AuthLogged) {
-      String userId = (state as AuthLogged).user.uid;
-      _firebaseRepository.logOut(userId: userId);
-    }
-    super.close();
   }
 }

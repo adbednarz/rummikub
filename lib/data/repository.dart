@@ -7,4 +7,5 @@ abstract class Repository {
   Future<void> logOut({required String userId});
   Future<String> searchGame({required int playersNumber});
   Stream<int> getMissingPlayersNumberToStartGame(String gameId);
+  Stream<List<Map<String, int>>> getPlayerTiles(String gameId, String playerId);
 }

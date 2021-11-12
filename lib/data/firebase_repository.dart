@@ -39,4 +39,9 @@ class FirebaseRepository implements Repository {
   Stream<int> getMissingPlayersNumberToStartGame(String gameId) {
     return _firestoreProvider.getMissingPlayersNumberToStartGame(gameId);
   }
+
+  @override
+  Stream<List<Map<String, int>>> getPlayerTiles(String gameId, String playerId) {
+    return _firestoreProvider.getPlayerTiles(gameId, playerId);
+  }
 }

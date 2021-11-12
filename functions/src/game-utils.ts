@@ -25,13 +25,13 @@ export class GameUtils {
         for (let j = 0; j < 2; j++) {
           transaction.set(
               gameRef.collection("pool").doc(),
-              {[i]: color});
+              {[color]: i});
         }
       }
       if (color === "black" || color === "red") {
         transaction.set(
             gameRef.collection("pool").doc(),
-            {0: color}); // 0 === joker
+            {color: 0}); // 0 === joker
       }
     }
 
@@ -69,10 +69,10 @@ export class GameUtils {
             for (const player of Object.keys(game.players)) {
               for (let i = 1; i < 15; i++) {
                 const titleDocument = titlesResult.docs[counter];
-                const tileNumber = Object.keys(titleDocument.data())[0];
-                const tileColor = Object.values(titleDocument.data())[0];
+                const tileColor = Object.keys(titleDocument.data())[0];
+                const tileNumber = Object.values(titleDocument.data())[0];
                 transaction.set(firestore.collection("games/" + gameId + "/playersTiles")
-                    .doc(player).collection("titles").doc(), {[tileNumber]: tileColor});
+                    .doc(player).collection("tiles").doc(), {[tileColor]: tileNumber});
                 transaction.delete(titleDocument.ref);
                 counter++;
               }

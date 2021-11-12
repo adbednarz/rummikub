@@ -9,45 +9,40 @@ class GameScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-        child: Scaffold(
-          body: BlocConsumer<AuthCubit, AuthState>(
-            listener: (context, state) {
-              if (state is AuthFailure) {
-                showDialog(
-                  context: context,
-                  builder: (context) =>
-                      CustomErrorDialog("Error", state.errorMessage)
-                );
-              } else if (state is AuthLoggedOut) {
-                Navigator.of(context).pop();
-              }
-            },
-            builder: (context, state) {
-              return Container(
-                margin: EdgeInsets.symmetric(horizontal: 30),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    _buildMaterialButton(context, 'game_settings', 'PLAY'),
-                  ],
-                )
-              );
-            }
-          )
-        ),
-        onWillPop: () async {
+        onWillPop: () {
           return _onWillPop(context);
         },
+        child: BlocListener<AuthCubit, AuthState>(
+          listener: (context, state) {
+            if (state is AuthFailure) {
+              showDialog(context: context, builder: (context) =>
+                  CustomErrorDialog("Error", state.errorMessage)
+              );
+            } else if (state is AuthLoggedOut) {
+              Navigator.of(context).popUntil(ModalRoute.withName('/'));
+            }
+          },
+          child: Container(
+              margin: EdgeInsets.symmetric(horizontal: 30),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  _buildMaterialButton(context, 'PLAY'),
+                ],
+              )
+          ),
+        ),
     );
   }
 
-  _buildMaterialButton(BuildContext context, String path, String text) {
+  _buildMaterialButton(BuildContext context, String text) {
     return MaterialButton(
       elevation: 0,
       minWidth: double.maxFinite,
       height: 50,
       onPressed: () {
-        Navigator.of(context).pushNamed('/' + path);
+        String playerId = (BlocProvider.of<AuthCubit>(context).state as AuthLogged).user.uid;
+        Navigator.of(context).pushNamed('/game_settings', arguments: playerId);
       },
       color: logoGreen,
       child: Text(text, style: TextStyle(color: Colors.white, fontSize: 16)),
@@ -68,7 +63,6 @@ class GameScreen extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop();
               authCubit.logOut();
             },
             child: new Text('Yes'),

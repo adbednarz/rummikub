@@ -30,12 +30,11 @@ class LoginScreen extends StatelessWidget {
                     builder: (context) => CustomErrorDialog("Error", state.errorMessage)
                 );
               } else if (state is AuthLogged) {
-                Navigator.of(context).pop();
-                Navigator.of(context).pushNamed('/game');
+                Navigator.of(context).pushNamed('/game', arguments: BlocProvider.of<AuthCubit>(context));
               }
             },
             builder: (context, state) {
-              if (state is AuthLoading) {
+              if (state is AuthLoading || state is AuthLogged) {
                 return Center(
                     child: CircularProgressIndicator()
                 );
