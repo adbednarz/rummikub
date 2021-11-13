@@ -39,8 +39,8 @@ class FirestoreProvider {
   }
 
   Stream<int> getMissingPlayersNumberToStartGame(String gameId) {
-    return _firestore.collection('games/' + gameId + '/playersQueue').snapshots()
-              .map((snapshots) => snapshots.size);
+    return _firestore.collection('games').doc(gameId).snapshots()
+              .map((snapshots) => snapshots.get('available'));
   }
 
   Stream<List<Map<String, int>>> getPlayerTiles(String gameId, String playerId) {

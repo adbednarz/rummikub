@@ -20,12 +20,14 @@ export const searchGame = functions.https.onCall((data, context) => {
           if (gameResult.size == 0) {
             gameId = GameUtils.createGame(transaction, playerId, size);
           } else {
-            isGameFull = GameUtils.addToGame(transaction, playerId, gameResult.docs[0]);
+            const result = GameUtils.addToGame(transaction, playerId, gameResult.docs[0]);
+            gameId = result[0];
+            isGameFull = result[1];
           }
         });
   }).then(() => {
     if (isGameFull) {
-      GameUtils.startGame(playerId);
+      GameUtils.startGame(gameId);
     }
     return {"gameId": gameId};
   });

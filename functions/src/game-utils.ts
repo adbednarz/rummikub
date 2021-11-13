@@ -40,14 +40,14 @@ export class GameUtils {
   }
 
   static addToGame(transaction: FirebaseFirestore.Transaction, playerId: string,
-      gameDoc: FirebaseFirestore.QueryDocumentSnapshot): boolean {
+      gameDoc: FirebaseFirestore.QueryDocumentSnapshot): [string, boolean] {
     transaction.set(
         gameDoc.ref.collection("playersQueue").doc(playerId),
         {currentTurn: false, initialMeld: false}
     );
     const availablePlaces: number = gameDoc.get("available") - 1;
     transaction.update(gameDoc.ref, {available: availablePlaces});
-    return availablePlaces == 0;
+    return [gameDoc.id, availablePlaces == 0];
   }
 
   static findGame(size: number): FirebaseFirestore.Query {
@@ -61,7 +61,7 @@ export class GameUtils {
     const playersId: string[] = [];
     firestore.collection("games/" + gameId + "/playersQueue").get()
         .then((playersDoc) => {
-          playersDoc.docs.map((doc) => playersId.push(doc.id));
+          playersDoc.forEach((doc) => playersId.push(doc.id));
           return firestore.collection("games/" + gameId + "/pool").limit(14 * playersId.length).get();
         })
         .then((tilesDoc) => {
