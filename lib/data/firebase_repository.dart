@@ -45,4 +45,9 @@ class FirebaseRepository implements Repository {
   Stream<List<Map<String, int>>> getPlayerTiles(String gameId, String playerId) {
     return _firestoreProvider.getPlayerTiles(gameId, playerId);
   }
+
+  @override
+  Future<void> putTiles(String gameId) async {
+    await _functionsProvider.putTiles(gameId);
+  }
 }

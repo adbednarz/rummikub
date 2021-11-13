@@ -19,4 +19,13 @@ class FunctionsProvider {
       throw new CustomException("Error occurred");
     }
   }
+
+  Future<void> putTiles(String gameId) async {
+    try {
+      await _functions.httpsCallable('putTiles').call({"gameId": gameId});
+    } catch(error) {
+      print(error);
+      throw new CustomException(error.toString());
+    }
+  }
 }

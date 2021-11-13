@@ -8,4 +8,5 @@ abstract class Repository {
   Future<String> searchGame(String playerId, int playersNumber);
   Stream<int> getMissingPlayersNumberToStartGame(String gameId);
   Stream<List<Map<String, int>>> getPlayerTiles(String gameId, String playerId);
+  Future<void> putTiles(String gameId);
 }

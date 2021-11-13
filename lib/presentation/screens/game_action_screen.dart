@@ -8,18 +8,24 @@ class GameActionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: BlocConsumer<GameActionCubit, GameActionState>(
+        body: BlocListener<GameActionCubit, GameActionState>(
           listener: (context, state) {
 
           },
-          builder: (context, state) {
-            return ListView(
-                children: state.tiles
-                    .asMap().entries.map(
-                      (e) => Text("${e.value} at index ${e.key}"),
-                ).toList()
-            );
-          }
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              MaterialButton(
+                elevation: 0,
+                minWidth: double.maxFinite,
+                height: 50,
+                onPressed: () {
+                  BlocProvider.of<GameActionCubit>(context).putTiles();
+                },
+                child: Text('REGISTER', style: TextStyle(color: Colors.black, fontSize: 16)),
+              ),
+            ],
+          )
         )
     );
   }

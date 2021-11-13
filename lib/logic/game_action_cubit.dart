@@ -20,9 +20,9 @@ class GameActionCubit extends Cubit<GameActionState> {
     });
   }
 
-  //Future<void> putTiles() {
-  //  _firebaseRepository.putTiles();
-  //}
+  Future<void> putTiles() async {
+    _firebaseRepository.putTiles(gameId);
+  }
 
   @override
   Future<void> close() async {
