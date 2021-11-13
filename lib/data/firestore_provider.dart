@@ -18,9 +18,9 @@ class FirestoreProvider {
             throw new CustomException('The nickname is already in use by another account.');
   }
 
-  Future<void> addUserData(String nickname, String userId) async {
+  Future<void> addUserData(String nickname, String playerId) async {
     _firestore.collection('users')
-        .doc(userId)
+        .doc(playerId)
         .set({'name': nickname, 'active': true})
         .catchError((error) {
           print(error);
@@ -28,9 +28,9 @@ class FirestoreProvider {
         });
   }
 
-  Future<void> changeUserActiveStatus(String userId, bool isActive) async {
+  Future<void> changeUserActiveStatus(String playerId, bool isActive) async {
     _firestore.collection('users')
-        .doc(userId)
+        .doc(playerId)
         .update({'active': isActive})
         .catchError((error) {
           print(error);
@@ -39,21 +39,16 @@ class FirestoreProvider {
   }
 
   Stream<int> getMissingPlayersNumberToStartGame(String gameId) {
-    return _firestore.collection('games').doc(gameId).snapshots()
-              .map((snapshot) {
-                return snapshot.data()?['size'] - snapshot.data()?['players'].length;
-              });
+    return _firestore.collection('games/' + gameId + '/playersQueue').snapshots()
+              .map((snapshots) => snapshots.size);
   }
 
   Stream<List<Map<String, int>>> getPlayerTiles(String gameId, String playerId) {
     return _firestore.collection('games/' + gameId + '/playersTiles/' + playerId + '/tiles').snapshots()
         .map((snapshot) {
-          print(snapshot.size);
-          List<Map<String, int>> tiles = [{}];
-          snapshot.docChanges.forEach((change) {
-            print(change.doc.data());
-          });
-          return tiles;
+          return snapshot.docChanges.map((e) => e.doc.data()!.map((key, value) =>
+              MapEntry(key, int.parse(value.toString())))
+          ).toList();
         });
   }
 

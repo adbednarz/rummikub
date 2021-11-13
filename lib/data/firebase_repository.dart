@@ -25,13 +25,14 @@ class FirebaseRepository implements Repository {
   }
 
   @override
-  Future<void> logOut({required String userId}) async {
+  Future<void> logOut({required String playerId}) async {
     _authenticationProvider.logOut();
-    _firestoreProvider.changeUserActiveStatus(userId, false);
+    _firestoreProvider.changeUserActiveStatus(playerId, false);
   }
 
   @override
-  Future<String> searchGame({required int playersNumber}) async {
+  Future<String> searchGame(String playerId, int playersNumber) async {
+    await _firestoreProvider.changeUserActiveStatus(playerId, false);
     return await _functionsProvider.searchGame(playersNumber);
   }
 

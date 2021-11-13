@@ -1,7 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import {GameUtils} from "./game-utils";
-import {Game} from "./models/game";
 import {GameLogic} from "./game-logic";
 
 admin.initializeApp(functions.config().firebase);
@@ -11,32 +10,28 @@ export const searchGame = functions.https.onCall((data, context) => {
   const playerId: string = context.auth?.uid ?? "";
   const size: number = data.playersNumber;
   let gameId: string;
-  let searchedGame: Game;
+  let isGameFull: boolean;
 
   GameUtils.checkAuthentication(playerId);
 
   return firestore.runTransaction((transaction) => {
     return transaction.get(GameUtils.findGame(size))
         .then((gameResult) => {
-          if (gameResult.size == 1) {
-            const result = GameUtils.addToGame(transaction, playerId, gameResult);
-            gameId = result[0];
-            searchedGame = result[1];
-          } else {
+          if (gameResult.size == 0) {
             gameId = GameUtils.createGame(transaction, playerId, size);
+          } else {
+            isGameFull = GameUtils.addToGame(transaction, playerId, gameResult.docs[0]);
           }
-          const userRef = firestore.collection("users").doc(playerId);
-          transaction.update(userRef, {"active": false});
         });
   }).then(() => {
-    if (searchedGame?.isFull) {
-      GameUtils.startGame(gameId, searchedGame);
+    if (isGameFull) {
+      GameUtils.startGame(playerId);
     }
     return {"gameId": gameId};
   });
 });
 
-export const putTitles = functions.https.onCall((data, context) => {
+export const putTiles = functions.https.onCall((data, context) => {
   const playerId: string = context.auth?.uid ?? "";
   const gameId: string = data.gameId;
   // const board = data.newBoard;

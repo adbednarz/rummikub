@@ -1,7 +1,6 @@
 // import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import {firestore} from "./index";
-import {Game, Player} from "./models/game";
 import * as functions from "firebase-functions";
 
 export class GameUtils {
@@ -15,9 +14,11 @@ export class GameUtils {
   static createGame(transaction: FirebaseFirestore.Transaction, playerId: string, size: number): string {
     const gameRef: FirebaseFirestore.DocumentReference = firestore.collection("games").doc();
 
+    transaction.set(gameRef, {available: size - 1, size: size});
+
     transaction.set(
-        gameRef,
-        {isFull: false, size, players: {[playerId]: {currentTurn: false, initialMeld: false}}}
+        gameRef.collection("playersQueue").doc(playerId),
+        {currentTurn: false, initialMeld: false}
     );
 
     for (const color of ["black", "red", "orange", "blue"]) {
@@ -39,50 +40,45 @@ export class GameUtils {
   }
 
   static addToGame(transaction: FirebaseFirestore.Transaction, playerId: string,
-      gameResult: FirebaseFirestore.QuerySnapshot): [string, Game] {
-    const gameSnapshot: FirebaseFirestore.DocumentSnapshot =
-        gameResult.docs[0];
-    const game: Game = <Game> gameSnapshot.data();
-    game.players[playerId] = {currentTurn: false, initialMeld: false};
-    const isFull = Object.keys(game.players).length == game.size;
-    const newGameData: Game = {
-      isFull, size: game.size, players: game.players,
-    };
-    transaction.update(gameSnapshot.ref, newGameData);
-
-    return [gameSnapshot.id, newGameData];
+      gameDoc: FirebaseFirestore.QueryDocumentSnapshot): boolean {
+    transaction.set(
+        gameDoc.ref.collection("playersQueue").doc(playerId),
+        {currentTurn: false, initialMeld: false}
+    );
+    const availablePlaces: number = gameDoc.get("available") - 1;
+    transaction.update(gameDoc.ref, {available: availablePlaces});
+    return availablePlaces == 0;
   }
 
   static findGame(size: number): FirebaseFirestore.Query {
     return firestore.collection("games")
-        .where("isFull", "==", false)
+        .where("available", ">", 0)
         .where("size", "==", size)
         .limit(1);
   }
 
-  static startGame(gameId: string, game: Game): void {
-    firestore.runTransaction((transaction) => {
-      return transaction.get(firestore.collection("games/" + gameId + "/pool")
-          .limit(14 * game.size))
-          .then((titlesResult) => {
-            let counter = 0;
-            for (const player of Object.keys(game.players)) {
-              for (let i = 1; i < 15; i++) {
-                const titleDocument = titlesResult.docs[counter];
-                const tileColor = Object.keys(titleDocument.data())[0];
-                const tileNumber = Object.values(titleDocument.data())[0];
-                transaction.set(firestore.collection("games/" + gameId + "/playersTiles")
-                    .doc(player).collection("tiles").doc(), {[tileColor]: tileNumber});
-                transaction.delete(titleDocument.ref);
-                counter++;
-              }
+  static startGame(gameId: string): void {
+    const playersId: string[] = [];
+    firestore.collection("games/" + gameId + "/playersQueue").get()
+        .then((playersDoc) => {
+          playersDoc.docs.map((doc) => playersId.push(doc.id));
+          return firestore.collection("games/" + gameId + "/pool").limit(14 * playersId.length).get();
+        })
+        .then((tilesDoc) => {
+          let counter = 0;
+          for (const player of playersId) {
+            for (let i = 1; i < 15; i++) {
+              const tileDocument = tilesDoc.docs[counter];
+              const tileColor = Object.keys(tileDocument.data())[0];
+              const tileNumber = Object.values(tileDocument.data())[0];
+              firestore.collection("games/" + gameId + "/playersTiles")
+                  .doc(player).collection("tiles").doc().set({[tileColor]: tileNumber});
+              tileDocument.ref.delete();
+              counter++;
             }
-          });
-    }).then(() => firestore.collection("games").doc(gameId).get()
-        .then((snap) => {
-          const players: {[p: string]: Player} = snap.get("players");
-          players[Object.keys(players)[0]] = {currentTurn: true, initialMeld: false};
-          snap.ref.update({players: players, timer: admin.firestore.FieldValue.serverTimestamp()});
-        }));
+          }
+          firestore.collection("games").doc(gameId).update({timer: admin.firestore.FieldValue.serverTimestamp()});
+          firestore.collection("games/" + gameId + "/playersQueue").doc(playersId[0]).update({currentTurn: true});
+        });
   }
 }

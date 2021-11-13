@@ -9,21 +9,26 @@ import 'package:rummikub/shared/custom_exception.dart';
 part 'game_searching_state.dart';
 
 class GameSearchingCubit extends Cubit<GameSearchingState> {
-  final Repository _firebaseRepository;
+  final Repository _repository;
   final String playerId;
   StreamSubscription? missingPlayersNumberSubscription;
 
-  GameSearchingCubit(this._firebaseRepository, this.playerId) : super(GameSearchingInitial());
+  GameSearchingCubit(this._repository, this.playerId) : super(GameSearchingInitial());
 
   Future<void> searchGame({
     required int playersNumber,
   }) async {
     emit(Loading());
     try {
-      String gameId = await _firebaseRepository.searchGame(playersNumber: playersNumber);
+      String gameId = await _repository.searchGame(playerId, playersNumber);
       missingPlayersNumberSubscription?.cancel();
-      missingPlayersNumberSubscription = _firebaseRepository.getMissingPlayersNumberToStartGame(gameId).listen((change) {
-        change == 0 ? emit(GameFound(gameId)) : emit(Waiting(change));
+      missingPlayersNumberSubscription = _repository.getMissingPlayersNumberToStartGame(gameId).listen((change) {
+        if (change == 0) {
+          emit(GameFound(gameId));
+          this.missingPlayersNumberSubscription?.cancel();
+        } else {
+          emit(Waiting(change));
+        }
       });
     } on CustomException catch(error) {
       emit(Failure(error.cause));

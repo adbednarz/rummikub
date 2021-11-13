@@ -38,9 +38,9 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> logOut() async {
     try {
-      String userId = (state as AuthLogged) .user.uid;
+      String playerId = (state as AuthLogged) .user.uid;
       emit(AuthLoading());
-      _firebaseRepository.logOut(userId: userId);
+      _firebaseRepository.logOut(playerId: playerId);
       emit(AuthLoggedOut());
     } on CustomException catch(error) {
       emit(AuthFailure(error.cause));
