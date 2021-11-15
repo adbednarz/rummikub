@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:rummikub/data/repository.dart';
+import 'package:rummikub/shared/custom_exception.dart';
+import 'package:rummikub/shared/models/tile.dart';
 
 part 'game_action_state.dart';
 
@@ -21,7 +23,12 @@ class GameActionCubit extends Cubit<GameActionState> {
   }
 
   Future<void> putTiles() async {
-    _firebaseRepository.putTiles(gameId);
+    List<List<Tile>> tiles = [[Tile("black", 0), Tile("red", 1)], [Tile("blue", 3), Tile("orange", 2)]];
+    try {
+      _firebaseRepository.putTiles(gameId, tiles);
+    } on CustomException catch(error) {
+      emit(Failure(state.tiles, error.cause));
+    }
   }
 
   @override

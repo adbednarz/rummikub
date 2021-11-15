@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:rummikub/shared/models/tile.dart';
 
 abstract class Repository {
 
@@ -7,6 +8,6 @@ abstract class Repository {
   Future<void> logOut({required String playerId});
   Future<String> searchGame(String playerId, int playersNumber);
   Stream<int> getMissingPlayersNumberToStartGame(String gameId);
-  Stream<List<Map<String, int>>> getPlayerTiles(String gameId, String playerId);
-  Future<void> putTiles(String gameId);
+  Stream<List<Tile>> getPlayerTiles(String gameId, String playerId);
+  Future<void> putTiles(String gameId, List<List<Tile>> tiles);
 }

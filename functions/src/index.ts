@@ -3,6 +3,7 @@ import * as admin from "firebase-admin";
 import {GameUtils} from "./game-utils";
 import {GameLogic} from "./game-logic";
 import {DocumentSnapshot, QueryDocumentSnapshot} from "firebase-functions/lib/providers/firestore";
+import {Tile} from "./model/tile";
 
 admin.initializeApp(functions.config().firebase);
 export const firestore: FirebaseFirestore.Firestore = admin.firestore();
@@ -36,7 +37,7 @@ export const searchGame = functions.https.onCall((data, context) => {
 export const putTiles = functions.https.onCall(async (data, context) => {
   const playerId: string = GameUtils.checkAuthentication(context.auth?.uid);
   const gameId: string = data.gameId;
-  // const board = data.newBoard;
+  const tiles: Tile[][] = data.tiles;
 
   const playerQueue: FirebaseFirestore.QuerySnapshot =
       await firestore.collection("games/" + gameId + "/playersQueue").get();
@@ -45,7 +46,7 @@ export const putTiles = functions.https.onCall(async (data, context) => {
   const currentPlayer: DocumentSnapshot = result[0];
   const nextPlayer: DocumentSnapshot = result[1];
 
-  GameLogic.validateTiles(currentPlayer);
+  GameLogic.validateTiles(gameId, currentPlayer, tiles);
 
   await currentPlayer.ref.update({currentTurn: false});
   await nextPlayer.ref.update({currentTurn: true});

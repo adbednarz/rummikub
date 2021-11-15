@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rummikub/shared/custom_exception.dart';
+import 'package:rummikub/shared/models/tile.dart';
 
 class FirestoreProvider {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -43,12 +44,12 @@ class FirestoreProvider {
               .map((snapshots) => snapshots.get('available'));
   }
 
-  Stream<List<Map<String, int>>> getPlayerTiles(String gameId, String playerId) {
+  Stream<List<Tile>> getPlayerTiles(String gameId, String playerId) {
     return _firestore.collection('games/' + gameId + '/playersTiles/' + playerId + '/tiles').snapshots()
-        .map((snapshot) {
-          return snapshot.docChanges.map((e) => e.doc.data()!.map((key, value) =>
-              MapEntry(key, int.parse(value.toString())))
-          ).toList();
+        .map((snapshots) {
+          return snapshots.docChanges
+              .map((snapshot) => Tile.fromDocument(snapshot.doc))
+              .toList();
         });
   }
 

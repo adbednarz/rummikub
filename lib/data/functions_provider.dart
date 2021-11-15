@@ -1,6 +1,7 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rummikub/shared/custom_exception.dart';
+import 'package:rummikub/shared/models/tile.dart';
 
 class FunctionsProvider {
   FirebaseFunctions _functions = FirebaseFunctions.instance;
@@ -20,9 +21,13 @@ class FunctionsProvider {
     }
   }
 
-  Future<void> putTiles(String gameId) async {
+  Future<void> putTiles(String gameId, List<List<Tile>> tiles) async {
     try {
-      await _functions.httpsCallable('putTiles').call({"gameId": gameId});
+      await _functions.httpsCallable('putTiles').call({
+        "gameId": gameId,
+        "tiles": tiles.map((tiles) =>
+            (tiles.map((tile) => tile.asMap())).toList()).toList()
+      });
     } catch(error) {
       print(error);
       throw new CustomException(error.toString());
