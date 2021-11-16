@@ -11,8 +11,5 @@ class Tile {
     document['number'],
   );
 
-  Map<String, dynamic> asMap() => {
-    'color' : color,
-    'number' : number,
-  };
+  Map<String, dynamic> asMap() => {'color' : color, 'number' : number};
 }

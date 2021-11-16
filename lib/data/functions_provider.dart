@@ -21,12 +21,12 @@ class FunctionsProvider {
     }
   }
 
-  Future<void> putTiles(String gameId, List<List<Tile>> tiles) async {
+  Future<void> putTiles(String gameId, List<List<Tile>> sets) async {
     try {
       await _functions.httpsCallable('putTiles').call({
         "gameId": gameId,
-        "tiles": tiles.map((tiles) =>
-            (tiles.map((tile) => tile.asMap())).toList()).toList()
+        "newBoard": sets.map((set) =>
+            (set.map((tile) => tile.asMap())).toList()).toList()
       });
     } catch(error) {
       print(error);

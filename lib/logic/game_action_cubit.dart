@@ -18,12 +18,16 @@ class GameActionCubit extends Cubit<GameActionState> {
     gameId = params['gameId']!;
     playerId = params['playerId']!;
     playerTitlesSubscription = _firebaseRepository.getPlayerTiles(gameId, playerId).listen((result) {
+      result.forEach((element) {
+        print(element.color);
+        print(element.number);
+      });
       emit(TilesLoaded(state.tiles + result));
     });
   }
 
   Future<void> putTiles() async {
-    List<List<Tile>> tiles = [[Tile("black", 0), Tile("red", 1)], [Tile("blue", 3), Tile("orange", 2)]];
+    List<List<Tile>> tiles = [[Tile("orange", 7), Tile("black", 11), Tile("red", 11)], [Tile("red", 9)]];
     try {
       _firebaseRepository.putTiles(gameId, tiles);
     } on CustomException catch(error) {

@@ -69,11 +69,10 @@ export class GameUtils {
         })
         .then((tilesDoc) => {
           let counter = 0;
-          for (const player of playersId) {
+          for (const playerId of playersId) {
             for (let i = 1; i < 15; i++) {
               const tileDocument = tilesDoc.docs[counter];
-              firestore.collection("games/" + gameId + "/playersTiles")
-                  .doc(player).collection("tiles").doc()
+              firestore.collection("games/" + gameId + "/playersRacks/" + playerId + "/rack").doc()
                   .set({color: tileDocument.data()["color"], number: tileDocument.data()["number"]});
               tileDocument.ref.delete();
               counter++;
