@@ -47,9 +47,9 @@ class FirestoreProvider {
   Stream<List<Tile>> getPlayerTiles(String gameId, String playerId) {
     return _firestore.collection('games/' + gameId + '/playersRacks/' + playerId + '/rack').snapshots()
         .map((snapshots) {
-          return snapshots.docChanges
-              .map((snapshot) => Tile.fromDocument(snapshot.doc))
-              .toList();
+          List<DocumentChange> docChanges = snapshots.docChanges;
+          docChanges.removeWhere((element) => element.type == DocumentChangeType.removed);
+          return docChanges.map((snapshot) => Tile.fromDocument(snapshot.doc, true)).toList();
         });
   }
 

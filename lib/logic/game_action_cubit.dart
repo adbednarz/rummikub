@@ -14,24 +14,56 @@ class GameActionCubit extends Cubit<GameActionState> {
   late String playerId;
   late StreamSubscription playerTitlesSubscription;
 
-  GameActionCubit(this._firebaseRepository, Map<String, String> params) : super(GameActionInitial([])) {
+  GameActionCubit(this._firebaseRepository, Map<String, String> params) : super(GameActionInitial()) {
     gameId = params['gameId']!;
     playerId = params['playerId']!;
     playerTitlesSubscription = _firebaseRepository.getPlayerTiles(gameId, playerId).listen((result) {
-      result.forEach((element) {
-        print(element.color);
-        print(element.number);
-      });
-      emit(TilesLoaded(state.tiles + result));
+      if (result.length != 0) {
+        emit(RackChanged(state.rack, result, state.board));
+      }
     });
   }
 
   Future<void> putTiles() async {
-    List<List<Tile>> tiles = [[Tile("orange", 7), Tile("black", 11), Tile("red", 11)], [Tile("red", 9)]];
+    List<List<Tile>> tiles = [];
     try {
       _firebaseRepository.putTiles(gameId, tiles);
     } on CustomException catch(error) {
-      emit(Failure(state.tiles, error.cause));
+      emit(Failure(state.rack, error.cause));
+    }
+  }
+  
+  addToRack(String from, Tile tile, int newIndex) {
+    if (from.startsWith("rack")) {
+      int index = int.parse(from.replaceRange(0, 5, ""));
+      List<Tile?> newRack = List.from(state.rack);
+      newRack[index] = null;
+      newRack[newIndex] = tile;
+      emit(RackChanged(newRack, [], state.board));
+    } else {
+      int index = int.parse(from.replaceRange(0, 6, ""));
+      List<Tile?> newRack = List.from(state.rack);
+      newRack[newIndex] = tile;
+      List<Tile?> newBoard = List.from(state.board);
+      newBoard[index] = null;
+      emit(BoardChanged(newRack, newBoard));
+    }
+  }
+
+  addToBoard(String from, Tile tile, int newIndex) {
+    if (from.startsWith("rack")) {
+      int index = int.parse(from.replaceRange(0, 5, ""));
+      List<Tile?> newRack = List.from(state.rack);
+      newRack[index] = null;
+      List<Tile?> newBoard = List.from(state.board);
+      newBoard[newIndex] = tile;
+      emit(BoardChanged(newRack, newBoard));
+    } else {
+      int index = int.parse(from.replaceRange(0, 6, ""));
+      List<Tile?> newBoard = List.from(state.board);
+      newBoard[index] = null;
+      newBoard[newIndex] = tile;
+      emit(BoardChanged(state.rack, newBoard));
     }
   }
 

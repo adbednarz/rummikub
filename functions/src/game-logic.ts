@@ -11,11 +11,11 @@ export class GameLogic {
     for (let i = 0; i < playersNumber; i++) {
       const playerDoc: QueryDocumentSnapshot = playerQueue.docs[i];
       if (playerDoc.get("currentTurn") === true) {
-        // if (Date.now() - playerDoc.updateTime.toMillis() < 42000) {
-        // if (playerDoc.id === playerId) {
-        return [playerDoc, playerQueue.docs[(i+1) % playersNumber]];
-        // }
-        // }
+        if (Date.now() - playerDoc.updateTime.toMillis() < 42000) {
+          if (playerDoc.id === playerId) {
+            return [playerDoc, playerQueue.docs[(i+1) % playersNumber]];
+          }
+        }
       }
     }
     throw new functions.https.HttpsError("failed-precondition", "It's not your turn.");
@@ -39,54 +39,71 @@ export class GameLogic {
               } else {
                 const set: FirebaseFirestore.DocumentData = snapshot.docs[counter].data();
                 const setFromPlayer = {...setsFromPlayer[counter]};
-                if (_.isEqual(set, setFromPlayer)) {
-                  // this.validateSet(setsFromPlayer[counter]);
-                  transaction.update(
+                if (!_.isEqual(set, setFromPlayer)) {
+                  this.validateSet(setsFromPlayer[counter]);
+                  transaction.set(
                       snapshot.docs[counter].ref,
                       setFromPlayer
                   );
-                  boardTiles = boardTiles.concat(Object.values(set)
-                      .filter((x) => setsFromPlayer[counter].includes(x)));
-                  playerTiles = playerTiles.concat(setsFromPlayer[counter]
-                      .filter((x) => Object.values(set).includes(x)));
-                  functions.logger.log(boardTiles);
-                  functions.logger.log(playerTiles);
-                  functions.logger.log([{name: "tak"}].includes({name: "tak"}));
+                  boardTiles = boardTiles.concat(Object.values(set));
+                  playerTiles = playerTiles.concat(setsFromPlayer[counter]);
+                } else {
+                  if (!playerDoc.get("initilMeld")) {
+                    throw new functions.https.HttpsError(
+                        "failed-precondition", "You cannot manipulate sets at initial meld.!");
+                  }
                 }
               }
               counter++;
             }
 
             while (counter < setsFromPlayer.length) {
-              // this.validateSet(setsFromPlayer[counter]);
+              this.validateSet(setsFromPlayer[counter]);
               transaction.set(
                   firestore.collection("games/" + gameId + "/board").doc(Date.now().toString()),
                   {...setsFromPlayer[counter]}
               );
-              playerTiles = {...playerTiles, ...setsFromPlayer[counter]};
+              playerTiles = playerTiles.concat(setsFromPlayer[counter]);
               counter++;
             }
-            /* let difference = Object.values(playerTiles).filter((x) => !boardTiles.includes(x));
+
+            if (playerTiles.length <= boardTiles.length) {
+              throw new functions.https.HttpsError("failed-precondition", "You are cheating!");
+            }
+
+            const difference = playerTiles.filter((x) => !boardTiles.some((y, index) => {
+              if (_.isEqual(x, y)) {
+                delete boardTiles[index];
+                return true;
+              }
+              return false;
+            }));
+
+            functions.logger.log(difference);
+
             playerRack.forEach((tile) => {
               const currentTile: Tile = <Tile> tile.data();
-              for (let i = 0; i < difference.length; i++) {
-                const diff = Object.values(difference).filter((x) => !_.isEqual(x, currentTile));
-                if (diff.length !== difference.length) {
+              difference.some((x, index) => {
+                if (_.isEqual(x, currentTile)) {
                   transaction.delete(tile.ref);
-                  difference = diff;
+                  delete difference[index];
                 }
+              });
+              if (difference.length === 0) {
+                return;
               }
             });
+
             if (difference.length !== 0) {
               throw new functions.https.HttpsError("failed-precondition", "You are cheating!");
-            }*/
+            }
           });
     }));
   }
 
   static validateSet(set: Tile[]): void {
     if (!this.isRun(set) && !this.isGroup(set)) {
-      throw new functions.https.HttpsError("failed-precondition", "You are cheating!");
+      throw new functions.https.HttpsError("failed-precondition", "Board is not valid!");
     }
   }
 
