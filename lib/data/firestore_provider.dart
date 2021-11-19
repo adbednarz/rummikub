@@ -7,7 +7,7 @@ class FirestoreProvider {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   
   FirestoreProvider() {
-    String localhost = kIsWeb ? 'localhost' : '156.17.235.49';
+    String localhost = kIsWeb ? 'localhost' : '192.168.198.172';
     _firestore.useFirestoreEmulator(localhost, 8080);
   }
 

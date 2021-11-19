@@ -3,13 +3,14 @@ part of 'game_action_cubit.dart';
 abstract class GameActionState extends Equatable {
   late final List<Tile?> rack;
   late final List<Tile?> board;
-  List<Object> get props => [rack];
+  List<Object> get props => [rack, board];
 }
 
 class GameActionInitial extends GameActionState {
   GameActionInitial() {
     this.rack = [];
     this.board = List.filled(140, null);
+    this.board[0] = Tile("black", 0, false);
   }
 }
 
