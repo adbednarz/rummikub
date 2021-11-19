@@ -2,7 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animation_progress_bar/flutter_animation_progress_bar.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:rummikub/logic/game_action_cubit.dart';
+import 'package:rummikub/logic/game_action/game_action_cubit.dart';
+import 'package:rummikub/logic/game_action/game_action_panel_cubit.dart';
+import 'package:rummikub/shared/models/player.dart';
 import 'package:rummikub/shared/models/tile.dart';
 import 'package:rummikub/shared/strings.dart';
 
@@ -20,7 +22,7 @@ class GameActionScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              BlocBuilder<GameActionCubit, GameActionState>(
+              BlocBuilder<GameActionPanelCubit, GameActionPanelState>(
                   builder: (context, state) {
                     return Expanded(
                         flex: 1,
@@ -50,7 +52,7 @@ class GameActionScreen extends StatelessWidget {
     );
   }
 
-  _panel(BuildContext context, GameActionState state) {
+  _panel(BuildContext context, GameActionPanelState state) {
     return Row(
       children: [
         Expanded(
@@ -63,90 +65,29 @@ class GameActionScreen extends StatelessWidget {
             mainAxisSpacing: 2,
             physics: NeverScrollableScrollPhysics(),
             children: [
-              Stack(
-                children: [
-                  FAProgressBar(
-                    progressColor: Colors.green,
-                    backgroundColor: Colors.white70,
-                    currentValue: 20,
-                  ),
-                  Container(
-                    padding: EdgeInsets.all(2),
-                    child: FittedBox(
-                        child: Text(
-                          "Player1",
-                          style: TextStyle(
-                            decoration: TextDecoration.none,
-                            color: Colors.black,
+              for (Player player in state.players)
+                Stack(
+                  children: [
+                    FAProgressBar(
+                      maxValue: 60,
+                      progressColor: Colors.green,
+                      backgroundColor: Colors.white70,
+                      currentValue: player.currentTurn ? state.procent : 0,
+                    ),
+                    Container(
+                      padding: EdgeInsets.all(2),
+                      child: FittedBox(
+                          child: Text(
+                            player.name,
+                            style: TextStyle(
+                              decoration: TextDecoration.none,
+                              color: Colors.black,
+                            ),
                           ),
-                        ),
-                    ),
-                  ),
-                ],
-              ),
-              Stack(
-                children: [
-                  FAProgressBar(
-                    progressColor: Colors.green,
-                    backgroundColor: Colors.white70,
-                    currentValue: 5,
-                  ),
-                  Container(
-                    padding: EdgeInsets.all(2),
-                    child: FittedBox(
-                      child: Text(
-                        "Player2",
-                        style: TextStyle(
-                          decoration: TextDecoration.none,
-                          color: Colors.black,
-                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              Stack(
-                children: [
-                  FAProgressBar(
-                    progressColor: Colors.green,
-                    backgroundColor: Colors.white70,
-                    currentValue: 90,
-                  ),
-                  Container(
-                    padding: EdgeInsets.all(2),
-                    child: FittedBox(
-                      child: Text(
-                        "Player3",
-                        style: TextStyle(
-                          decoration: TextDecoration.none,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Stack(
-                children: [
-                  FAProgressBar(
-                    progressColor: Colors.green,
-                    backgroundColor: Colors.white70,
-                    currentValue: 60,
-                  ),
-                  Container(
-                    padding: EdgeInsets.all(2),
-                    child: FittedBox(
-                      child: Text(
-                        "Player4",
-                        style: TextStyle(
-                          decoration: TextDecoration.none,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
             ],
           ),
         ),
@@ -168,7 +109,7 @@ class GameActionScreen extends StatelessWidget {
 
   _board(BuildContext context, GameActionState state) {
     return GridView.count(
-      crossAxisCount: 10,
+      crossAxisCount: 13,
       mainAxisSpacing: 5,
       children: List.generate(state.board.length, (index) {
         bool flag = false;

@@ -3,7 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rummikub/data/firebase_repository.dart';
 import 'package:rummikub/data/repository.dart';
 import 'package:rummikub/logic/auth_cubit.dart';
-import 'package:rummikub/logic/game_action_cubit.dart';
+import 'package:rummikub/logic/game_action/game_action_cubit.dart';
+import 'package:rummikub/logic/game_action/game_action_panel_cubit.dart';
 import 'package:rummikub/logic/game_searching_cubit.dart';
 import 'package:rummikub/presentation/screens/game_action_screen.dart';
 import 'package:rummikub/presentation/screens/game_screen.dart';
@@ -52,8 +53,15 @@ class AppRouter {
         );
       case '/play':
         return MaterialPageRoute(
-            builder: (context) => BlocProvider<GameActionCubit>(
-              create: (context) => GameActionCubit(_firebaseRepository, settings.arguments as Map<String, String>),
+            builder: (context) => MultiBlocProvider(
+              providers: [
+                BlocProvider<GameActionCubit>(
+                  create: (context) => GameActionCubit(_firebaseRepository, settings.arguments as Map<String, String>),
+                ),
+                BlocProvider<GameActionPanelCubit>(
+                  create: (context) => GameActionPanelCubit(_firebaseRepository, (settings.arguments as Map<String, String>)['gameId']),
+                ),
+              ],
               child: GameActionScreen(),
             ),
             settings: settings

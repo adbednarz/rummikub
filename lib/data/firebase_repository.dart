@@ -3,6 +3,7 @@ import 'package:rummikub/data/authentication_provider.dart';
 import 'package:rummikub/data/firestore_provider.dart';
 import 'package:rummikub/data/functions_provider.dart';
 import 'package:rummikub/data/repository.dart';
+import 'package:rummikub/shared/models/player.dart';
 import 'package:rummikub/shared/models/tile.dart';
 
 class FirebaseRepository implements Repository {
@@ -45,6 +46,11 @@ class FirebaseRepository implements Repository {
   @override
   Stream<List<Tile>> getPlayerTiles(String gameId, String playerId) {
     return _firestoreProvider.getPlayerTiles(gameId, playerId);
+  }
+
+  @override
+  Stream<List<Player>> getPlayersQueue(String gameId) {
+    return _firestoreProvider.getPlayersQueue(gameId);
   }
 
   @override

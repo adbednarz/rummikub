@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rummikub/shared/custom_exception.dart';
+import 'package:rummikub/shared/models/player.dart';
 import 'package:rummikub/shared/models/tile.dart';
 
 class FirestoreProvider {
@@ -42,6 +43,13 @@ class FirestoreProvider {
   Stream<int> getMissingPlayersNumberToStartGame(String gameId) {
     return _firestore.collection('games').doc(gameId).snapshots()
               .map((snapshots) => snapshots.get('available'));
+  }
+
+  Stream<List<Player>> getPlayersQueue(String gameId) {
+    return _firestore.collection('games/' + gameId + '/playersQueue').snapshots()
+        .map((snapshots) {
+          return snapshots.docs.map((doc) => Player.fromDocument(doc)).toList();
+        });
   }
 
   Stream<List<Tile>> getPlayerTiles(String gameId, String playerId) {
