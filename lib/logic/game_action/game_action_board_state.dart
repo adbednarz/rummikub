@@ -2,7 +2,7 @@ part of 'game_action_board_cubit.dart';
 
 @immutable
 abstract class GameActionBoardState extends Equatable {
-  final List<Tile?> board;
+  final List<List<Tile?>> board;
 
   GameActionBoardState(this.board);
 
@@ -11,9 +11,11 @@ abstract class GameActionBoardState extends Equatable {
 }
 
 class GameActionBoardInitial extends GameActionBoardState {
-  GameActionBoardInitial() : super([]);
+  GameActionBoardInitial() : super(List.filled(140, [null])) {
+    this.board[0] = [Tile("blue", 0, false)];
+  }
 }
 
 class BoardChanged extends GameActionBoardState {
-  BoardChanged(List<Tile?> board) : super(board);
+  BoardChanged(List<List<Tile?>> board) : super(board);
 }

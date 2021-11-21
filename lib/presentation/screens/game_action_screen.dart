@@ -2,8 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animation_progress_bar/flutter_animation_progress_bar.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:rummikub/logic/game_action/game_action_cubit.dart';
+import 'package:rummikub/logic/game_action/game_action_board_cubit.dart';
 import 'package:rummikub/logic/game_action/game_action_panel_cubit.dart';
+import 'package:rummikub/logic/game_action/game_action_rack_cubit.dart';
 import 'package:rummikub/shared/models/player.dart';
 import 'package:rummikub/shared/models/tile.dart';
 import 'package:rummikub/shared/strings.dart';
@@ -15,7 +16,7 @@ class GameActionScreen extends StatelessWidget {
     return Container(
       padding: EdgeInsets.fromLTRB(10, 30, 10, 10),
       color: Colors.teal,
-      child: BlocListener<GameActionCubit, GameActionState>(
+      child: BlocListener<GameActionPanelCubit, GameActionPanelState>(
           listener: (context, state) {
 
           },
@@ -30,7 +31,7 @@ class GameActionScreen extends StatelessWidget {
                     );
                   }
               ),
-              BlocBuilder<GameActionCubit, GameActionState>(
+              BlocBuilder<GameActionBoardCubit, GameActionBoardState>(
                   builder: (context, state) {
                     return Expanded(
                         flex: 10,
@@ -38,7 +39,7 @@ class GameActionScreen extends StatelessWidget {
                     );
                   }
               ),
-              BlocBuilder<GameActionCubit, GameActionState>(
+              BlocBuilder<GameActionRackCubit, GameActionRackState>(
                   builder: (context, state) {
                     return Expanded(
                         flex: 1,
@@ -107,45 +108,58 @@ class GameActionScreen extends StatelessWidget {
     );
   }
 
-  _board(BuildContext context, GameActionState state) {
+  _board(BuildContext context, GameActionBoardState state) {
+    final children = <Widget>[];
+    for (var i = 0; i < state.board.length; i++) {
+      for (var j = 0; j < state.board[i].length; j++) {
+        if (state.board[i][j] != null) {
+          children.add(
+              Draggable<Tile>(
+                data: state.board[i][j],
+                child: _tile(state.board[i][j]!),
+                feedback: _tile(state.board[i][j]!),
+                childWhenDragging: Container(),
+                onDragCompleted: () {
+                  BlocProvider.of<GameActionBoardCubit>(context).removeTile(i, j);
+                },
+              )
+          );
+        } else {
+          bool flag = false;
+          children.add(
+            DragTarget<Tile>(
+              builder: (BuildContext context, List<dynamic> accepted, List<dynamic> rejected) {
+                return flag ?
+                Container(
+                  decoration: BoxDecoration(
+                      border: Border.all(color: Colors.white)
+                  ),
+                ) : Container();
+              },
+              onWillAccept: (Tile? tile) {
+                flag = true;
+                return true;
+              },
+              onLeave: (Tile? tile) {
+                flag = false;
+              },
+              onAccept: (Tile tile) {
+                BlocProvider.of<GameActionBoardCubit>(context).addTile(i, tile);
+              },
+            )
+          );
+        }
+      }
+    }
     return GridView.count(
       crossAxisCount: 13,
       mainAxisSpacing: 5,
-      children: List.generate(state.board.length, (index) {
-        bool flag = false;
-        return state.board[index] != null ?
-        Draggable<Map<String, Tile>>(
-          data: {"board." + index.toString(): state.board[index]!},
-          child: _tile(state.board[index]!),
-          feedback: _tile(state.board[index]!),
-          childWhenDragging: Container(),
-        ) :
-        DragTarget<Map<String, Tile>>(
-          builder: (BuildContext context, List<dynamic> accepted, List<dynamic> rejected) {
-            return flag ?
-            Container(
-              decoration: BoxDecoration(
-                  border: Border.all(color: Colors.white)
-              ),
-            ) : Container();
-          },
-          onWillAccept: (Map<String, Tile>? tile) {
-            flag = true;
-            return true;
-          },
-          onLeave: (Map<String, Tile>? tile) {
-            flag = false;
-          },
-          onAccept: (Map<String, Tile> item) {
-            String from = item.keys.first;
-            BlocProvider.of<GameActionCubit>(context).addToBoard(from, item[from]!, index);
-          },
-        );
-      }),
+      physics: NeverScrollableScrollPhysics(),
+      children: children,
     );
   }
 
-  _rack(BuildContext context, GameActionState state) {
+  _rack(BuildContext context, GameActionRackState state) {
     double padding = (MediaQuery.of(context).size.width - (state.rack.length/2).ceil() * 35) / 2;
     return GridView.count(
       padding: EdgeInsets.symmetric(horizontal: padding > 0 ? padding : 0),
@@ -155,13 +169,16 @@ class GameActionScreen extends StatelessWidget {
       children: List.generate(state.rack.length, (index) {
         bool flag = false;
         return state.rack[index] != null ?
-          Draggable<Map<String, Tile>>(
-            data: {"rack." + index.toString(): state.rack[index]!},
+          Draggable<Tile>(
+            data: state.rack[index]!,
             child: _tile(state.rack[index]!),
             feedback: _tile(state.rack[index]!),
             childWhenDragging: Container(),
+            onDragCompleted: () {
+              BlocProvider.of<GameActionRackCubit>(context).changeRack(index, null);
+            },
           ) :
-          DragTarget<Map<String, Tile>>(
+          DragTarget<Tile>(
             builder: (BuildContext context, List<dynamic> accepted, List<dynamic> rejected) {
               return flag ?
                 Container(
@@ -170,20 +187,19 @@ class GameActionScreen extends StatelessWidget {
                 ),
               ) : Container();
             },
-            onWillAccept: (Map<String, Tile>? tile) {
-              if (tile!.values.first.isMine) {
+            onWillAccept: (Tile? tile) {
+              if (tile!.isMine) {
                 flag = true;
                 return true;
               } else {
                 return false;
               }
             },
-            onLeave: (Map<String, Tile>? tile) {
+            onLeave: (Tile? tile) {
               flag = false;
             },
-            onAccept: (Map<String, Tile> item) {
-              String from = item.keys.first;
-              BlocProvider.of<GameActionCubit>(context).addToRack(from, item[from]!, index);
+            onAccept: (Tile tile) {
+              BlocProvider.of<GameActionRackCubit>(context).changeRack(index, tile);
             },
           );
         }),
@@ -211,4 +227,5 @@ class GameActionScreen extends StatelessWidget {
       ),
     );
   }
+
 }

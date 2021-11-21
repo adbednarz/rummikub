@@ -13,6 +13,7 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
   late String gameId;
   late String playerId;
   late StreamSubscription playerTitlesSubscription;
+  List<int> setsIndexes = [];
 
   GameActionBoardCubit(this._firebaseRepository, Map<String, String> params) : super(GameActionBoardInitial()) {
     gameId = params['gameId']!;
@@ -20,6 +21,22 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
     playerTitlesSubscription = _firebaseRepository.getPlayerTiles(gameId, playerId).listen((result) {
 
     });
+  }
+
+  removeTile(int i, int j) {
+
+  }
+
+  addTile(int i, Tile tile) {
+    List<List<Tile?>> board = List.from(state.board);
+    if (i > 0 && i-1 < board.length) {
+      if (board[i-1] == [null] && board[i+1] == [null]) {
+        
+      }
+    }
+
+    board[i] = [tile];
+    emit(BoardChanged(board));
   }
 
   @override

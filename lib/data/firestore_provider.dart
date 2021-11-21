@@ -61,4 +61,13 @@ class FirestoreProvider {
         });
   }
 
+  /*Stream<List<List<Tile>>> getBoardSets(String gameId, String playerId) {
+    return _firestore.collection('games/' + gameId + '/board/').snapshots()
+        .map((snapshots) {
+      List<DocumentChange> docChanges = snapshots.docChanges;
+      docChanges.removeWhere((element) => element.type == DocumentChangeType.removed);
+      return docChanges.map((snapshot) => Tile.fromDocument(snapshot.doc, true)).toList();
+    });
+  }*/
+
 }

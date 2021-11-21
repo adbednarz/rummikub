@@ -11,7 +11,7 @@ abstract class GameActionRackState extends Equatable {
 }
 
 class GameActionRackInitial extends GameActionRackState {
-  GameActionRackInitial() : super([]);
+  GameActionRackInitial() : super(List.filled(14, null));
 }
 
 class RackChanged extends GameActionRackState {
