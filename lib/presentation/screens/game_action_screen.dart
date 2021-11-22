@@ -7,6 +7,7 @@ import 'package:rummikub/logic/game_action/game_action_panel_cubit.dart';
 import 'package:rummikub/logic/game_action/game_action_rack_cubit.dart';
 import 'package:rummikub/shared/models/player.dart';
 import 'package:rummikub/shared/models/tile.dart';
+import 'package:rummikub/shared/models/tiles_set.dart';
 import 'package:rummikub/shared/strings.dart';
 
 class GameActionScreen extends StatelessWidget {
@@ -110,46 +111,62 @@ class GameActionScreen extends StatelessWidget {
 
   _board(BuildContext context, GameActionBoardState state) {
     final children = <Widget>[];
-    for (var i = 0; i < state.board.length; i++) {
-      for (var j = 0; j < state.board[i].length; j++) {
-        if (state.board[i][j] != null) {
+    int counter = 0;
+    List<MapEntry<String, TilesSet>> tilesSetList = state.sets.entries.toList()
+      ..sort((a, b) => a.value.position.compareTo(b.value.position));
+    for(int i = 0; i < tilesSetList.length; i++) {
+      while(counter < tilesSetList[i].value.position - 1) {
+        children.add(_buildDragTarget(context, counter));
+        counter++;
+      }
+      if (counter % 13 != 0) {
+        if (counter % 13 == 12) {
+          children.add(_buildDragTarget(context, counter));
+          counter++;
+        } else if (i != 0 &&
+            tilesSetList[i - 1].value.position +
+                tilesSetList[i - 1].value.tiles.length + 1
+                != tilesSetList[i].value.position) {
           children.add(
-              Draggable<Tile>(
-                data: state.board[i][j],
-                child: _tile(state.board[i][j]!),
-                feedback: _tile(state.board[i][j]!),
-                childWhenDragging: Container(),
-                onDragCompleted: () {
-                  BlocProvider.of<GameActionBoardCubit>(context).removeTile(i, j);
-                },
-              )
-          );
-        } else {
-          bool flag = false;
+              _buildDragTarget2(context, tilesSetList[i].key, 'start'));
+          counter++;
+        } else if (i == 0) {
           children.add(
-            DragTarget<Tile>(
-              builder: (BuildContext context, List<dynamic> accepted, List<dynamic> rejected) {
-                return flag ?
-                Container(
-                  decoration: BoxDecoration(
-                      border: Border.all(color: Colors.white)
-                  ),
-                ) : Container();
-              },
-              onWillAccept: (Tile? tile) {
-                flag = true;
-                return true;
-              },
-              onLeave: (Tile? tile) {
-                flag = false;
-              },
-              onAccept: (Tile tile) {
-                BlocProvider.of<GameActionBoardCubit>(context).addTile(i, tile);
-              },
-            )
-          );
+              _buildDragTarget2(context, tilesSetList[i].key, 'start'));
+          counter++;
         }
       }
+      tilesSetList[i].value.tiles.forEach((tile) {
+        children.add(
+            Draggable<Tile>(
+              data: tile,
+              child: _tile(tile),
+              feedback: _tile(tile),
+              childWhenDragging: Container(),
+              onDragCompleted: () {
+                BlocProvider.of<GameActionBoardCubit>(context)
+                    .removeTile(tilesSetList[i].key, tile);
+              },
+            )
+        );
+        counter++;
+      });
+      if (counter % 13 != 0) {
+        if (i + 1 < tilesSetList.length &&
+            tilesSetList[i].value.position +
+                tilesSetList[i].value.tiles.length + 1
+                == tilesSetList[i + 1].value.position && counter % 13 != 12) {
+          children.add(_buildDragTarget3(
+              context, tilesSetList[i].key, tilesSetList[i + 1].key));
+        } else {
+          children.add(_buildDragTarget2(context, tilesSetList[i].key, 'end'));
+        }
+        counter++;
+      }
+    }
+    while(counter < 140) {
+      children.add(_buildDragTarget(context, counter));
+      counter++;
     }
     return GridView.count(
       crossAxisCount: 13,
@@ -208,6 +225,8 @@ class GameActionScreen extends StatelessWidget {
 
   _tile(Tile tile) {
     return Container(
+      width: 10,
+      height: 10,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.all(Radius.circular(10)),
         color: Colors.amber[100],
@@ -225,6 +244,79 @@ class GameActionScreen extends StatelessWidget {
             )
           ),
       ),
+    );
+  }
+
+  _buildDragTarget(BuildContext context, int counter) {
+    bool flag = false;
+    return DragTarget<Tile>(
+      builder: (BuildContext context, List<dynamic> accepted, List<dynamic> rejected) {
+        return flag ?
+        Container(
+          decoration: BoxDecoration(
+              border: Border.all(color: Colors.white)
+          ),
+        ) : Container();
+      },
+      onWillAccept: (Tile? tile) {
+        flag = true;
+        return true;
+      },
+      onLeave: (Tile? tile) {
+        flag = false;
+      },
+      onAccept: (Tile tile) {
+        BlocProvider.of<GameActionBoardCubit>(context)
+            .addNewSet(counter, tile);
+      },
+    );
+  }
+
+  _buildDragTarget2(BuildContext context, String key, String direction) {
+    bool flag = false;
+    return DragTarget<Tile>(
+      builder: (BuildContext context, List<dynamic> accepted, List<dynamic> rejected) {
+        return flag ?
+        Container(
+          decoration: BoxDecoration(
+              border: Border.all(color: Colors.white)
+          ),
+        ) : Container();
+      },
+      onWillAccept: (Tile? tile) {
+        flag = true;
+        return true;
+      },
+      onLeave: (Tile? tile) {
+        flag = false;
+      },
+      onAccept: (Tile tile) {
+        BlocProvider.of<GameActionBoardCubit>(context).addToExistingSet(key, tile, direction);
+      },
+    );
+  }
+
+  _buildDragTarget3(BuildContext context, String key1, String key2) {
+    bool flag = false;
+    return DragTarget<Tile>(
+      builder: (BuildContext context, List<dynamic> accepted, List<dynamic> rejected) {
+        return flag ?
+        Container(
+          decoration: BoxDecoration(
+              border: Border.all(color: Colors.white)
+          ),
+        ) : Container();
+      },
+      onWillAccept: (Tile? tile) {
+        flag = true;
+        return true;
+      },
+      onLeave: (Tile? tile) {
+        flag = false;
+      },
+      onAccept: (Tile tile) {
+        BlocProvider.of<GameActionBoardCubit>(context).combineTwoSet(key1, key2, tile);
+      },
     );
   }
 

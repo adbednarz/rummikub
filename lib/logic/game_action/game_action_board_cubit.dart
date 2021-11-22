@@ -5,6 +5,7 @@ import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart';
 import 'package:rummikub/data/repository.dart';
 import 'package:rummikub/shared/models/tile.dart';
+import 'package:rummikub/shared/models/tiles_set.dart';
 
 part 'game_action_board_state.dart';
 
@@ -13,7 +14,6 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
   late String gameId;
   late String playerId;
   late StreamSubscription playerTitlesSubscription;
-  List<int> setsIndexes = [];
 
   GameActionBoardCubit(this._firebaseRepository, Map<String, String> params) : super(GameActionBoardInitial()) {
     gameId = params['gameId']!;
@@ -23,20 +23,45 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
     });
   }
 
-  removeTile(int i, int j) {
-
+  removeTile(String key, Tile tile) {
+    Map<String, TilesSet> sets = Map.from(state.sets);
+    sets[key]!.tiles.remove(tile);
+    if (sets[key]!.tiles.isEmpty) {
+      sets.remove(key);
+    }
+    emit(BoardChanged(sets));
   }
 
-  addTile(int i, Tile tile) {
-    List<List<Tile?>> board = List.from(state.board);
-    if (i > 0 && i-1 < board.length) {
-      if (board[i-1] == [null] && board[i+1] == [null]) {
-        
-      }
-    }
+  addNewSet(int counter, Tile tile) {
+    Map<String, TilesSet> sets = Map.from(state.sets);
+    String time = DateTime.now().millisecondsSinceEpoch.toString();
+    sets[time] = TilesSet(counter, [tile]);
+    emit(BoardChanged(sets));
+  }
 
-    board[i] = [tile];
-    emit(BoardChanged(board));
+  combineTwoSet(String key1, String key2, Tile tile) {
+    Map<String, TilesSet> sets = Map.from(state.sets);
+    String time = DateTime.now().millisecondsSinceEpoch.toString();
+    sets[key1]!.tiles.addAll([tile] + sets[key2]!.tiles);
+    sets[time] = sets[key1]!;
+    sets.remove(key1);
+    sets.remove(key2);
+    emit(BoardChanged(sets));
+  }
+
+  addToExistingSet(String key, Tile tile, String direction) {
+    if (tile == this.state.sets[key]!.tiles[0]) {
+      addNewSet(this.state.sets[key]!.position - 1, tile);
+    } else {
+      Map<String, TilesSet> sets = Map.from(state.sets);
+      if (direction == 'start') {
+        sets[key]!.tiles.insert(0, tile);
+        sets[key]!.position -= 1;
+      } else {
+        sets[key]!.tiles.add(tile);
+      }
+      emit(BoardChanged(sets));
+    }
   }
 
   @override
