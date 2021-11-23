@@ -112,60 +112,51 @@ class GameActionScreen extends StatelessWidget {
   _board(BuildContext context, GameActionBoardState state) {
     final children = <Widget>[];
     int counter = 0;
-    List<MapEntry<String, TilesSet>> tilesSetList = state.sets.entries.toList()
-      ..sort((a, b) => a.value.position.compareTo(b.value.position));
-    for(int i = 0; i < tilesSetList.length; i++) {
-      while(counter < tilesSetList[i].value.position - 1) {
-        children.add(_buildDragTarget(context, counter));
+    for(int i = 0; i < state.sets.length; i++) {
+      while(counter < state.sets[i].position - 1) {
+        children.add(_buildDragTarget(context, counter, i));
         counter++;
       }
       if (counter % 13 != 0) {
         if (counter % 13 == 12) {
-          children.add(_buildDragTarget(context, counter));
+          children.add(_buildDragTarget(context, counter, i));
           counter++;
-        } else if (i != 0 &&
-            tilesSetList[i - 1].value.position +
-                tilesSetList[i - 1].value.tiles.length + 1
-                != tilesSetList[i].value.position) {
-          children.add(
-              _buildDragTarget2(context, tilesSetList[i].key, 'start'));
+        } else if (i != 0 && state.sets[i-1].position +
+            state.sets[i-1].tiles.length + 1 != state.sets[i].position) {
+          children.add(_buildDragTarget2(context, i, 'start'));
           counter++;
         } else if (i == 0) {
-          children.add(
-              _buildDragTarget2(context, tilesSetList[i].key, 'start'));
+          children.add(_buildDragTarget2(context, i, 'start'));
           counter++;
         }
       }
-      tilesSetList[i].value.tiles.forEach((tile) {
+      for(int j = 0; j < state.sets[i].tiles.length; j++) {
         children.add(
             Draggable<Tile>(
-              data: tile,
-              child: _tile(tile),
-              feedback: _tile(tile),
+              data: state.sets[i].tiles[j],
+              child: _tile(state.sets[i].tiles[j]),
+              feedback: _tile(state.sets[i].tiles[j]),
               childWhenDragging: Container(),
-              onDragCompleted: () {
-                BlocProvider.of<GameActionBoardCubit>(context)
-                    .removeTile(tilesSetList[i].key, tile);
+              onDragStarted: () {
+                BlocProvider.of<GameActionBoardCubit>(context).draggable = [i, j];
               },
             )
         );
         counter++;
-      });
+      }
       if (counter % 13 != 0) {
-        if (i + 1 < tilesSetList.length &&
-            tilesSetList[i].value.position +
-                tilesSetList[i].value.tiles.length + 1
-                == tilesSetList[i + 1].value.position && counter % 13 != 12) {
-          children.add(_buildDragTarget3(
-              context, tilesSetList[i].key, tilesSetList[i + 1].key));
+        if (i + 1 < state.sets.length &&
+            state.sets[i].position + state.sets[i].tiles.length + 1
+                == state.sets[i + 1].position && counter % 13 != 12) {
+          children.add(_buildDragTarget3(context, i));
         } else {
-          children.add(_buildDragTarget2(context, tilesSetList[i].key, 'end'));
+          children.add(_buildDragTarget2(context, i, 'end'));
         }
         counter++;
       }
     }
     while(counter < 140) {
-      children.add(_buildDragTarget(context, counter));
+      children.add(_buildDragTarget(context, counter, state.sets.length - 1));
       counter++;
     }
     return GridView.count(
@@ -247,7 +238,7 @@ class GameActionScreen extends StatelessWidget {
     );
   }
 
-  _buildDragTarget(BuildContext context, int counter) {
+  _buildDragTarget(BuildContext context, int counter, int previousSetIndex) {
     bool flag = false;
     return DragTarget<Tile>(
       builder: (BuildContext context, List<dynamic> accepted, List<dynamic> rejected) {
@@ -266,13 +257,12 @@ class GameActionScreen extends StatelessWidget {
         flag = false;
       },
       onAccept: (Tile tile) {
-        BlocProvider.of<GameActionBoardCubit>(context)
-            .addNewSet(counter, tile);
+        BlocProvider.of<GameActionBoardCubit>(context).addNewSet(counter, previousSetIndex, tile);
       },
     );
   }
 
-  _buildDragTarget2(BuildContext context, String key, String direction) {
+  _buildDragTarget2(BuildContext context, int index, String direction) {
     bool flag = false;
     return DragTarget<Tile>(
       builder: (BuildContext context, List<dynamic> accepted, List<dynamic> rejected) {
@@ -291,12 +281,12 @@ class GameActionScreen extends StatelessWidget {
         flag = false;
       },
       onAccept: (Tile tile) {
-        BlocProvider.of<GameActionBoardCubit>(context).addToExistingSet(key, tile, direction);
+        BlocProvider.of<GameActionBoardCubit>(context).addToExistingSet(index, tile, direction);
       },
     );
   }
 
-  _buildDragTarget3(BuildContext context, String key1, String key2) {
+  _buildDragTarget3(BuildContext context, int index) {
     bool flag = false;
     return DragTarget<Tile>(
       builder: (BuildContext context, List<dynamic> accepted, List<dynamic> rejected) {
@@ -315,7 +305,7 @@ class GameActionScreen extends StatelessWidget {
         flag = false;
       },
       onAccept: (Tile tile) {
-        BlocProvider.of<GameActionBoardCubit>(context).combineTwoSet(key1, key2, tile);
+        BlocProvider.of<GameActionBoardCubit>(context).combineTwoSet(index, tile);
       },
     );
   }

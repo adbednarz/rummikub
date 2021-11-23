@@ -14,6 +14,7 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
   late String gameId;
   late String playerId;
   late StreamSubscription playerTitlesSubscription;
+  List<int> draggable = new List.filled(2, -1, growable: false);
 
   GameActionBoardCubit(this._firebaseRepository, Map<String, String> params) : super(GameActionBoardInitial()) {
     gameId = params['gameId']!;
@@ -23,45 +24,84 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
     });
   }
 
-  removeTile(String key, Tile tile) {
-    Map<String, TilesSet> sets = Map.from(state.sets);
-    sets[key]!.tiles.remove(tile);
-    if (sets[key]!.tiles.isEmpty) {
-      sets.remove(key);
-    }
-    emit(BoardChanged(sets));
-  }
-
-  addNewSet(int counter, Tile tile) {
-    Map<String, TilesSet> sets = Map.from(state.sets);
-    String time = DateTime.now().millisecondsSinceEpoch.toString();
-    sets[time] = TilesSet(counter, [tile]);
-    emit(BoardChanged(sets));
-  }
-
-  combineTwoSet(String key1, String key2, Tile tile) {
-    Map<String, TilesSet> sets = Map.from(state.sets);
-    String time = DateTime.now().millisecondsSinceEpoch.toString();
-    sets[key1]!.tiles.addAll([tile] + sets[key2]!.tiles);
-    sets[time] = sets[key1]!;
-    sets.remove(key1);
-    sets.remove(key2);
-    emit(BoardChanged(sets));
-  }
-
-  addToExistingSet(String key, Tile tile, String direction) {
-    if (tile == this.state.sets[key]!.tiles[0]) {
-      addNewSet(this.state.sets[key]!.position - 1, tile);
-    } else {
-      Map<String, TilesSet> sets = Map.from(state.sets);
-      if (direction == 'start') {
-        sets[key]!.tiles.insert(0, tile);
-        sets[key]!.position -= 1;
-      } else {
-        sets[key]!.tiles.add(tile);
+  removeDraggable(List<TilesSet> sets) {
+    if (draggable[1] > 0 && draggable[1] < sets[draggable[0]].tiles.length-1) {
+      sets.insert(
+          draggable[0] + 1,
+          new TilesSet(sets[draggable[0]].position + draggable[1]+1, sets[draggable[0]].tiles.sublist(draggable[1]+1))
+      );
+      sets[draggable[0]].tiles = sets[draggable[0]].tiles.sublist(0, draggable[1]);
+    } else if (draggable[0] != -1) {  // kość nie jest z planszy
+      if(draggable[1] == 0) {
+          sets[draggable[0]].position += 1;
       }
-      emit(BoardChanged(sets));
+      sets[draggable[0]].tiles.removeAt(draggable[1]);
+      if (sets[draggable[0]].tiles.isEmpty) {
+        sets.removeAt(draggable[0]);
+      }
     }
+    draggable = [-1, -1];
+  }
+
+  addNewSet(int counter, int previousSetIndex, Tile tile) {
+    List<TilesSet> sets = new List.from(state.sets);
+    sets.insert(
+        previousSetIndex + 1,
+        new TilesSet(counter, [tile])
+    );
+    if (previousSetIndex < draggable[0]) {
+      draggable[0] += 1;
+    }
+    removeDraggable(sets);
+    emit(BoardChanged(sets));
+  }
+
+  combineTwoSet(int index, Tile tile) {
+    List<TilesSet> sets = new List.from(state.sets);
+    // przesuwana kość nie znajduje się w łączących się zbiorach
+    if (draggable[0] != index && draggable[0] != index + 1) {
+      sets[index].tiles = sets[index].tiles + [tile] + sets[index+1].tiles;
+      sets.removeAt(index+1);
+      if (index + 1 < draggable[0]) {
+        draggable[0] -= 1;
+      }
+      removeDraggable(sets);
+    } else if (draggable[0] == index) {
+      if (sets[index].tiles.length == 1) {
+        sets[index+1].position -= 1;
+        sets[index+1].tiles = [tile] + sets[index+1].tiles;
+      } else {
+        sets[index+1].position = sets[index].position + draggable[1] + 1;
+        sets[index+1].tiles = sets[index].tiles.sublist(draggable[1]+1) + [tile] + sets[index+1].tiles;
+        sets[index].tiles = sets[index].tiles.sublist(0, draggable[1]);
+      }
+      draggable = [-1, -1];
+    } else {
+      if (sets[index+1].tiles.length == 1) {
+        sets[index].tiles = sets[index+1].tiles + [tile];
+      } else {
+        sets[index].tiles = sets[index].tiles + [tile] + sets[index+1].tiles.sublist(0, draggable[1]);
+        sets[index+1].position = sets[index+1].position + draggable[1] + 1;
+        sets[index+1].tiles = sets[index].tiles.sublist(draggable[1]+1);
+      }
+      draggable = [-1, -1];
+    }
+    emit(BoardChanged(sets));
+  }
+
+  addToExistingSet(int index, Tile tile, String direction) {
+    List<TilesSet> sets = new List.from(state.sets);
+    if (direction == 'start') {
+      sets[index].tiles.insert(0, tile);
+      sets[index].position -= 1;
+      if (index == draggable[0]) {
+        draggable[1] += 1;
+      }
+    } else {
+      sets[index].tiles.add(tile);
+    }
+    removeDraggable(sets);
+    emit(BoardChanged(sets));
   }
 
   @override
