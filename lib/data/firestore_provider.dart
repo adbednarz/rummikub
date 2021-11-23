@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:rummikub/shared/custom_exception.dart';
 import 'package:rummikub/shared/models/player.dart';
 import 'package:rummikub/shared/models/tile.dart';
+import 'package:rummikub/shared/models/tiles_set.dart';
 
 class FirestoreProvider {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -61,13 +62,17 @@ class FirestoreProvider {
         });
   }
 
-  /*Stream<List<List<Tile>>> getBoardSets(String gameId, String playerId) {
+  Stream<List<TilesSet>> getTilesSets(String gameId) {
     return _firestore.collection('games/' + gameId + '/board/').snapshots()
         .map((snapshots) {
-      List<DocumentChange> docChanges = snapshots.docChanges;
-      docChanges.removeWhere((element) => element.type == DocumentChangeType.removed);
-      return docChanges.map((snapshot) => Tile.fromDocument(snapshot.doc, true)).toList();
+      return snapshots.docs.map((doc) {
+        List<Tile> tiles = [];
+        doc.get('set').forEach((key, value) {
+          tiles.add(Tile(value['color'], value['number'], false));
+        });
+        return TilesSet(doc.get('position'), tiles);
+      }).toList();
     });
-  }*/
+  }
 
 }

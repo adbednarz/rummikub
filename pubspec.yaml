@@ -41,6 +41,7 @@ dependencies:
   equatable: ^2.0.3
   data_connection_checker: ^0.3.4
   flutter_animation_progress_bar: ^2.0.1
+  fluttertoast: ^8.0.8
 
   json_annotation: ^4.0.1
 

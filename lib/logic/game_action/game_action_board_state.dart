@@ -1,13 +1,9 @@
 part of 'game_action_board_cubit.dart';
 
-@immutable
-abstract class GameActionBoardState extends Equatable {
+abstract class GameActionBoardState {
   final List<TilesSet> sets;
 
   GameActionBoardState(this.sets);
-
-  List<Object> get props => [sets];
-
 }
 
 class GameActionBoardInitial extends GameActionBoardState {
@@ -15,5 +11,10 @@ class GameActionBoardInitial extends GameActionBoardState {
 }
 
 class BoardChanged extends GameActionBoardState {
-  BoardChanged(List<TilesSet> sets) : super(sets);
+  BoardChanged(List<TilesSet> sets) : super(sets) {
+    sets.forEach((element) {
+      print(element.tiles.length);
+    });
+    print('-------');
+  }
 }

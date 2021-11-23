@@ -7,8 +7,8 @@ import 'package:rummikub/logic/game_action/game_action_panel_cubit.dart';
 import 'package:rummikub/logic/game_action/game_action_rack_cubit.dart';
 import 'package:rummikub/shared/models/player.dart';
 import 'package:rummikub/shared/models/tile.dart';
-import 'package:rummikub/shared/models/tiles_set.dart';
 import 'package:rummikub/shared/strings.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class GameActionScreen extends StatelessWidget {
 
@@ -17,10 +17,25 @@ class GameActionScreen extends StatelessWidget {
     return Container(
       padding: EdgeInsets.fromLTRB(10, 30, 10, 10),
       color: Colors.teal,
-      child: BlocListener<GameActionPanelCubit, GameActionPanelState>(
-          listener: (context, state) {
-
-          },
+      child: MultiBlocListener(
+          listeners: [
+            BlocListener<GameActionPanelCubit, GameActionPanelState>(
+              listener: (context, state) {
+                if (state is PanelInfo) {
+                  Fluttertoast.showToast(
+                    msg: "GeeksforGeeks",
+                    backgroundColor: Colors.grey,
+                    // fontSize: 25
+                    // gravity: ToastGravity.TOP,
+                    // textColor: Colors.pink
+                  );
+                }
+              },
+            ),
+            BlocListener<GameActionBoardCubit, GameActionBoardState>(
+              listener: (context, state) {},
+            ),
+          ],
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -109,27 +124,38 @@ class GameActionScreen extends StatelessWidget {
     );
   }
 
+  /* plansza składa się z pól, które:
+    - zawierają kość,
+    - nie sąsiadują z żadnym zbiorem
+    - znajdują się bezpośrednio za lub przed zbiorem
+    - znajdują się pomiędzy dwoma zbiorami
+  */
   _board(BuildContext context, GameActionBoardState state) {
     final children = <Widget>[];
     int counter = 0;
+    // iterujemy po ułożonych zbiorach kości
     for(int i = 0; i < state.sets.length; i++) {
+      // plansze wypełniamy pustymi polami, aż do ostatniego pola przed zbiorem
       while(counter < state.sets[i].position - 1) {
-        children.add(_buildDragTarget(context, counter, i));
+        children.add(_buildDragTarget(context, i, counter: counter));
         counter++;
       }
-      if (counter % 13 != 0) {
-        if (counter % 13 == 12) {
-          children.add(_buildDragTarget(context, counter, i));
-          counter++;
-        } else if (i != 0 && state.sets[i-1].position +
-            state.sets[i-1].tiles.length + 1 != state.sets[i].position) {
-          children.add(_buildDragTarget2(context, i, 'start'));
-          counter++;
-        } else if (i == 0) {
-          children.add(_buildDragTarget2(context, i, 'start'));
+
+      // pomiędzy wierszami nie występuje przerwa między zbiorami (warunek 1)
+      // pola łączące zbiory zostało dodane w poprzedniej iteracji (warunek 2)
+      // ostatnie pola w wierszu nie może wskazywać na dołączenie do zbioru w następnym wierszu (warunek 3)
+      if (counter != state.sets[i].position) {
+        if (i == 0 || state.sets[i-1].position + state.sets[i-1].tiles.length + 1 != state.sets[i].position) {
+          if (counter % 13 != 12) {
+            children.add(_buildDragTarget(context, i, direction: 'start'));
+          } else {
+            children.add(_buildDragTarget(context, i, counter: counter));
+          }
           counter++;
         }
       }
+
+      // kolejno dodawanie pół z kośćmi ze zbioru
       for(int j = 0; j < state.sets[i].tiles.length; j++) {
         children.add(
             Draggable<Tile>(
@@ -138,27 +164,37 @@ class GameActionScreen extends StatelessWidget {
               feedback: _tile(state.sets[i].tiles[j]),
               childWhenDragging: Container(),
               onDragStarted: () {
-                BlocProvider.of<GameActionBoardCubit>(context).draggable = [i, j];
+                BlocProvider.of<GameActionBoardCubit>(context).draggable = [i, j]; // wskazanie jaki element jest obecnie przenoszony
               },
             )
         );
         counter++;
       }
-      if (counter % 13 != 0) {
-        if (i + 1 < state.sets.length &&
-            state.sets[i].position + state.sets[i].tiles.length + 1
-                == state.sets[i + 1].position && counter % 13 != 12) {
-          children.add(_buildDragTarget3(context, i));
+
+      // pole łączące zbiory w przypadku, gdy oddziela ich tylko jedno pole
+      // pole to nie może być pierwszym i ostatnim polem w wierszu (nie łączymy zbiory pomiędzy wierszami)
+      if (i + 1 < state.sets.length && counter % 13 != 12 &&
+          state.sets[i].position + state.sets[i].tiles.length + 1 == state.sets[i + 1].position) {
+        if (counter % 13 != 0) {
+          children.add(_buildDragTarget(context, i));
         } else {
-          children.add(_buildDragTarget2(context, i, 'end'));
+          children.add(_buildDragTarget(context, i+1, direction: 'start'));
         }
+        counter++;
+      } else if (counter % 13 != 0) {
+        // za zbiorem dajemy pole wskazujące na dołączenie do tego zbioru
+        // oprócz pola pierwszego, gdyż nie występuje łączenie pomiędzy wierszami
+        children.add(_buildDragTarget(context, i, direction: 'end'));
         counter++;
       }
     }
+
+    // pustymi polami wypełniamy resztę planszy
     while(counter < 140) {
-      children.add(_buildDragTarget(context, counter, state.sets.length - 1));
+      children.add(_buildDragTarget(context, state.sets.length, counter: counter));
       counter++;
     }
+
     return GridView.count(
       crossAxisCount: 13,
       mainAxisSpacing: 5,
@@ -238,7 +274,7 @@ class GameActionScreen extends StatelessWidget {
     );
   }
 
-  _buildDragTarget(BuildContext context, int counter, int previousSetIndex) {
+  _buildDragTarget(BuildContext context, int index, {int? counter, String? direction}) {
     bool flag = false;
     return DragTarget<Tile>(
       builder: (BuildContext context, List<dynamic> accepted, List<dynamic> rejected) {
@@ -257,55 +293,13 @@ class GameActionScreen extends StatelessWidget {
         flag = false;
       },
       onAccept: (Tile tile) {
-        BlocProvider.of<GameActionBoardCubit>(context).addNewSet(counter, previousSetIndex, tile);
-      },
-    );
-  }
-
-  _buildDragTarget2(BuildContext context, int index, String direction) {
-    bool flag = false;
-    return DragTarget<Tile>(
-      builder: (BuildContext context, List<dynamic> accepted, List<dynamic> rejected) {
-        return flag ?
-        Container(
-          decoration: BoxDecoration(
-              border: Border.all(color: Colors.white)
-          ),
-        ) : Container();
-      },
-      onWillAccept: (Tile? tile) {
-        flag = true;
-        return true;
-      },
-      onLeave: (Tile? tile) {
-        flag = false;
-      },
-      onAccept: (Tile tile) {
-        BlocProvider.of<GameActionBoardCubit>(context).addToExistingSet(index, tile, direction);
-      },
-    );
-  }
-
-  _buildDragTarget3(BuildContext context, int index) {
-    bool flag = false;
-    return DragTarget<Tile>(
-      builder: (BuildContext context, List<dynamic> accepted, List<dynamic> rejected) {
-        return flag ?
-        Container(
-          decoration: BoxDecoration(
-              border: Border.all(color: Colors.white)
-          ),
-        ) : Container();
-      },
-      onWillAccept: (Tile? tile) {
-        flag = true;
-        return true;
-      },
-      onLeave: (Tile? tile) {
-        flag = false;
-      },
-      onAccept: (Tile tile) {
-        BlocProvider.of<GameActionBoardCubit>(context).combineTwoSet(index, tile);
+        if (counter != null) {
+          BlocProvider.of<GameActionBoardCubit>(context).addNewSet(counter, index, tile);
+        } else if (direction != null) {
+          BlocProvider.of<GameActionBoardCubit>(context).addToExistingSet(index, tile, direction);
+        } else {
+          BlocProvider.of<GameActionBoardCubit>(context).combineTwoSet(index, tile);
+        }
       },
     );
   }

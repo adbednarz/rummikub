@@ -11,12 +11,15 @@ part 'game_action_panel_state.dart';
 
 class GameActionPanelCubit extends Cubit<GameActionPanelState> {
   final Repository _firebaseRepository;
-  final gameId;
+  late final playerId;
+  late final gameId;
   bool initialMeld = false;
   late final StreamSubscription playersQueue;
   Timer? _timer;
 
-  GameActionPanelCubit(this._firebaseRepository, this.gameId) : super(GameActionPanelInitial()) {
+  GameActionPanelCubit(this._firebaseRepository, Map<String, String> params) : super(GameActionPanelInitial()) {
+    gameId = params['gameId']!;
+    playerId = params['playerId']!;
     playersQueue = _firebaseRepository.getPlayersQueue(gameId).listen((result) {
       this._changePanel(result);
     });
@@ -33,7 +36,6 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
       emit(CurrentPlayersQueue(players, 60));
       this._timer = Timer.periodic(new Duration(seconds: 1), (timer) {
         if (timer.tick > 60) {
-          emit(PanelInfo(state.players, 0, "Your tour is missed."));
           timer.cancel();
         } else {
           emit(CurrentPlayersQueue(state.players, timer.tick > 60 ? 0 : 60 - timer.tick));

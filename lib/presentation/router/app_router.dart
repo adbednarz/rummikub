@@ -57,7 +57,7 @@ class AppRouter {
             builder: (context) => MultiBlocProvider(
               providers: [
                 BlocProvider<GameActionPanelCubit>(
-                  create: (context) => GameActionPanelCubit(_firebaseRepository, (settings.arguments as Map<String, String>)['gameId']),
+                  create: (context) => GameActionPanelCubit(_firebaseRepository, settings.arguments as Map<String, String>),
                 ),
                 BlocProvider<GameActionBoardCubit>(
                   create: (context) => GameActionBoardCubit(_firebaseRepository, settings.arguments as Map<String, String>),

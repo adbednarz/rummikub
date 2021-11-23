@@ -5,6 +5,7 @@ import 'package:rummikub/data/functions_provider.dart';
 import 'package:rummikub/data/repository.dart';
 import 'package:rummikub/shared/models/player.dart';
 import 'package:rummikub/shared/models/tile.dart';
+import 'package:rummikub/shared/models/tiles_set.dart';
 
 class FirebaseRepository implements Repository {
   final AuthenticationProvider _authenticationProvider = AuthenticationProvider();
@@ -56,5 +57,10 @@ class FirebaseRepository implements Repository {
   @override
   Future<void> putTiles(String gameId, List<List<Tile>> tiles) async {
     await _functionsProvider.putTiles(gameId, tiles);
+  }
+
+  @override
+  Stream<List<TilesSet>> getTilesSets(String gameId) {
+    return _firestoreProvider.getTilesSets(gameId);
   }
 }
