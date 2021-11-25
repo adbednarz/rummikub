@@ -55,7 +55,12 @@ class FirebaseRepository implements Repository {
   }
 
   @override
-  Future<void> putTiles(String gameId, List<List<Tile>> tiles) async {
+  Stream<String> getCurrentTurnPlayerId(String gameId) {
+    return _firestoreProvider.getCurrentTurnPlayerId(gameId);
+  }
+
+  @override
+  Future<void> putTiles(String gameId, List<TilesSet> tiles) async {
     await _functionsProvider.putTiles(gameId, tiles);
   }
 

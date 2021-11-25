@@ -2,12 +2,13 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rummikub/shared/custom_exception.dart';
 import 'package:rummikub/shared/models/tile.dart';
+import 'package:rummikub/shared/models/tiles_set.dart';
 
 class FunctionsProvider {
   FirebaseFunctions _functions = FirebaseFunctions.instance;
 
   FunctionsProvider() {
-    String localhost = kIsWeb ? 'localhost' : '192.168.198.172';
+    String localhost = kIsWeb ? 'localhost' : '192.168.194.172';
     _functions.useFunctionsEmulator(localhost, 5001);
   }
 
@@ -21,7 +22,7 @@ class FunctionsProvider {
     }
   }
 
-  Future<void> putTiles(String gameId, List<List<Tile>> sets) async {
+  Future<void> putTiles(String gameId, List<TilesSet> sets) async {
     try {
       await _functions.httpsCallable('putTiles').call({
         "gameId": gameId,

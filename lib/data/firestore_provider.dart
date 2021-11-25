@@ -9,7 +9,7 @@ class FirestoreProvider {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   
   FirestoreProvider() {
-    String localhost = kIsWeb ? 'localhost' : '192.168.198.172';
+    String localhost = kIsWeb ? 'localhost' : '192.168.194.172';
     _firestore.useFirestoreEmulator(localhost, 8080);
   }
 
@@ -51,6 +51,13 @@ class FirestoreProvider {
         .map((snapshots) {
           return snapshots.docs.map((doc) => Player.fromDocument(doc)).toList();
         });
+  }
+
+  Stream<String> getCurrentTurnPlayerId(String gameId) {
+    return _firestore.collection('games').doc(gameId).snapshots()
+        .map((snapshots) {
+      return snapshots.get('currentTurn');
+    });
   }
 
   Stream<List<Tile>> getPlayerTiles(String gameId, String playerId) {

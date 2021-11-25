@@ -39,10 +39,7 @@ export const putTiles = functions.https.onCall(async (data, context) => {
   const gameId: string = data.gameId;
   const sets: Tile[][] = data.newBoard;
 
-  const playerQueue: FirebaseFirestore.QuerySnapshot =
-      await firestore.collection("games/" + gameId + "/playersQueue").get();
-  const result: [QueryDocumentSnapshot, QueryDocumentSnapshot] = GameLogic.checkTurn(playerQueue, playerId);
-
+  const result: [QueryDocumentSnapshot, QueryDocumentSnapshot] = await GameLogic.checkTurn(gameId, playerId);
   const currentPlayer: DocumentSnapshot = result[0];
   const nextPlayer: DocumentSnapshot = result[1];
   const currentPlayerRack: FirebaseFirestore.QuerySnapshot =
@@ -50,8 +47,7 @@ export const putTiles = functions.https.onCall(async (data, context) => {
 
   GameLogic.addNewTiles(gameId, currentPlayer, currentPlayerRack, sets);
 
-  await currentPlayer.ref.update({currentTurn: false});
-  await nextPlayer.ref.update({currentTurn: true});
+  await firestore.collection("games/").doc(gameId).update({currentTurn: nextPlayer.id});
 });
 
 

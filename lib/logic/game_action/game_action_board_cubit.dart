@@ -107,6 +107,11 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
     emit(BoardChanged(state.sets));
   }
 
+  bool wantToPutTiles() {
+    _firebaseRepository.putTiles(gameId, state.sets);
+    return true;
+  }
+
   @override
   Future<void> close() async {
     tilesSetsSubscription.cancel();

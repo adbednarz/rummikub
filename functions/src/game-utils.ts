@@ -17,11 +17,11 @@ export class GameUtils {
       playerId: string, playerName: string, size: number): string {
     const gameRef: FirebaseFirestore.DocumentReference = firestore.collection("games").doc();
 
-    transaction.set(gameRef, {available: size - 1, size: size});
+    transaction.set(gameRef, {available: size - 1, currentTurn: "", size: size});
 
     transaction.set(
         gameRef.collection("playersQueue").doc(playerId),
-        {currentTurn: false, initialMeld: false, name: playerName}
+        {initialMeld: false, name: playerName}
     );
 
     for (const color of ["black", "red", "orange", "blue"]) {
@@ -46,7 +46,7 @@ export class GameUtils {
       gameDoc: QueryDocumentSnapshot): [string, boolean] {
     transaction.set(
         gameDoc.ref.collection("playersQueue").doc(playerId),
-        {currentTurn: false, initialMeld: false, name: playerName}
+        {initialMeld: false, name: playerName}
     );
     const availablePlaces: number = gameDoc.get("available") - 1;
     transaction.update(gameDoc.ref, {available: availablePlaces});
@@ -78,7 +78,7 @@ export class GameUtils {
               counter++;
             }
           }
-          firestore.collection("games/" + gameId + "/playersQueue").doc(playersId[0]).update({currentTurn: true});
+          firestore.collection("games/").doc(gameId).update({currentTurn: playersId[0]});
         });
   }
 }

@@ -30,7 +30,7 @@ class PanelInfo extends GameActionPanelState {
 class GameCancelled extends GameActionPanelState {
   final String message = "The game left the last player.";
 
-  GameCancelled() : super([], 0);
+  GameCancelled(List<Player> players, int procent) : super(players, procent);
 
   @override
   List<Object> get props => [players, procent, message];

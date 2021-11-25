@@ -23,11 +23,8 @@ class GameActionScreen extends StatelessWidget {
               listener: (context, state) {
                 if (state is PanelInfo) {
                   Fluttertoast.showToast(
-                    msg: "GeeksforGeeks",
+                    msg: state.message,
                     backgroundColor: Colors.grey,
-                    // fontSize: 25
-                    // gravity: ToastGravity.TOP,
-                    // textColor: Colors.pink
                   );
                 }
               },
@@ -89,7 +86,9 @@ class GameActionScreen extends StatelessWidget {
                       maxValue: 60,
                       progressColor: Colors.green,
                       backgroundColor: Colors.white70,
-                      currentValue: player.currentTurn ? state.procent : 0,
+                      currentValue:
+                        BlocProvider.of<GameActionPanelCubit>(context).currentTurn
+                            == player.playerId ? state.procent : 0,
                     ),
                     Container(
                       padding: EdgeInsets.all(2),
@@ -112,7 +111,14 @@ class GameActionScreen extends StatelessWidget {
           flex: 1,
           child: FittedBox(
             child: OutlinedButton(
-              onPressed: () {  },
+              onPressed: () {
+                if (BlocProvider.of<GameActionPanelCubit>(context).currentTurn
+                    == BlocProvider.of<GameActionPanelCubit>(context).playerId) {
+                  if (BlocProvider.of<GameActionBoardCubit>(context).wantToPutTiles()) {
+                    BlocProvider.of<GameActionPanelCubit>(context).tilesWasPut();
+                  }
+                }
+              },
               child: Icon(
                 Icons.check_circle_outline,
                 color: Colors.red,

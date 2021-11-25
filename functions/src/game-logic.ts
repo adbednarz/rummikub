@@ -5,15 +5,17 @@ import {Tile} from "./model/tile";
 import _ = require("lodash");
 
 export class GameLogic {
-  static checkTurn(playerQueue: FirebaseFirestore.QuerySnapshot, playerId: string):
-      [QueryDocumentSnapshot, QueryDocumentSnapshot] {
-    const playersNumber: number = playerQueue.size;
+  static async checkTurn(gameId: string, playerId: string): Promise<[QueryDocumentSnapshot, QueryDocumentSnapshot]> {
+    const game: FirebaseFirestore.DocumentSnapshot = await firestore.collection("games/").doc(gameId).get();
+    const playersQueue: FirebaseFirestore.QuerySnapshot =
+        await firestore.collection("games/" + gameId + "/playersQueue").get();
+    const playersNumber: number = playersQueue.size;
     for (let i = 0; i < playersNumber; i++) {
-      const playerDoc: QueryDocumentSnapshot = playerQueue.docs[i];
-      if (playerDoc.get("currentTurn") === true) {
-        if (Date.now() - playerDoc.updateTime.toMillis() < 42000) {
+      const playerDoc: QueryDocumentSnapshot = playersQueue.docs[i];
+      if (playerDoc.id === game.get("currentTurn")) {
+        if (Date.now() - game.get("currentTurn").updateTime.toMillis() < 42000) {
           if (playerDoc.id === playerId) {
-            return [playerDoc, playerQueue.docs[(i+1) % playersNumber]];
+            return [playerDoc, playersQueue.docs[(i + 1) % playersNumber]];
           }
         }
       }

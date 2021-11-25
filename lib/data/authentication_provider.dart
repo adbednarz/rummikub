@@ -6,7 +6,7 @@ class AuthenticationProvider {
   final FirebaseAuth _firebaseAuth =  FirebaseAuth.instance;
 
   AuthenticationProvider() {
-    String localhost = kIsWeb ? 'localhost' : '192.168.198.172';
+    String localhost = kIsWeb ? 'localhost' : '192.168.194.172';
     _firebaseAuth.useAuthEmulator(localhost, 9090);
   }
 
