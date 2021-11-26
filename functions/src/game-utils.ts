@@ -78,7 +78,7 @@ export class GameUtils {
               counter++;
             }
           }
-          firestore.collection("games/").doc(gameId).update({currentTurn: playersId[0]});
+          firestore.collection("games/").doc(gameId).update({currentTurn: playersId[1]}); // zmienić na 0 później
         });
   }
 }

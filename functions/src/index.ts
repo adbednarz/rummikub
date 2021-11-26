@@ -37,17 +37,17 @@ export const searchGame = functions.https.onCall((data, context) => {
 export const putTiles = functions.https.onCall(async (data, context) => {
   const playerId: string = GameUtils.checkAuthentication(context.auth?.uid);
   const gameId: string = data.gameId;
-  const sets: Tile[][] = data.newBoard;
+  const sets: Record<string, Tile[]> = data.newBoard;
 
   const result: [QueryDocumentSnapshot, QueryDocumentSnapshot] = await GameLogic.checkTurn(gameId, playerId);
   const currentPlayer: DocumentSnapshot = result[0];
-  const nextPlayer: DocumentSnapshot = result[1];
+  // const nextPlayer: DocumentSnapshot = result[1];
   const currentPlayerRack: FirebaseFirestore.QuerySnapshot =
-      await firestore.collection("games/" + gameId + "/playersRacks/" + currentPlayer.id + "/rack").get();
+       await firestore.collection("games/" + gameId + "/playersRacks/" + currentPlayer.id + "/rack").get();
 
   GameLogic.addNewTiles(gameId, currentPlayer, currentPlayerRack, sets);
 
-  await firestore.collection("games/").doc(gameId).update({currentTurn: nextPlayer.id});
+  // await firestore.collection("games/").doc(gameId).update({currentTurn: nextPlayer.id});
 });
 
 

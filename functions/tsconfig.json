@@ -6,7 +6,10 @@
     "outDir": "lib",
     "sourceMap": true,
     "strict": true,
-    "target": "es2017"
+    "target": "es2017",
+    "lib": [
+      "es5", "es6", "dom", "dom.iterable"
+    ]
   },
   "compileOnSave": true,
   "include": [

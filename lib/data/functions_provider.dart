@@ -26,8 +26,10 @@ class FunctionsProvider {
     try {
       await _functions.httpsCallable('putTiles').call({
         "gameId": gameId,
-        "newBoard": sets.map((set) =>
-            (set.map((tile) => tile.asMap())).toList()).toList()
+        "newBoard": Map.fromIterable(sets,
+          key: (v) => "0" * (3 - v.position.toString().length) + v.position.toString(),
+          value: (v) => v.tiles.map((tile) => tile.asMap()).toList()
+        )
       });
     } catch(error) {
       print(error);

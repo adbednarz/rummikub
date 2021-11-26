@@ -55,6 +55,7 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
   }
 
   tilesWasPut() {
+    // this.currentTurn = "";
     this._timer?.cancel();
     emit(CurrentPlayersQueue(state.players, 0));
   }

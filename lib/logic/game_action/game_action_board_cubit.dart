@@ -18,6 +18,10 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
     gameId = params['gameId']!;
     playerId = params['playerId']!;
     tilesSetsSubscription = _firebaseRepository.getTilesSets(gameId).listen((result) {
+      result.forEach((element) {
+        print(element.position);
+        print(element.tiles);
+      });
       emit(BoardChanged(result));
     });
   }

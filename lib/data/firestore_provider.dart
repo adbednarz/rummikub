@@ -70,16 +70,21 @@ class FirestoreProvider {
   }
 
   Stream<List<TilesSet>> getTilesSets(String gameId) {
-    return _firestore.collection('games/' + gameId + '/board/').snapshots()
+    return _firestore.collection('games/' + gameId + '/state').doc('sets').snapshots()
         .map((snapshots) {
-      return snapshots.docs.map((doc) {
-        List<Tile> tiles = [];
-        doc.get('set').forEach((key, value) {
-          tiles.add(Tile(value['color'], value['number'], false));
+          List<TilesSet> sets = [];
+          if (snapshots.data() != null) {
+            snapshots.data()!.forEach((key, value) {
+              List<Tile> tiles = [];
+              value.forEach((tile) {
+                tiles.add(Tile(tile['color'], tile['number'], false));
+              });
+              sets.add(TilesSet(int.parse(key), tiles));
+            });
+          }
+          //sets.sort((a, b) => a.position.compareTo(b.position));
+          return sets;
         });
-        return TilesSet(doc.get('position'), tiles);
-      }).toList();
-    });
   }
 
 }
