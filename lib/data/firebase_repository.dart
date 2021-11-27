@@ -55,8 +55,8 @@ class FirebaseRepository implements Repository {
   }
 
   @override
-  Stream<String> getCurrentTurnPlayerId(String gameId) {
-    return _firestoreProvider.getCurrentTurnPlayerId(gameId);
+  Stream<Map<String, dynamic>> getGameStatus(String gameId) {
+    return _firestoreProvider.getGameStatus(gameId);
   }
 
   @override
@@ -68,4 +68,5 @@ class FirebaseRepository implements Repository {
   Stream<List<TilesSet>> getTilesSets(String gameId) {
     return _firestoreProvider.getTilesSets(gameId);
   }
+
 }

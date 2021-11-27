@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart';
 import 'package:rummikub/data/repository.dart';
@@ -14,7 +13,6 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
   late final playerId;
   late final gameId;
   late String currentTurn;
-  bool initialMeld = false;
   late final StreamSubscription playersQueue;
   late final StreamSubscription currentTurnPlayerId;
   Timer? _timer;
@@ -25,9 +23,17 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
     playersQueue = _firebaseRepository.getPlayersQueue(gameId).listen((result) {
       this._changePanel(result);
     });
-    currentTurnPlayerId = _firebaseRepository.getCurrentTurnPlayerId(gameId).listen((result) {
-      this.currentTurn = result;
-      this._changeTurn();
+    currentTurnPlayerId = _firebaseRepository.getGameStatus(gameId).listen((result) {
+      if (result['winner'] != null) {
+        List<String> winners = result['winner'];
+        List<Player> players = state.players;
+        players.removeWhere((player) => winners.contains(player.playerId));
+        emit(GameFinished(state.players, state.procent, players.map((player) => player.name).toList()));
+      } else {
+        print(result['currentTurn']);
+        this.currentTurn = result['currentTurn'];
+        this._changeTurn();
+      }
     });
   }
 
@@ -36,7 +42,7 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
       emit(GameCancelled(players, state.procent));
     } else if (state.players.length > players.length) {
       Player removedPlayer = state.players.where((e) => !players.contains(e)).first;
-      emit(PanelInfo(players, state.procent, "Player " + removedPlayer.name + " left the game."));
+      emit(PanelInfo(players, state.procent, 'Player ' + removedPlayer.name + ' left the game.'));
     } else if (players.length != state.players.length) {
       emit(CurrentPlayersQueue(players, state.procent));
     }
@@ -48,6 +54,9 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
     this._timer = Timer.periodic(new Duration(seconds: 1), (timer) {
       if (timer.tick > 60) {
         timer.cancel();
+        if(isMyTurn()) {
+          emit(PanelInfo(state.players, 0, 'Your turn is missed.'));
+        }
       } else {
         emit(CurrentPlayersQueue(state.players, timer.tick > 60 ? 0 : 60 - timer.tick));
       }
@@ -58,6 +67,10 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
     // this.currentTurn = "";
     this._timer?.cancel();
     emit(CurrentPlayersQueue(state.players, 0));
+  }
+
+  isMyTurn() {
+    return playerId == currentTurn;
   }
 
   @override

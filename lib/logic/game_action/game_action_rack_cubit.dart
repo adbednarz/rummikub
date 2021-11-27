@@ -13,6 +13,7 @@ class GameActionRackCubit extends Cubit<GameActionRackState> {
   late String gameId;
   late String playerId;
   late StreamSubscription playerTitlesSubscription;
+  late List<Tile?> rackBeforeModification;
 
   GameActionRackCubit(this._firebaseRepository, Map<String, String> params) : super(GameActionRackInitial()) {
     gameId = params['gameId']!;
@@ -36,6 +37,7 @@ class GameActionRackCubit extends Cubit<GameActionRackState> {
       if (rack.length % 2 != 0) {
         rack.add(null);
       }
+      rackBeforeModification = rack;
       emit(RackChanged(rack));
     });
   }
@@ -44,6 +46,10 @@ class GameActionRackCubit extends Cubit<GameActionRackState> {
     List<Tile?> rack = List.from(state.rack);
     rack[index] = tile;
     emit(RackChanged(rack));
+  }
+
+  timePassed() {
+    emit(RackChanged(this.rackBeforeModification));
   }
 
   @override

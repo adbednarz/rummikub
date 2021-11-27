@@ -27,7 +27,7 @@ class FunctionsProvider {
       await _functions.httpsCallable('putTiles').call({
         "gameId": gameId,
         "newBoard": Map.fromIterable(sets,
-          key: (v) => "0" * (3 - v.position.toString().length) + v.position.toString(),
+          key: (v) => v.position.toString(),
           value: (v) => v.tiles.map((tile) => tile.asMap()).toList()
         )
       });

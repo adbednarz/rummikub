@@ -35,3 +35,22 @@ class GameCancelled extends GameActionPanelState {
   @override
   List<Object> get props => [players, procent, message];
 }
+
+class GameFinished extends GameActionPanelState {
+  late final String message;
+
+  GameFinished(List<Player> players, int procent, List<String> winners) : super(players, procent) {
+    if (winners.length == 1) {
+      message = "The winner is " + winners[0];
+    } else {
+      String tmp = "The winners are ";
+      for (var playerName in winners) {
+        tmp += playerName;
+      }
+      message = tmp;
+    }
+  }
+
+  @override
+  List<Object> get props => [players, procent, message];
+}

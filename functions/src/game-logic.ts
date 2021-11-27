@@ -6,10 +6,10 @@ import {Tile} from "./model/tile";
 import _ = require("lodash");
 
 export class GameLogic {
-  static async checkTurn(gameId: string, playerId: string): Promise<[QueryDocumentSnapshot, QueryDocumentSnapshot]> {
-    const game: FirebaseFirestore.DocumentSnapshot = await firestore.collection("games/").doc(gameId).get();
-    const playersQueue: FirebaseFirestore.QuerySnapshot =
-        await firestore.collection("games/" + gameId + "/playersQueue").get();
+  static async checkTurn(
+      game: FirebaseFirestore.DocumentSnapshot,
+      playersQueue: FirebaseFirestore.QuerySnapshot,
+      playerId: string): Promise<[QueryDocumentSnapshot, QueryDocumentSnapshot]> {
     const playersNumber: number = playersQueue.size;
     for (let i = 0; i < playersNumber; i++) {
       const playerDoc: QueryDocumentSnapshot = playersQueue.docs[i];
@@ -25,13 +25,18 @@ export class GameLogic {
     throw new functions.https.HttpsError("failed-precondition", "It's not your turn.");
   }
 
-  static addNewTiles(gameId: string, playerDoc: DocumentSnapshot,
-      playerRack: FirebaseFirestore.QuerySnapshot, playerSets: Record<string, any>): void {
-    firestore.collection("games/" + gameId + "/state").doc("sets").get()
+  static async addNewTiles(gameId: string, playerDoc: DocumentSnapshot,
+      playerRack: FirebaseFirestore.QuerySnapshot, playerSets: Record<string, any>): Promise<string> {
+    return await firestore.collection("games/" + gameId + "/state").doc("sets").get()
         .then((snapshot) => {
           const boardSets = snapshot.data();
           let boardTiles: Tile[] = [];
           let playerTiles: Tile[] = [];
+
+          // jeśli gracz nie zmienia tablicy bierze kość z banku
+          if (_.isEqual(boardSets, playerSets) || _.isEmpty(playerSets)) {
+            return "empty";
+          }
 
           // usuwamy niezmienione zbiory kości, różniące się zbiory rozdzielamy na tablicę kości
           for (const key in boardSets) {
@@ -46,10 +51,23 @@ export class GameLogic {
             }
           }
 
+          // pierwszy ruch gracza składa się tylko z własnych kostek i ich suma musi przekraczać 30
           // zbiory gracza, które się różniły również rozdzielamy na tablicę kości
-          for (const key in playerSets) {
-            this.validateSet(playerSets[key]);
-            playerTiles = playerTiles.concat(playerSets[key]);
+          if (playerDoc.get("initialMeld") == false) {
+            let total = 0;
+            for (const key in playerSets) {
+              this.validateSet(playerSets[key]);
+              total += playerTiles.reduce(this.countTilesValue, 0);
+              playerTiles = playerTiles.concat(playerSets[key]);
+            }
+            if (total < 30) {
+              throw new functions.https.HttpsError("failed-precondition", "You are cheating!");
+            }
+          } else {
+            for (const key in playerSets) {
+              this.validateSet(playerSets[key]);
+              playerTiles = playerTiles.concat(playerSets[key]);
+            }
           }
 
           // usuwamy część wspólną zbiorów gracza i planszy
@@ -62,8 +80,8 @@ export class GameLogic {
           }));
 
           const playerTilesRack: FirebaseFirestore.DocumentReference[] = [];
-          playerRack.forEach((tile) => {
-            const currentTile: Tile = <Tile> tile.data();
+          playerRack.docs.forEach((tile) => {
+            const currentTile: Tile = <Tile>tile.data();
             difference.some((x, index) => {
               if (_.isEqual(x, currentTile)) {
                 playerTilesRack.push(tile.ref);
@@ -86,18 +104,70 @@ export class GameLogic {
               firestore.collection("games/" + gameId + "/state").doc("sets").set(playerSets);
             }
             playerTilesRack.forEach((docRef) => docRef.delete());
+            if (playerDoc.get("initialMeld") == false) {
+              playerDoc.ref.update({"initialMeld": true});
+            }
+            if (playerTilesRack.length === playerRack.docs.length) {
+              return "winner";
+            }
+          }
+          return "added";
+        });
+  }
+
+  static async getTileFromPool(gameId: string, playerId: string): Promise<boolean> {
+    return await firestore.collection("games/" + gameId + "/pool").limit(1).get()
+        .then((snapshot) => {
+          if (snapshot.docs[0]) {
+            const tileDocument = snapshot.docs[0];
+            firestore.collection("games/" + gameId + "/playersRacks/" + playerId + "/rack").doc()
+                .set({color: tileDocument.data()["color"], number: tileDocument.data()["number"]});
+            tileDocument.ref.delete();
+            return true;
+          } else {
+            return false;
           }
         });
   }
 
-  static validateSet(set: Tile[]): void {
-    functions.logger.log(set);
-    if (set.length < 3 && !this.isRun(set) && !this.isGroup(set)) {
+  static async pointTheWinner(
+      gameId: FirebaseFirestore.DocumentSnapshot,
+      playersQueue: FirebaseFirestore.QuerySnapshot): Promise<void> {
+    let winner: string[] = [];
+    let number = 2548; // suma wszystkich kostek
+    const playersNumber: number = playersQueue.size;
+    for (let i = 0; i < playersNumber; i++) {
+      const tiles = await playersQueue.docs[i].ref.collection("rack").get();
+      const sum = tiles.docs.reduce((acc, x) => acc + x.get("number").number, 0);
+      if (number > sum) {
+        number = sum;
+        winner = [playersQueue.docs[i].id];
+      } else if (number === sum) {
+        winner.push(playersQueue.docs[i].id);
+      }
+    }
+  }
+
+  private static countTilesValue(total: number, tile: Tile, index: number, tiles: Tile[]) {
+    if (tile.number === 0) {
+      let jokerNumber: number;
+      if (this.isRun(tiles)) {
+        jokerNumber = index > 0 ? tiles[index-1].number + 1 : tiles[index+1].number - 1;
+      } else {
+        jokerNumber = index > 0 ? tiles[index-1].number : tiles[index+1].number;
+      }
+      return total + jokerNumber;
+    }
+    return total + tile.number;
+  }
+
+  private static validateSet(set: Tile[]): void {
+    if (set.length < 3 || (!this.isRun(set) && !this.isGroup(set))) {
       throw new functions.https.HttpsError("failed-precondition", "Board is not valid!");
     }
   }
 
-  static isRun(set: Tile[]): boolean {
+  private static isRun(set: Tile[]): boolean {
     for (let i = 0; i < set.length - 1; i++) {
       if (set[i].number === 0 || set[i+1].number === 0) {
         continue;
@@ -109,7 +179,7 @@ export class GameLogic {
     return true;
   }
 
-  static isGroup(set: Tile[]): boolean {
+  private static isGroup(set: Tile[]): boolean {
     set.filter((e) => e.number != 0);
     const uniqueColors = new Set(set.map((tile) => tile.color));
     const uniqueNumbers = new Set(set.map((tile) => tile.number));

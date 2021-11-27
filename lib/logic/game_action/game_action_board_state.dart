@@ -18,3 +18,8 @@ class BoardChanged extends GameActionBoardState {
     print('-------');
   }
 }
+
+class BoardInfo extends GameActionBoardState {
+  final String message;
+  BoardInfo(List<TilesSet> sets, this.message) : super(sets);
+}

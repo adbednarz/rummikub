@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animation_progress_bar/flutter_animation_progress_bar.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/foundation.dart';
 import 'package:rummikub/logic/game_action/game_action_board_cubit.dart';
 import 'package:rummikub/logic/game_action/game_action_panel_cubit.dart';
 import 'package:rummikub/logic/game_action/game_action_rack_cubit.dart';
@@ -26,11 +27,28 @@ class GameActionScreen extends StatelessWidget {
                     msg: state.message,
                     backgroundColor: Colors.grey,
                   );
+                  if (state.message.startsWith("Your")) {
+                    if (BlocProvider.of<GameActionBoardCubit>(context).timePassed()) {
+                      BlocProvider.of<GameActionRackCubit>(context).timePassed();
+                    }
+                  }
+                } else if (state is GameFinished) {
+                  Fluttertoast.showToast(
+                    msg: state.message,
+                    backgroundColor: Colors.grey,
+                  );
                 }
               },
             ),
             BlocListener<GameActionBoardCubit, GameActionBoardState>(
-              listener: (context, state) {},
+              listener: (context, state) {
+                if (state is BoardInfo) {
+                  Fluttertoast.showToast(
+                    msg: state.message,
+                    backgroundColor: Colors.grey,
+                  );
+                }
+              },
             ),
           ],
           child: Column(
@@ -112,8 +130,7 @@ class GameActionScreen extends StatelessWidget {
           child: FittedBox(
             child: OutlinedButton(
               onPressed: () {
-                if (BlocProvider.of<GameActionPanelCubit>(context).currentTurn
-                    == BlocProvider.of<GameActionPanelCubit>(context).playerId) {
+                if (BlocProvider.of<GameActionPanelCubit>(context).isMyTurn()) {
                   if (BlocProvider.of<GameActionBoardCubit>(context).wantToPutTiles()) {
                     BlocProvider.of<GameActionPanelCubit>(context).tilesWasPut();
                   }
@@ -201,7 +218,14 @@ class GameActionScreen extends StatelessWidget {
       counter++;
     }
 
+    double padding = 0;
+    if (kIsWeb) {
+      padding = MediaQuery.of(context).size.width * 2 / 3;
+    } else if (MediaQuery.of(context).size.width > MediaQuery.of(context).size.height){
+      padding = MediaQuery.of(context).size.width * 2 / 3;
+    }
     return GridView.count(
+      padding: EdgeInsets.symmetric(horizontal: padding),
       crossAxisCount: 13,
       mainAxisSpacing: 5,
       physics: NeverScrollableScrollPhysics(),
@@ -238,7 +262,7 @@ class GameActionScreen extends StatelessWidget {
               ) : Container();
             },
             onWillAccept: (Tile? tile) {
-              if (tile!.isMine) {
+              if (tile!.isMine && BlocProvider.of<GameActionPanelCubit>(context).isMyTurn()) {
                 flag = true;
                 return true;
               } else {
@@ -249,11 +273,13 @@ class GameActionScreen extends StatelessWidget {
               flag = false;
             },
             onAccept: (Tile tile) {
+              BlocProvider.of<GameActionBoardCubit>(context).removeDraggable();
               BlocProvider.of<GameActionRackCubit>(context).changeRack(index, tile);
             },
           );
         }),
     );
+
   }
 
   _tile(Tile tile) {
@@ -292,8 +318,12 @@ class GameActionScreen extends StatelessWidget {
         ) : Container();
       },
       onWillAccept: (Tile? tile) {
-        flag = true;
-        return true;
+        if (BlocProvider.of<GameActionPanelCubit>(context).isMyTurn()) {
+          flag = true;
+          return true;
+        } else {
+          return false;
+        }
       },
       onLeave: (Tile? tile) {
         flag = false;

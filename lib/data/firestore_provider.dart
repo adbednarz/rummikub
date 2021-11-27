@@ -53,10 +53,13 @@ class FirestoreProvider {
         });
   }
 
-  Stream<String> getCurrentTurnPlayerId(String gameId) {
+  Stream<Map<String, dynamic>> getGameStatus(String gameId) {
     return _firestore.collection('games').doc(gameId).snapshots()
         .map((snapshots) {
-      return snapshots.get('currentTurn');
+          if (snapshots.data()!.containsKey("winner")) {
+            return {"winner": snapshots.get("winner")};
+          }
+          return {"currentTurn": snapshots.get('currentTurn')};
     });
   }
 
@@ -82,7 +85,7 @@ class FirestoreProvider {
               sets.add(TilesSet(int.parse(key), tiles));
             });
           }
-          //sets.sort((a, b) => a.position.compareTo(b.position));
+          sets.sort((a, b) => a.position.compareTo(b.position));
           return sets;
         });
   }
