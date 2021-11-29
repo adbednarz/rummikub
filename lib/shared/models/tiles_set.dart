@@ -5,4 +5,8 @@ class TilesSet {
   List<Tile> tiles;
 
   TilesSet(this.position, this.tiles);
+
+  TilesSet copy() {
+    return TilesSet(position, List.from(tiles));
+  }
 }

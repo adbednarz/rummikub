@@ -56,16 +56,17 @@ export class GameLogic {
           if (playerDoc.get("initialMeld") == false) {
             let total = 0;
             for (const key in playerSets) {
-              this.validateSet(playerSets[key]);
-              total += playerTiles.reduce(this.countTilesValue, 0);
+              total += this.validateSetInitialMeld(playerSets[key]);
               playerTiles = playerTiles.concat(playerSets[key]);
             }
             if (total < 30) {
-              throw new functions.https.HttpsError("failed-precondition", "You are cheating!");
+              return "empty";
             }
           } else {
             for (const key in playerSets) {
-              this.validateSet(playerSets[key]);
+              if (!this.validateSet(playerSets[key])) {
+                return "empty";
+              }
               playerTiles = playerTiles.concat(playerSets[key]);
             }
           }
@@ -96,7 +97,7 @@ export class GameLogic {
           // warunek pierwszy - gracz nie posiadał takiej kości
           // warunek drugi - gracz nie przekazał wszystkich kości z planszy
           if (difference[0] !== undefined && boardTiles[0] !== undefined) {
-            throw new functions.https.HttpsError("failed-precondition", "You are cheating!");
+            return "empty";
           } else {
             if (snapshot.data()) {
               firestore.collection("games/" + gameId + "/state").doc("sets").update(playerSets);
@@ -131,14 +132,14 @@ export class GameLogic {
   }
 
   static async pointTheWinner(
-      gameId: FirebaseFirestore.DocumentSnapshot,
+      game: FirebaseFirestore.DocumentSnapshot,
       playersQueue: FirebaseFirestore.QuerySnapshot): Promise<void> {
     let winner: string[] = [];
     let number = 2548; // suma wszystkich kostek
     const playersNumber: number = playersQueue.size;
     for (let i = 0; i < playersNumber; i++) {
-      const tiles = await playersQueue.docs[i].ref.collection("rack").get();
-      const sum = tiles.docs.reduce((acc, x) => acc + x.get("number").number, 0);
+      const tiles = await game.ref.collection("playersRacks/" + playersQueue.docs[i].id + "/rack").get();
+      const sum = tiles.docs.reduce((acc, x) => acc + x.get("number"), 0);
       if (number > sum) {
         number = sum;
         winner = [playersQueue.docs[i].id];
@@ -146,25 +147,35 @@ export class GameLogic {
         winner.push(playersQueue.docs[i].id);
       }
     }
+    game.ref.update({"winner": winner});
   }
 
-  private static countTilesValue(total: number, tile: Tile, index: number, tiles: Tile[]) {
-    if (tile.number === 0) {
-      let jokerNumber: number;
-      if (this.isRun(tiles)) {
-        jokerNumber = index > 0 ? tiles[index-1].number + 1 : tiles[index+1].number - 1;
-      } else {
-        jokerNumber = index > 0 ? tiles[index-1].number : tiles[index+1].number;
+  private static validateSetInitialMeld(set: Tile[]): number {
+    let value = -1;
+    if (this.isRun(set)) {
+      value = 1;
+    } else if (this.isGroup(set)) {
+      value = 0;
+    }
+    if (set.length < 3 || value === -1) {
+      return 0;
+    }
+    let total = 0;
+    for (let i = 0; i < set.length; i++) {
+      if (set[i].number === 0) {
+        total += i > 0 ? set[i - 1].number + value : set[i + 1].number - value;
       }
-      return total + jokerNumber;
+      total += set[i].number;
     }
-    return total + tile.number;
+    return total;
   }
 
-  private static validateSet(set: Tile[]): void {
+
+  private static validateSet(set: Tile[]): boolean {
     if (set.length < 3 || (!this.isRun(set) && !this.isGroup(set))) {
-      throw new functions.https.HttpsError("failed-precondition", "Board is not valid!");
+      return false;
     }
+    return true;
   }
 
   private static isRun(set: Tile[]): boolean {
@@ -180,7 +191,7 @@ export class GameLogic {
   }
 
   private static isGroup(set: Tile[]): boolean {
-    set.filter((e) => e.number != 0);
+    set = set.filter((e) => e.number != 0);
     const uniqueColors = new Set(set.map((tile) => tile.color));
     const uniqueNumbers = new Set(set.map((tile) => tile.number));
     return uniqueColors.size === set.length && uniqueNumbers.size === 1;

@@ -37,7 +37,7 @@ class GameActionRackCubit extends Cubit<GameActionRackState> {
       if (rack.length % 2 != 0) {
         rack.add(null);
       }
-      rackBeforeModification = rack;
+      rackBeforeModification = List.from(rack);
       emit(RackChanged(rack));
     });
   }
@@ -48,8 +48,12 @@ class GameActionRackCubit extends Cubit<GameActionRackState> {
     emit(RackChanged(rack));
   }
 
-  timePassed() {
-    emit(RackChanged(this.rackBeforeModification));
+  confirmRackModifications() {
+    rackBeforeModification = List.from(state.rack);
+  }
+
+  restorePreviousRack() {
+    emit(RackChanged(List.from(rackBeforeModification)));
   }
 
   @override

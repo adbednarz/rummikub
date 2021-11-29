@@ -12,9 +12,9 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
   final Repository _firebaseRepository;
   late final playerId;
   late final gameId;
-  late String currentTurn;
   late final StreamSubscription playersQueue;
-  late final StreamSubscription currentTurnPlayerId;
+  late final StreamSubscription gameStatus;
+  String? currentTurn;
   Timer? _timer;
 
   GameActionPanelCubit(this._firebaseRepository, Map<String, String> params) : super(GameActionPanelInitial()) {
@@ -23,14 +23,14 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
     playersQueue = _firebaseRepository.getPlayersQueue(gameId).listen((result) {
       this._changePanel(result);
     });
-    currentTurnPlayerId = _firebaseRepository.getGameStatus(gameId).listen((result) {
+    gameStatus = _firebaseRepository.getGameStatus(gameId).listen((result) {
       if (result['winner'] != null) {
-        List<String> winners = result['winner'];
-        List<Player> players = state.players;
-        players.removeWhere((player) => winners.contains(player.playerId));
+        List<String> winners = [...result['winner']];
+        print(winners);
+        List<Player> players = List.from(state.players);
+        players.removeWhere((player) => !winners.contains(player.playerId));
         emit(GameFinished(state.players, state.procent, players.map((player) => player.name).toList()));
       } else {
-        print(result['currentTurn']);
         this.currentTurn = result['currentTurn'];
         this._changeTurn();
       }
@@ -38,6 +38,7 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
   }
 
   _changePanel(List<Player> players) {
+    print(players.length);
     if (players.length == 1) {
       emit(GameCancelled(players, state.procent));
     } else if (state.players.length > players.length) {
@@ -64,7 +65,7 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
   }
 
   tilesWasPut() {
-    // this.currentTurn = "";
+    this.currentTurn = "";
     this._timer?.cancel();
     emit(CurrentPlayersQueue(state.players, 0));
   }
@@ -73,10 +74,15 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
     return playerId == currentTurn;
   }
 
+  leftGame() {
+    _firebaseRepository.leftGame(gameId, playerId);
+    emit(GameAbandoned());
+  }
+
   @override
   Future<void> close() async {
     playersQueue.cancel();
-    currentTurnPlayerId.cancel();
+    gameStatus.cancel();
     super.close();
   }
 

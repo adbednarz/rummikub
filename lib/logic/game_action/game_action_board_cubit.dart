@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:flutter/foundation.dart';
 import 'package:rummikub/data/repository.dart';
 import 'package:rummikub/shared/models/tile.dart';
 import 'package:rummikub/shared/models/tiles_set.dart';
@@ -12,16 +13,16 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
   late String gameId;
   late String playerId;
   late StreamSubscription tilesSetsSubscription;
-  late List<TilesSet> setsBeforeModification;
-  List<int> draggable = new List.filled(2, -1, growable: false);
+  List<TilesSet> setsBeforeModification = [];
+  List<int> draggable = List.filled(2, -1, growable: false);
   bool initialMeld = false;
 
   GameActionBoardCubit(this._firebaseRepository, Map<String, String> params) : super(GameActionBoardInitial()) {
     gameId = params['gameId']!;
     playerId = params['playerId']!;
     tilesSetsSubscription = _firebaseRepository.getTilesSets(gameId).listen((result) {
-      setsBeforeModification = result;
       emit(BoardChanged(result));
+      setsBeforeModification = result.map((set) => set.copy()).toList();
     });
   }
 
@@ -29,13 +30,13 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
     if (draggable[1] > 0 && draggable[1] < state.sets[draggable[0]].tiles.length-1) {
       state.sets.insert(
           draggable[0] + 1,
-          new TilesSet(
+          TilesSet(
               state.sets[draggable[0]].position + draggable[1]+1,
               state.sets[draggable[0]].tiles.sublist(draggable[1]+1)
           )
       );
       state.sets[draggable[0]].tiles = state.sets[draggable[0]].tiles.sublist(0, draggable[1]);
-    } else if (draggable[0] != -1) {  // -1, gdy kość nie jest z planszy
+    } else if (draggable[0] != -1) {  // -1 - kość jest z planszy
       if(draggable[1] == 0) {
         state.sets[draggable[0]].position += 1;
       }
@@ -44,14 +45,13 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
         state.sets.removeAt(draggable[0]);
       }
     }
-    draggable = [-1, -1];
     emit(BoardChanged(state.sets));
   }
 
   addNewSet(int counter, int beforeSetIndex, Tile tile) {
     state.sets.insert(
         beforeSetIndex,
-        new TilesSet(counter, [tile])
+        TilesSet(counter, [tile])
     );
     if (beforeSetIndex <= draggable[0]) {
       draggable[0] += 1;
@@ -80,7 +80,6 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
         if (state.sets[index].tiles.isEmpty) {
           state.sets.removeAt(index);
         }
-        draggable = [-1, -1];
         emit(BoardChanged(state.sets));
       }
     } else { // przesuwana kość znajduje się w prawym zbiorze
@@ -94,7 +93,6 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
         if (state.sets[index+1].tiles.isEmpty) {
           state.sets.removeAt(index+1);
         }
-        draggable = [-1, -1];
         emit(BoardChanged(state.sets));
       }
     }
@@ -118,27 +116,36 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
       _firebaseRepository.putTiles(gameId, state.sets);
       return true;
     }
-    emit(BoardInfo(state.sets, "The board is not valid"));
+    if (initialMeld) {
+      emit(BoardInfo(state.sets, "The board is not valid"));
+    } else {
+      emit(BoardInfo(state.sets, "The board is not valid"));
+      emit(BoardInfo(state.sets, "You cannot modify others sets"));
+      emit(BoardInfo(state.sets, "A value of your tiles min 30"));
+    }
     return false;
   }
 
   bool timePassed() {
-    if (!wantToPutTiles()) {
-      _firebaseRepository.putTiles(gameId, this.setsBeforeModification);
-      emit(BoardChanged(this.setsBeforeModification));
+    if (_isValid()) {
+      _firebaseRepository.putTiles(gameId, state.sets);
       return true;
+    } else {
+      _firebaseRepository.putTiles(gameId, setsBeforeModification);
+      emit(BoardChanged(setsBeforeModification.map((set) => set.copy()).toList()));
+      return false;
     }
-    return false;
   }
 
   bool _isValid() {
-    return true;
     for (TilesSet set in state.sets) {
-      if (set.tiles.length < 3 || (!_isRun(set.tiles) && !_isGroup(set.tiles))) {
+      if (set.tiles.length < 3 || (!_isRun(set.tiles) && !_isGroup(List.from(set.tiles)))) {
         return false;
       }
     }
-    _isInitialMeld();
+    if (!initialMeld) {
+      _isInitialMeld();
+    }
     return true;
   }
 
@@ -162,31 +169,34 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
   }
 
   bool _isInitialMeld() {
-    if (!initialMeld) {
-      List<TilesSet> modifiedSets = state.sets;
-      modifiedSets.removeWhere((set) => setsBeforeModification.contains(set));
-      int tilesValue = 0;
-      for (var set in modifiedSets) {
-        for (int i = 0; i < set.tiles.length; i++) {
-          if (!set.tiles[i].isMine) {
-            return false;
-          }
-          if (set.tiles[i].number == 0) {
-            if (_isRun(set.tiles)) {
-              tilesValue += i > 0 ? set.tiles[i-1].number + 1 : set.tiles[i+1].number - 1;
-            } else {
-              tilesValue += i > 0 ? set.tiles[i-1].number : set.tiles[i+1].number;
-            }
+    List<List<Tile>> currentSets = state.sets.map((set) => set.tiles).toList();
+    List<List<Tile>> previousSets = setsBeforeModification.map((set) => set.tiles).toList();
+    currentSets.removeWhere((x) => previousSets.any((y) => listEquals(x, y)));
+    print(currentSets.length);
+    if (currentSets.length == 0) {
+      return true;
+    }
+    int tilesValue = 0;
+    for (var set in currentSets) {
+      for (int i = 0; i < set.length; i++) {
+        if (!set[i].isMine) {
+          return false;
+        }
+        if (set[i].number == 0) {
+          if (_isRun(set)) {
+            tilesValue += i > 0 ? set[i-1].number + 1 : set[i+1].number - 1;
           } else {
-            tilesValue += set.tiles[i].number;
+            tilesValue += i > 0 ? set[i-1].number : set[i+1].number;
           }
+        } else {
+          tilesValue += set[i].number;
         }
       }
-      if (tilesValue < 30) {
-        return false;
-      }
-      initialMeld = true;
     }
+    if (tilesValue < 30) {
+      return false;
+    }
+    initialMeld = true;
     return true;
   }
 

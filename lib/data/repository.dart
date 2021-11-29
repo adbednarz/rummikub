@@ -14,4 +14,5 @@ abstract class Repository {
   Stream<Map<String, dynamic>> getGameStatus(String gameId);
   Stream<List<TilesSet>> getTilesSets(String gameId);
   Future<void> putTiles(String gameId, List<TilesSet> tiles);
+  Future<void> leftGame(String gameId, String playerId);
 }

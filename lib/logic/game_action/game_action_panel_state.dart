@@ -43,9 +43,9 @@ class GameFinished extends GameActionPanelState {
     if (winners.length == 1) {
       message = "The winner is " + winners[0];
     } else {
-      String tmp = "The winners are ";
+      String tmp = "The winners are";
       for (var playerName in winners) {
-        tmp += playerName;
+        tmp += " " + playerName;
       }
       message = tmp;
     }
@@ -53,4 +53,8 @@ class GameFinished extends GameActionPanelState {
 
   @override
   List<Object> get props => [players, procent, message];
+}
+
+class GameAbandoned extends GameActionPanelState {
+  GameAbandoned() : super([], 0);
 }

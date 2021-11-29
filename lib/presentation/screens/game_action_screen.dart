@@ -15,70 +15,47 @@ class GameActionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(10, 30, 10, 10),
-      color: Colors.teal,
-      child: MultiBlocListener(
-          listeners: [
-            BlocListener<GameActionPanelCubit, GameActionPanelState>(
-              listener: (context, state) {
-                if (state is PanelInfo) {
-                  Fluttertoast.showToast(
-                    msg: state.message,
-                    backgroundColor: Colors.grey,
-                  );
-                  if (state.message.startsWith("Your")) {
-                    if (BlocProvider.of<GameActionBoardCubit>(context).timePassed()) {
-                      BlocProvider.of<GameActionRackCubit>(context).timePassed();
-                    }
-                  }
-                } else if (state is GameFinished) {
-                  Fluttertoast.showToast(
-                    msg: state.message,
-                    backgroundColor: Colors.grey,
-                  );
-                }
-              },
-            ),
-            BlocListener<GameActionBoardCubit, GameActionBoardState>(
-              listener: (context, state) {
-                if (state is BoardInfo) {
-                  Fluttertoast.showToast(
-                    msg: state.message,
-                    backgroundColor: Colors.grey,
-                  );
-                }
-              },
-            ),
-          ],
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              BlocBuilder<GameActionPanelCubit, GameActionPanelState>(
-                  builder: (context, state) {
-                    return Expanded(
-                        flex: 1,
-                        child: _panel(context, state),
-                    );
-                  }
-              ),
-              BlocBuilder<GameActionBoardCubit, GameActionBoardState>(
-                  builder: (context, state) {
-                    return Expanded(
-                        flex: 10,
-                        child: _board(context, state),
-                    );
-                  }
-              ),
-              BlocBuilder<GameActionRackCubit, GameActionRackState>(
-                  builder: (context, state) {
-                    return Expanded(
-                        flex: 1,
-                        child: _rack(context, state),
-                    );
-                  }
-              ),
+    return WillPopScope(
+        onWillPop: () {
+          return _onWillPop(context);
+        },
+        child: Container(
+          padding: EdgeInsets.fromLTRB(10, 30, 10, 10),
+          color: Colors.teal,
+          child: MultiBlocListener(
+            listeners: [
+              _createListenerActionPanel(),
+              _createListenerActionBoard(),
             ],
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                BlocBuilder<GameActionPanelCubit, GameActionPanelState>(
+                    builder: (context, state) {
+                      return Expanded(
+                          flex: 1,
+                          child: _panel(context, state),
+                      );
+                    }
+                ),
+                BlocBuilder<GameActionBoardCubit, GameActionBoardState>(
+                    builder: (context, state) {
+                      return Expanded(
+                          flex: 6,
+                          child: _board(context, state),
+                      );
+                    }
+                ),
+                BlocBuilder<GameActionRackCubit, GameActionRackState>(
+                    builder: (context, state) {
+                      return Expanded(
+                          flex: 1,
+                          child: _rack(context, state),
+                      );
+                    }
+                  ),
+                ],
+              ),
           ),
         ),
     );
@@ -133,6 +110,7 @@ class GameActionScreen extends StatelessWidget {
                 if (BlocProvider.of<GameActionPanelCubit>(context).isMyTurn()) {
                   if (BlocProvider.of<GameActionBoardCubit>(context).wantToPutTiles()) {
                     BlocProvider.of<GameActionPanelCubit>(context).tilesWasPut();
+                    BlocProvider.of<GameActionRackCubit>(context).confirmRackModifications();
                   }
                 }
               },
@@ -189,6 +167,9 @@ class GameActionScreen extends StatelessWidget {
               onDragStarted: () {
                 BlocProvider.of<GameActionBoardCubit>(context).draggable = [i, j]; // wskazanie jaki element jest obecnie przenoszony
               },
+              onDraggableCanceled: (velocity, offset) {
+                BlocProvider.of<GameActionBoardCubit>(context).draggable = [-1, -1];
+              },
             )
         );
         counter++;
@@ -220,9 +201,9 @@ class GameActionScreen extends StatelessWidget {
 
     double padding = 0;
     if (kIsWeb) {
-      padding = MediaQuery.of(context).size.width * 2 / 3;
+      padding = MediaQuery.of(context).size.width * 1 / 4;
     } else if (MediaQuery.of(context).size.width > MediaQuery.of(context).size.height){
-      padding = MediaQuery.of(context).size.width * 2 / 3;
+      padding = MediaQuery.of(context).size.width * 1 / 4;
     }
     return GridView.count(
       padding: EdgeInsets.symmetric(horizontal: padding),
@@ -248,6 +229,9 @@ class GameActionScreen extends StatelessWidget {
             child: _tile(state.rack[index]!),
             feedback: _tile(state.rack[index]!),
             childWhenDragging: Container(),
+            onDragStarted: () {
+              BlocProvider.of<GameActionBoardCubit>(context).draggable = [-1, -1]; // wskazanie, że nie jest to element z tablicy
+            },
             onDragCompleted: () {
               BlocProvider.of<GameActionRackCubit>(context).changeRack(index, null);
             },
@@ -335,6 +319,79 @@ class GameActionScreen extends StatelessWidget {
           BlocProvider.of<GameActionBoardCubit>(context).addToExistingSet(index, tile, direction);
         } else {
           BlocProvider.of<GameActionBoardCubit>(context).combineTwoSet(index, tile);
+        }
+      },
+    );
+  }
+
+  Future<bool> _onWillPop(BuildContext context) async {
+    final GameActionPanelCubit gameActionPanelCubit = BlocProvider.of<GameActionPanelCubit>(context);
+    return await showDialog(
+      context: context,
+      builder: (context) => new AlertDialog(
+        title: new Text('Are you sure?'),
+        content: new Text('Do you want to leave the Game?'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: new Text('No'),
+          ),
+          TextButton(
+            onPressed: () {
+              gameActionPanelCubit.leftGame();
+            },
+            child: new Text('Yes'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  _createListenerActionPanel() {
+    return BlocListener<GameActionPanelCubit, GameActionPanelState>(
+      listener: (context, state) {
+        if (state is PanelInfo) {
+          Fluttertoast.showToast(
+            gravity: ToastGravity.TOP,
+            msg: state.message,
+            backgroundColor: Colors.grey,
+          );
+          if (state.message.startsWith("Your")) {
+            if (BlocProvider.of<GameActionBoardCubit>(context).timePassed()) {
+              BlocProvider.of<GameActionRackCubit>(context).confirmRackModifications();
+            } else {
+              BlocProvider.of<GameActionRackCubit>(context).restorePreviousRack();
+            }
+          }
+        } else if (state is GameCancelled) {
+          Fluttertoast.showToast(
+            gravity: ToastGravity.TOP,
+            msg: state.message,
+            backgroundColor: Colors.grey,
+          );
+          Navigator.of(context).popUntil(ModalRoute.withName('/game'));
+        } else if (state is GameFinished) {
+          Fluttertoast.showToast(
+            gravity: ToastGravity.CENTER,
+            msg: state.message,
+            backgroundColor: Colors.grey,
+          );
+        } else if (state is GameAbandoned) {
+          Navigator.of(context).popUntil(ModalRoute.withName('/game'));
+        }
+        },
+    );
+  }
+
+  _createListenerActionBoard() {
+    return BlocListener<GameActionBoardCubit, GameActionBoardState>(
+      listener: (context, state) {
+        if (state is BoardInfo) {
+          Fluttertoast.showToast(
+            gravity: ToastGravity.TOP,
+            msg: state.message,
+            backgroundColor: Colors.grey,
+          );
         }
       },
     );

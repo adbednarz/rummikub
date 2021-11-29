@@ -36,4 +36,13 @@ class FunctionsProvider {
       throw new CustomException(error.toString());
     }
   }
+
+  Future<void> leftGame(String gameId) async {
+    try {
+      _functions.httpsCallable('leftGame').call({"gameId": gameId});
+    } catch(error) {
+      print(error);
+      throw new CustomException(error.toString());
+    }
+  }
 }

@@ -69,4 +69,10 @@ class FirebaseRepository implements Repository {
     return _firestoreProvider.getTilesSets(gameId);
   }
 
+  @override
+  Future<void> leftGame(String gameId, String playerId) async {
+    _functionsProvider.leftGame(gameId);
+    _firestoreProvider.changeUserActiveStatus(playerId, true);
+  }
+
 }

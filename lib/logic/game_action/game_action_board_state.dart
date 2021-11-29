@@ -11,12 +11,7 @@ class GameActionBoardInitial extends GameActionBoardState {
 }
 
 class BoardChanged extends GameActionBoardState {
-  BoardChanged(List<TilesSet> sets) : super(sets) {
-    sets.forEach((element) {
-      print(element.tiles.length);
-    });
-    print('-------');
-  }
+  BoardChanged(List<TilesSet> sets) : super(sets);
 }
 
 class BoardInfo extends GameActionBoardState {

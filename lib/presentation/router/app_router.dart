@@ -40,6 +40,7 @@ class AppRouter {
         );
       case '/game':
         return MaterialPageRoute(
+            settings: RouteSettings(name: '/game'),
             builder: (context) => BlocProvider.value(
               value: settings.arguments as AuthCubit,
               child: GameScreen(),
