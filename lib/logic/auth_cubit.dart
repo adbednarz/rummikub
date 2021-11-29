@@ -19,17 +19,17 @@ class AuthCubit extends Cubit<AuthState> {
   }) async {
     emit(AuthLoading());
     try {
-      User user = await _firebaseRepository.signUp(email: email, username: username, password: password);
+      var user = await _firebaseRepository.signUp(email, username, password);
       emit(AuthLogged(user));
     } on CustomException catch(error) {
       emit(AuthFailure(error.cause));
     }
   }
 
-  Future<void> logIn({required String email, required String password}) async {
+  Future<void> logIn(String email, String password) async {
     emit(AuthLoading());
     try {
-      User user = await _firebaseRepository.logIn(email: email, password: password);
+      var user = await _firebaseRepository.logIn(email, password);
       emit(AuthLogged(user));
     } on CustomException catch(error) {
       emit(AuthFailure(error.cause));
@@ -38,9 +38,9 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> logOut() async {
     try {
-      String playerId = (state as AuthLogged) .user.uid;
+      var playerId = (state as AuthLogged) .user.uid;
       emit(AuthLoading());
-      _firebaseRepository.logOut(playerId: playerId);
+      await _firebaseRepository.logOut(playerId);
       emit(AuthLoggedOut());
     } on CustomException catch(error) {
       emit(AuthFailure(error.cause));

@@ -16,7 +16,7 @@ class GameScreen extends StatelessWidget {
           listener: (context, state) {
             if (state is AuthFailure) {
               showDialog(context: context, builder: (context) =>
-                  CustomErrorDialog("Error", state.errorMessage)
+                  CustomErrorDialog('Error', state.errorMessage)
               );
             } else if (state is AuthLoggedOut) {
               Navigator.of(context).popUntil(ModalRoute.withName('/'));
@@ -35,13 +35,13 @@ class GameScreen extends StatelessWidget {
     );
   }
 
-  _buildMaterialButton(BuildContext context, String text) {
+  MaterialButton _buildMaterialButton(BuildContext context, String text) {
     return MaterialButton(
       elevation: 0,
       minWidth: double.maxFinite,
       height: 50,
       onPressed: () {
-        String playerId = (BlocProvider.of<AuthCubit>(context).state as AuthLogged).user.uid;
+        var playerId = (BlocProvider.of<AuthCubit>(context).state as AuthLogged).user.uid;
         Navigator.of(context).pushNamed('/game_settings', arguments: playerId);
       },
       color: logoGreen,
@@ -50,22 +50,22 @@ class GameScreen extends StatelessWidget {
   }
 
   Future<bool> _onWillPop(BuildContext context) async {
-    final AuthCubit authCubit = BlocProvider.of<AuthCubit>(context);
+    final authCubit = BlocProvider.of<AuthCubit>(context);
     return await showDialog(
       context: context,
-      builder: (context) => new AlertDialog(
-        title: new Text('Are you sure?'),
-        content: new Text('Do you want to exit an App'),
+      builder: (context) => AlertDialog(
+        title: Text('Are you sure?'),
+        content: Text('Do you want to exit an App'),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: new Text('No'),
+            child: Text('No'),
           ),
           TextButton(
             onPressed: () {
               authCubit.logOut();
             },
-            child: new Text('Yes'),
+            child: Text('Yes'),
           ),
         ],
       ),

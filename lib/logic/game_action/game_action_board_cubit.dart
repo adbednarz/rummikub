@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rummikub/data/repository.dart';
 import 'package:rummikub/shared/models/tile.dart';
@@ -26,7 +27,7 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
     });
   }
 
-  removeDraggable() {
+  void removeDraggable() {
     if (draggable[1] > 0 && draggable[1] < state.sets[draggable[0]].tiles.length-1) {
       state.sets.insert(
           draggable[0] + 1,
@@ -48,7 +49,7 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
     emit(BoardChanged(state.sets));
   }
 
-  addNewSet(int counter, int beforeSetIndex, Tile tile) {
+  void addNewSet(int counter, int beforeSetIndex, Tile tile) {
     state.sets.insert(
         beforeSetIndex,
         TilesSet(counter, [tile])
@@ -59,7 +60,7 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
     removeDraggable();
   }
 
-  combineTwoSet(int index, Tile tile) {
+  void combineTwoSet(int index, Tile tile) {
     // przesuwana kość nie znajduje się w łączących się zbiorach
     if (draggable[0] != index && draggable[0] != index + 1) {
       state.sets[index].tiles = state.sets[index].tiles + [tile] + state.sets[index+1].tiles;
@@ -98,7 +99,7 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
     }
   }
 
-  addToExistingSet(int index, Tile tile, String direction) {
+  void addToExistingSet(int index, Tile tile, String direction) {
     if (direction == 'start') {
       state.sets[index].tiles.insert(0, tile);
       state.sets[index].position -= 1;
@@ -117,11 +118,11 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
       return true;
     }
     if (initialMeld) {
-      emit(BoardInfo(state.sets, "The board is not valid"));
+      emit(BoardInfo(state.sets, 'The board is not valid'));
     } else {
-      emit(BoardInfo(state.sets, "The board is not valid"));
-      emit(BoardInfo(state.sets, "You cannot modify others sets"));
-      emit(BoardInfo(state.sets, "A value of your tiles min 30"));
+      emit(BoardInfo(state.sets, 'The board is not valid'));
+      emit(BoardInfo(state.sets, 'You cannot modify others sets'));
+      emit(BoardInfo(state.sets, 'A value of your tiles min 30'));
     }
     return false;
   }
@@ -138,7 +139,7 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
   }
 
   bool _isValid() {
-    for (TilesSet set in state.sets) {
+    for (var set in state.sets) {
       if (set.tiles.length < 3 || (!_isRun(set.tiles) && !_isGroup(List.from(set.tiles)))) {
         return false;
       }
@@ -150,7 +151,7 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
   }
 
   bool _isRun(List<Tile> set) {
-    for (int i = 0; i < set.length - 1; i++) {
+    for (var i = 0; i < set.length - 1; i++) {
       if (set[i].number == 0 || set[i+1].number == 0) {
         continue;
       }
@@ -163,22 +164,21 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
 
   bool _isGroup(List<Tile> set) {
     set.removeWhere((e) => e.number == 0);
-    Set<String> uniqueColors = set.map((tile) => tile.color).toSet();
-    Set<int> uniqueNumbers = set.map((tile) => tile.number).toSet();
+    var uniqueColors = set.map((tile) => tile.color).toSet();
+    var uniqueNumbers = set.map((tile) => tile.number).toSet();
     return uniqueColors.length == set.length && uniqueNumbers.length == 1;
   }
 
   bool _isInitialMeld() {
-    List<List<Tile>> currentSets = state.sets.map((set) => set.tiles).toList();
-    List<List<Tile>> previousSets = setsBeforeModification.map((set) => set.tiles).toList();
+    var currentSets = state.sets.map((set) => set.tiles).toList();
+    var previousSets = setsBeforeModification.map((set) => set.tiles).toList();
     currentSets.removeWhere((x) => previousSets.any((y) => listEquals(x, y)));
-    print(currentSets.length);
-    if (currentSets.length == 0) {
+    if (currentSets.isEmpty) {
       return true;
     }
-    int tilesValue = 0;
+    var tilesValue = 0;
     for (var set in currentSets) {
-      for (int i = 0; i < set.length; i++) {
+      for (var i = 0; i < set.length; i++) {
         if (!set[i].isMine) {
           return false;
         }
@@ -202,7 +202,7 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
 
   @override
   Future<void> close() async {
-    tilesSetsSubscription.cancel();
-    super.close();
+    await tilesSetsSubscription.cancel();
+    await super.close();
   }
 }

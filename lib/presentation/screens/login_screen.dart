@@ -27,7 +27,7 @@ class LoginScreen extends StatelessWidget {
               if (state is AuthFailure) {
                 showDialog(
                     context: context,
-                    builder: (context) => CustomErrorDialog("Error", state.errorMessage)
+                    builder: (context) => CustomErrorDialog('Error', state.errorMessage)
                 );
               } else if (state is AuthLogged) {
                 Navigator.of(context).pushNamed('/game', arguments: BlocProvider.of<AuthCubit>(context));
@@ -51,7 +51,7 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  _buildForm(BuildContext context) {
+  Container _buildForm(BuildContext context) {
     return Container(
         child: Form(
           key: _formKey,
@@ -70,7 +70,7 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  _buildTextFormField(IconData icon, String labelText) {
+  Container _buildTextFormField(IconData icon, String labelText) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
@@ -97,16 +97,14 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  _buildMaterialButton(BuildContext context) {
+  MaterialButton _buildMaterialButton(BuildContext context) {
     return MaterialButton(
       elevation: 0,
       minWidth: double.maxFinite,
       height: 50,
       onPressed: () {
         if (_formKey.currentState!.validate()) {
-          BlocProvider.of<AuthCubit>(context).logIn(
-              email: emailController.text,
-              password: passwordController.text);
+          BlocProvider.of<AuthCubit>(context).logIn(emailController.text, passwordController.text);
         }
       },
       color: logoGreen,

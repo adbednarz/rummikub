@@ -6,6 +6,7 @@ abstract class GameActionRackState extends Equatable {
 
   GameActionRackState(this.rack);
 
+  @override
   List<Object> get props => [rack];
 
 }

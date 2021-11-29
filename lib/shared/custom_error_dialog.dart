@@ -19,7 +19,7 @@ class CustomErrorDialog extends StatelessWidget {
     );
   }
 
-  contentBox(context) {
+  Container contentBox(context) {
     return Container(
       padding: EdgeInsets.only(left: 20,top: 40, right: 20, bottom: 20
       ),
@@ -46,7 +46,7 @@ class CustomErrorDialog extends StatelessWidget {
                 onPressed: (){
                   Navigator.of(context).pop();
                   },
-                child: Text("Ok", style: TextStyle(fontSize: 18),)),
+                child: Text('Ok', style: TextStyle(fontSize: 18),)),
           ),
         ],
       ),

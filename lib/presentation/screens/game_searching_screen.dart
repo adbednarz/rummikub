@@ -20,7 +20,7 @@ class GameSearchingScreen extends StatelessWidget {
                         CustomErrorDialog('Error', state.errorMessage)
                 );
               } else if (state is GameFound) {
-                String playerId =  BlocProvider.of<GameSearchingCubit>(context).playerId;
+                var playerId =  BlocProvider.of<GameSearchingCubit>(context).playerId;
                 Navigator.of(context).pushNamed('/play', arguments:
                 {'gameId': state.gameId, 'playerId': playerId});
               }
@@ -58,7 +58,7 @@ class GameSearchingScreen extends StatelessWidget {
     );
   }
 
-  _buildDropdownButton(BuildContext context) {
+  NumberInputPrefabbed _buildDropdownButton(BuildContext context) {
     return NumberInputPrefabbed.squaredButtons(
       controller: incDecNumController,
       initialValue: 2,
@@ -68,7 +68,7 @@ class GameSearchingScreen extends StatelessWidget {
     );
   }
 
-  _buildMaterialButton(BuildContext context) {
+  MaterialButton _buildMaterialButton(BuildContext context) {
     return MaterialButton(
       elevation: 0,
       minWidth: double.maxFinite,

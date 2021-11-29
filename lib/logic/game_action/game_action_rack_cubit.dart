@@ -19,9 +19,9 @@ class GameActionRackCubit extends Cubit<GameActionRackState> {
     gameId = params['gameId']!;
     playerId = params['playerId']!;
     playerTitlesSubscription = _firebaseRepository.getPlayerTiles(gameId, playerId).listen((result) {
-      List<Tile?> rack = List.from(state.rack);
-      int counter = 0;
-      for (int i = 0; i < rack.length; i++) {
+      var rack = List<Tile?>.from(state.rack);
+      var counter = 0;
+      for (var i = 0; i < rack.length; i++) {
         if (counter == result.length) {
           break;
         }
@@ -42,23 +42,23 @@ class GameActionRackCubit extends Cubit<GameActionRackState> {
     });
   }
 
-  changeRack(int index, Tile? tile) {
-    List<Tile?> rack = List.from(state.rack);
+  void changeRack(int index, Tile? tile) {
+    var rack = List<Tile?>.from(state.rack);
     rack[index] = tile;
     emit(RackChanged(rack));
   }
 
-  confirmRackModifications() {
+  void confirmRackModifications() {
     rackBeforeModification = List.from(state.rack);
   }
 
-  restorePreviousRack() {
+  void restorePreviousRack() {
     emit(RackChanged(List.from(rackBeforeModification)));
   }
 
   @override
   Future<void> close() async {
-    playerTitlesSubscription.cancel();
-    super.close();
+    await playerTitlesSubscription.cancel();
+    await super.close();
   }
 }

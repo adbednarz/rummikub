@@ -10,8 +10,8 @@ part 'game_action_panel_state.dart';
 
 class GameActionPanelCubit extends Cubit<GameActionPanelState> {
   final Repository _firebaseRepository;
-  late final playerId;
-  late final gameId;
+  late final String playerId;
+  late final String gameId;
   late final StreamSubscription playersQueue;
   late final StreamSubscription gameStatus;
   String? currentTurn;
@@ -21,42 +21,41 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
     gameId = params['gameId']!;
     playerId = params['playerId']!;
     playersQueue = _firebaseRepository.getPlayersQueue(gameId).listen((result) {
-      this._changePanel(result);
+      _changePanel(result);
     });
     gameStatus = _firebaseRepository.getGameStatus(gameId).listen((result) {
       if (result['winner'] != null) {
-        List<String> winners = [...result['winner']];
-        print(winners);
-        List<Player> players = List.from(state.players);
+        var winners = <String>[...result['winner']];
+        var players = List<Player>.from(state.players);
         players.removeWhere((player) => !winners.contains(player.playerId));
         emit(GameFinished(state.players, state.procent, players.map((player) => player.name).toList()));
       } else {
-        this.currentTurn = result['currentTurn'];
-        this._changeTurn();
+        currentTurn = result['currentTurn'];
+        print(currentTurn);
+        _changeTurn();
       }
     });
   }
 
-  _changePanel(List<Player> players) {
-    print(players.length);
+  void _changePanel(List<Player> players) {
     if (players.length == 1) {
-      emit(GameCancelled(players, state.procent));
+      leaveGame();
     } else if (state.players.length > players.length) {
-      Player removedPlayer = state.players.where((e) => !players.contains(e)).first;
+      var removedPlayer = state.players.where((e) => !players.contains(e)).first;
       emit(PanelInfo(players, state.procent, 'Player ' + removedPlayer.name + ' left the game.'));
     } else if (players.length != state.players.length) {
       emit(CurrentPlayersQueue(players, state.procent));
     }
   }
 
-  _changeTurn() {
-    this._timer?.cancel();
+  void _changeTurn() {
+    _timer?.cancel();
     emit(CurrentPlayersQueue(state.players, 60));
-    this._timer = Timer.periodic(new Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
       if (timer.tick > 60) {
         timer.cancel();
         if(isMyTurn()) {
-          emit(PanelInfo(state.players, 0, 'Your turn is missed.'));
+          emit(MissedTurn(state.players, 0));
         }
       } else {
         emit(CurrentPlayersQueue(state.players, timer.tick > 60 ? 0 : 60 - timer.tick));
@@ -64,26 +63,31 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
     });
   }
 
-  tilesWasPut() {
-    this.currentTurn = "";
-    this._timer?.cancel();
+  void tilesWasPut() {
+    currentTurn = '';
+    _timer?.cancel();
     emit(CurrentPlayersQueue(state.players, 0));
   }
 
-  isMyTurn() {
+  bool isMyTurn() {
     return playerId == currentTurn;
   }
 
-  leftGame() {
-    _firebaseRepository.leftGame(gameId, playerId);
+  void leaveGameBeforeEnd() {
+    _firebaseRepository.leaveGame(gameId, playerId, false);
     emit(GameAbandoned());
+  }
+
+  void leaveGame() {
+    _firebaseRepository.leaveGame(gameId, playerId, true);
+    emit(GameCancelled(state.players, state.procent));
   }
 
   @override
   Future<void> close() async {
-    playersQueue.cancel();
-    gameStatus.cancel();
-    super.close();
+    await playersQueue.cancel();
+    await gameStatus.cancel();
+    await super.close();
   }
 
 }

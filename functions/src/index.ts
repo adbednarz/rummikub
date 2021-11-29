@@ -78,20 +78,17 @@ export const leftGame = functions.https.onCall((data, context) => {
         snapshot.docs.forEach((doc) => doc.ref.delete());
       });
 
-  firestore.collection("games").doc(gameId).get().then((snapshotGame) => {
+  firestore.collection("games").doc(gameId).get().then(async (snapshotGame) => {
     if (snapshotGame.get("currentTurn") === playerId) {
-      snapshotGame.ref.collection("playersQueue").get().then((snapshotQueue) => {
-        for (let i = 0; i < snapshotQueue.docs.length; i++) {
-          if (snapshotQueue.docs[i].id === playerId) {
-            snapshotGame.ref.update({"currentTurn": snapshotQueue.docs[(i + 1) % snapshotQueue.size].id});
-            break;
-          }
+      const playersQueue: FirebaseFirestore.QuerySnapshot = await snapshotGame.ref.collection("playersQueue").get();
+      for (let i = 0; i < playersQueue.docs.length; i++) {
+        if (playersQueue.docs[i].id === playerId) {
+          await snapshotGame.ref.update({"currentTurn": playersQueue.docs[(i + 1) % playersQueue.size].id});
+          break;
         }
-        firestore.collection("games/" + gameId + "/playersQueue").doc(playerId).delete();
-      });
-    } else {
-      firestore.collection("games/" + gameId + "/playersQueue").doc(playerId).delete();
+      }
     }
+    await firestore.collection("games/" + gameId + "/playersQueue").doc(playerId).delete();
   });
 });
 

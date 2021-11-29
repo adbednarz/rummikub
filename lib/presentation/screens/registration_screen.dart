@@ -31,7 +31,7 @@ class RegistrationScreen extends StatelessWidget {
             if (state is AuthFailure) {
               showDialog(
                   context: context,
-                  builder: (context) => CustomErrorDialog("Error", state.errorMessage)
+                  builder: (context) => CustomErrorDialog('Error', state.errorMessage)
               );
             } else if (state is AuthLogged) {
               Navigator.of(context).pushNamed('/game', arguments: BlocProvider.of<AuthCubit>(context));
@@ -55,7 +55,7 @@ class RegistrationScreen extends StatelessWidget {
     );
   }
 
-  _buildForm(BuildContext context) {
+  Container _buildForm(BuildContext context) {
     return Container(
         child: Form(
           key: _formKey,
@@ -78,7 +78,7 @@ class RegistrationScreen extends StatelessWidget {
     );
   }
 
-  _buildTextFormField(IconData icon, String labelText, TextEditingController controller) {
+  Container _buildTextFormField(IconData icon, String labelText, TextEditingController controller) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
@@ -111,7 +111,7 @@ class RegistrationScreen extends StatelessWidget {
     );
   }
 
-  _buildMaterialButton(BuildContext context) {
+  MaterialButton _buildMaterialButton(BuildContext context) {
     return MaterialButton(
       elevation: 0,
       minWidth: double.maxFinite,

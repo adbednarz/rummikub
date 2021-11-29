@@ -9,7 +9,7 @@ class FirestoreProvider {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   
   FirestoreProvider() {
-    String localhost = kIsWeb ? 'localhost' : '192.168.194.172';
+    var localhost = kIsWeb ? 'localhost' : '192.168.194.172';
     _firestore.useFirestoreEmulator(localhost, 8080);
   }
 
@@ -17,27 +17,28 @@ class FirestoreProvider {
     QuerySnapshot querySnapshot = await _firestore.collection('users')
         .where('name', isEqualTo: nickname)
         .get();
-    if (querySnapshot.size != 0)
-            throw new CustomException('The nickname is already in use by another account.');
+    if (querySnapshot.size != 0) {
+      throw CustomException('The nickname is already in use by another account.');
+    }
   }
 
   Future<void> addUserData(String nickname, String playerId) async {
-    _firestore.collection('users')
+    await _firestore.collection('users')
         .doc(playerId)
         .set({'name': nickname, 'active': true})
         .catchError((error) {
           print(error);
-          throw new CustomException('Error occurred');
+          throw CustomException('Error occurred');
         });
   }
 
   Future<void> changeUserActiveStatus(String playerId, bool isActive) async {
-    _firestore.collection('users')
+    await _firestore.collection('users')
         .doc(playerId)
         .update({'active': isActive})
         .catchError((error) {
           print(error);
-          throw new CustomException('Error occurred');
+          throw CustomException('Error occurred');
         });
   }
 
@@ -56,10 +57,10 @@ class FirestoreProvider {
   Stream<Map<String, dynamic>> getGameStatus(String gameId) {
     return _firestore.collection('games').doc(gameId).snapshots()
         .map((snapshots) {
-          if (snapshots.data()!.containsKey("winner")) {
-            return {"winner": snapshots.get("winner")};
+          if (snapshots.data()!.containsKey('winner')) {
+            return {'winner': snapshots.get('winner')};
           }
-          return {"currentTurn": snapshots.get('currentTurn')};
+          return {'currentTurn': snapshots.get('currentTurn')};
     });
   }
 
@@ -75,10 +76,10 @@ class FirestoreProvider {
   Stream<List<TilesSet>> getTilesSets(String gameId) {
     return _firestore.collection('games/' + gameId + '/state').doc('sets').snapshots()
         .map((snapshots) {
-          List<TilesSet> sets = [];
+          var sets = <TilesSet>[];
           if (snapshots.data() != null) {
             snapshots.data()!.forEach((key, value) {
-              List<Tile> tiles = [];
+              var tiles = <Tile>[];
               value.forEach((tile) {
                 tiles.add(Tile(tile['color'], tile['number'], false));
               });

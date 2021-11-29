@@ -7,6 +7,7 @@ abstract class GameActionPanelState extends Equatable {
 
   GameActionPanelState(this.players, this.procent);
 
+  @override
   List<Object> get props => [players, procent];
 
 }
@@ -27,8 +28,12 @@ class PanelInfo extends GameActionPanelState {
   List<Object> get props => [players, procent, message];
 }
 
+class MissedTurn extends GameActionPanelState {
+  MissedTurn(List<Player> players, int procent) : super(players, procent);
+}
+
 class GameCancelled extends GameActionPanelState {
-  final String message = "The game left the last player.";
+  final String message = 'The game left the last player.';
 
   GameCancelled(List<Player> players, int procent) : super(players, procent);
 
@@ -41,11 +46,11 @@ class GameFinished extends GameActionPanelState {
 
   GameFinished(List<Player> players, int procent, List<String> winners) : super(players, procent) {
     if (winners.length == 1) {
-      message = "The winner is " + winners[0];
+      message = 'The winner is ' + winners[0];
     } else {
-      String tmp = "The winners are";
+      var tmp = 'The winners are';
       for (var playerName in winners) {
-        tmp += " " + playerName;
+        tmp += ' ' + playerName;
       }
       message = tmp;
     }

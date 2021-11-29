@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:rummikub/data/bot/bot.dart';
 import 'package:rummikub/data/firebase_repository.dart';
 import 'package:rummikub/data/repository.dart';
 import 'package:rummikub/logic/auth_cubit.dart';
@@ -18,61 +19,73 @@ class AppRouter {
   final Repository _firebaseRepository = FirebaseRepository();
 
   Route? onGenerateRoute(RouteSettings settings) {
-    switch (settings.name) {
-      case '/':
-        return MaterialPageRoute(
-          settings: RouteSettings(name: '/'),
-          builder: (context) => HomeScreen(),
-        );
-      case '/registration':
-        return MaterialPageRoute(
-            builder: (context) => BlocProvider<AuthCubit>(
-              create: (context) => AuthCubit(_firebaseRepository),
-              child: RegistrationScreen(),
-            )
-        );
-      case '/login':
-        return MaterialPageRoute(
-            builder: (context) => BlocProvider<AuthCubit>(
-              create: (context) => AuthCubit(_firebaseRepository),
-              child: LoginScreen(),
-            )
-        );
-      case '/game':
-        return MaterialPageRoute(
-            settings: RouteSettings(name: '/game'),
-            builder: (context) => BlocProvider.value(
-              value: settings.arguments as AuthCubit,
-              child: GameScreen(),
-            )
-        );
-      case '/game_settings':
-        return MaterialPageRoute(
-            builder: (context) => BlocProvider<GameSearchingCubit>(
-              create: (context) => GameSearchingCubit(_firebaseRepository, settings.arguments as String),
-              child: GameSearchingScreen(),
-            )
-        );
-      case '/play':
-        return MaterialPageRoute(
-            builder: (context) => MultiBlocProvider(
-              providers: [
-                BlocProvider<GameActionPanelCubit>(
-                  create: (context) => GameActionPanelCubit(_firebaseRepository, settings.arguments as Map<String, String>),
-                ),
-                BlocProvider<GameActionBoardCubit>(
-                  create: (context) => GameActionBoardCubit(_firebaseRepository, settings.arguments as Map<String, String>),
-                ),
-                BlocProvider<GameActionRackCubit>(
-                  create: (context) => GameActionRackCubit(_firebaseRepository, settings.arguments as Map<String, String>),
-                ),
-              ],
-              child: GameActionScreen(),
-            ),
-            settings: settings
-        );
-      default:
-        return null;
+    if (settings.name == '/') {
+      return MaterialPageRoute(
+        settings: RouteSettings(name: '/'),
+        builder: (context) => HomeScreen(),
+      );
+    } else if (settings.name == '/registration') {
+      return MaterialPageRoute(
+          builder: (context) => BlocProvider<AuthCubit>(
+            create: (context) => AuthCubit(_firebaseRepository),
+            child: RegistrationScreen(),
+          )
+      );
+    } else if (settings.name == '/login') {
+      return MaterialPageRoute(
+          builder: (context) => BlocProvider<AuthCubit>(
+            create: (context) => AuthCubit(_firebaseRepository),
+            child: LoginScreen(),
+          )
+      );
+    } else if (settings.name == '/game') {
+      return MaterialPageRoute(
+          settings: RouteSettings(name: '/game'),
+          builder: (context) => BlocProvider.value(
+            value: settings.arguments as AuthCubit,
+            child: GameScreen(),
+          )
+      );
+    } else if (settings.name == '/game_settings') {
+      return MaterialPageRoute(
+          builder: (context) =>
+              BlocProvider<GameSearchingCubit>(
+                create: (context) =>
+                    GameSearchingCubit(
+                        _firebaseRepository, settings.arguments as String),
+                child: GameSearchingScreen(),
+              )
+      );
+    } else if (settings.name!.startsWith('/play')) {
+      Repository server;
+      if (settings.name == '/play') {
+        server = _firebaseRepository;
+      } else {
+        server = Bot();
+      }
+      return MaterialPageRoute(
+          builder: (context) =>
+              MultiBlocProvider(
+                providers: [
+                  BlocProvider<GameActionPanelCubit>(
+                    create: (context) =>
+                        GameActionPanelCubit(server, settings.arguments as Map<String, String>),
+                  ),
+                  BlocProvider<GameActionBoardCubit>(
+                    create: (context) =>
+                        GameActionBoardCubit(server, settings.arguments as Map<String, String>),
+                  ),
+                  BlocProvider<GameActionRackCubit>(
+                    create: (context) =>
+                        GameActionRackCubit(server, settings.arguments as Map<String, String>),
+                  ),
+                ],
+                child: GameActionScreen(),
+              ),
+          settings: settings
+      );
+    } else {
+      return null;
     }
   }
 }

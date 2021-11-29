@@ -20,12 +20,12 @@ class GameSearchingCubit extends Cubit<GameSearchingState> {
   }) async {
     emit(Loading());
     try {
-      String gameId = await _repository.searchGame(playerId, playersNumber);
-      missingPlayersNumberSubscription?.cancel();
+      var gameId = await _repository.searchGame(playerId, playersNumber);
+      await missingPlayersNumberSubscription?.cancel();
       missingPlayersNumberSubscription = _repository.getMissingPlayersNumberToStartGame(gameId).listen((change) {
         if (change == 0) {
           emit(GameFound(gameId));
-          this.missingPlayersNumberSubscription?.cancel();
+          missingPlayersNumberSubscription?.cancel();
         } else {
           emit(Waiting(change));
         }
@@ -37,8 +37,8 @@ class GameSearchingCubit extends Cubit<GameSearchingState> {
 
   @override
   Future<void> close() async {
-    missingPlayersNumberSubscription?.cancel();
-    super.close();
+    await missingPlayersNumberSubscription?.cancel();
+    await super.close();
   }
 }
 

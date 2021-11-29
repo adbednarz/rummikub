@@ -4,9 +4,9 @@ import 'package:rummikub/shared/models/tile.dart';
 import 'package:rummikub/shared/models/tiles_set.dart';
 
 abstract class Repository {
-  Future<User> signUp({required String email, required String username, required String password});
-  Future<User> logIn({required String email, required String password});
-  Future<void> logOut({required String playerId});
+  Future<User> signUp(String email, String username, String password);
+  Future<User> logIn(String email, String password);
+  Future<void> logOut(String playerId);
   Future<String> searchGame(String playerId, int playersNumber);
   Stream<int> getMissingPlayersNumberToStartGame(String gameId);
   Stream<List<Tile>> getPlayerTiles(String gameId, String playerId);
@@ -14,5 +14,5 @@ abstract class Repository {
   Stream<Map<String, dynamic>> getGameStatus(String gameId);
   Stream<List<TilesSet>> getTilesSets(String gameId);
   Future<void> putTiles(String gameId, List<TilesSet> tiles);
-  Future<void> leftGame(String gameId, String playerId);
+  Future<void> leaveGame(String gameId, String playerId, bool isFinished);
 }

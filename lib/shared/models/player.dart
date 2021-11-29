@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Player {
   final String name;
-  final playerId;
+  final String playerId;
 
   Player(this.name, this.playerId);
 

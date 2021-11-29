@@ -6,7 +6,7 @@ class AuthenticationProvider {
   final FirebaseAuth _firebaseAuth =  FirebaseAuth.instance;
 
   AuthenticationProvider() {
-    String localhost = kIsWeb ? 'localhost' : '192.168.194.172';
+    var localhost = kIsWeb ? 'localhost' : '192.168.194.172';
     _firebaseAuth.useAuthEmulator(localhost, 9090);
   }
 
@@ -16,18 +16,18 @@ class AuthenticationProvider {
     required String password})
   async {
     try {
-      UserCredential result = await _firebaseAuth.createUserWithEmailAndPassword(
+      var result = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      User user = result.user!;
-      user.updateDisplayName(username);
+      var user = result.user!;
+      await user.updateDisplayName(username);
       return user;
     } on FirebaseException catch (e) {
-      throw new CustomException(e.message ?? "Error occurred");
+      throw CustomException(e.message ?? 'Error occurred');
     } catch(error) {
       print(error);
-      throw new CustomException("Error occurred");
+      throw CustomException('Error occurred');
     }
   }
 
@@ -36,17 +36,17 @@ class AuthenticationProvider {
     required String password})
   async {
     try {
-      UserCredential result = await _firebaseAuth.signInWithEmailAndPassword(
+      var result = await _firebaseAuth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
       return result.user!;
     }
     on FirebaseException catch (e) {
-    throw new CustomException(e.message ?? "Error occurred");
+    throw CustomException(e.message ?? 'Error occurred');
     } catch(error) {
       print(error);
-      throw new CustomException("Error occurred");
+      throw CustomException('Error occurred');
     }
   }
 
@@ -55,7 +55,7 @@ class AuthenticationProvider {
       await _firebaseAuth.signOut();
     } catch(error) {
       print(error);
-      throw new CustomException("Error occurred");
+      throw CustomException('Error occurred');
     }
   }
 }

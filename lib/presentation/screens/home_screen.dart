@@ -11,25 +11,31 @@ class HomeScreen  extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              _buildMaterialButton(context, 'login'),
+              _buildMaterialButton(context, '/login', 'LOGIN'),
               SizedBox(height: 20),
-              _buildMaterialButton(context, 'registration'),
+              _buildMaterialButton(context, '/registration', 'REGISTRATION'),
+              SizedBox(height: 20),
+              _buildMaterialButton(context, '/play_with_bot', 'PLAY WITH BOT'),
             ],
           )
       ),
     );
   }
 
-  _buildMaterialButton(BuildContext context, String path) {
+  MaterialButton _buildMaterialButton(BuildContext context, String path, String name) {
     return MaterialButton(
       elevation: 0,
       minWidth: double.maxFinite,
       height: 50,
       onPressed: () {
-          Navigator.of(context).pushNamed('/' + path);
+        if (path == '/play_with_bot') {
+          Navigator.of(context).pushNamed('/play_with_bot', arguments: {'gameId': '0', 'playerId': '0'});
+        } else {
+          Navigator.of(context).pushNamed(path);
+        }
       },
       color: logoGreen,
-      child: Text(path.toUpperCase(), style: TextStyle(color: Colors.white, fontSize: 16)),
+      child: Text(name, style: TextStyle(color: Colors.white, fontSize: 16)),
     );
   }
 }

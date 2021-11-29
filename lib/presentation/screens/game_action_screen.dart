@@ -61,7 +61,7 @@ class GameActionScreen extends StatelessWidget {
     );
   }
 
-  _panel(BuildContext context, GameActionPanelState state) {
+  Row _panel(BuildContext context, GameActionPanelState state) {
     return Row(
       children: [
         Expanded(
@@ -131,11 +131,11 @@ class GameActionScreen extends StatelessWidget {
     - znajdują się bezpośrednio za lub przed zbiorem
     - znajdują się pomiędzy dwoma zbiorami
   */
-  _board(BuildContext context, GameActionBoardState state) {
+  GridView _board(BuildContext context, GameActionBoardState state) {
     final children = <Widget>[];
-    int counter = 0;
+    var counter = 0;
     // iterujemy po ułożonych zbiorach kości
-    for(int i = 0; i < state.sets.length; i++) {
+    for(var i = 0; i < state.sets.length; i++) {
       // plansze wypełniamy pustymi polami, aż do ostatniego pola przed zbiorem
       while(counter < state.sets[i].position - 1) {
         children.add(_buildDragTarget(context, i, counter: counter));
@@ -157,11 +157,10 @@ class GameActionScreen extends StatelessWidget {
       }
 
       // kolejno dodawanie pół z kośćmi ze zbioru
-      for(int j = 0; j < state.sets[i].tiles.length; j++) {
+      for(var j = 0; j < state.sets[i].tiles.length; j++) {
         children.add(
             Draggable<Tile>(
               data: state.sets[i].tiles[j],
-              child: _tile(state.sets[i].tiles[j]),
               feedback: _tile(state.sets[i].tiles[j]),
               childWhenDragging: Container(),
               onDragStarted: () {
@@ -170,6 +169,7 @@ class GameActionScreen extends StatelessWidget {
               onDraggableCanceled: (velocity, offset) {
                 BlocProvider.of<GameActionBoardCubit>(context).draggable = [-1, -1];
               },
+              child: _tile(state.sets[i].tiles[j]),
             )
         );
         counter++;
@@ -199,7 +199,7 @@ class GameActionScreen extends StatelessWidget {
       counter++;
     }
 
-    double padding = 0;
+    var padding = 0.0;
     if (kIsWeb) {
       padding = MediaQuery.of(context).size.width * 1 / 4;
     } else if (MediaQuery.of(context).size.width > MediaQuery.of(context).size.height){
@@ -214,19 +214,18 @@ class GameActionScreen extends StatelessWidget {
     );
   }
 
-  _rack(BuildContext context, GameActionRackState state) {
-    double padding = (MediaQuery.of(context).size.width - (state.rack.length/2).ceil() * 35) / 2;
+  GridView _rack(BuildContext context, GameActionRackState state) {
+    var padding = (MediaQuery.of(context).size.width - (state.rack.length/2).ceil() * 35) / 2;
     return GridView.count(
       padding: EdgeInsets.symmetric(horizontal: padding > 0 ? padding : 0),
       crossAxisCount: state.rack.length > 14 ? (state.rack.length/2).ceil() : 7,
       reverse: true,
       physics: NeverScrollableScrollPhysics(),
       children: List.generate(state.rack.length, (index) {
-        bool flag = false;
+        var flag = false;
         return state.rack[index] != null ?
           Draggable<Tile>(
             data: state.rack[index]!,
-            child: _tile(state.rack[index]!),
             feedback: _tile(state.rack[index]!),
             childWhenDragging: Container(),
             onDragStarted: () {
@@ -235,6 +234,7 @@ class GameActionScreen extends StatelessWidget {
             onDragCompleted: () {
               BlocProvider.of<GameActionRackCubit>(context).changeRack(index, null);
             },
+            child: _tile(state.rack[index]!),
           ) :
           DragTarget<Tile>(
             builder: (BuildContext context, List<dynamic> accepted, List<dynamic> rejected) {
@@ -266,7 +266,7 @@ class GameActionScreen extends StatelessWidget {
 
   }
 
-  _tile(Tile tile) {
+  Container _tile(Tile tile) {
     return Container(
       width: 10,
       height: 10,
@@ -278,7 +278,7 @@ class GameActionScreen extends StatelessWidget {
         child: FittedBox(
             fit: BoxFit.fitWidth,
             child: Text(
-              tile.number == 0 ? "?" : tile.number.toString(),
+              tile.number == 0 ? '?' : tile.number.toString(),
               style: TextStyle(
                   decoration: TextDecoration.none,
                   color: colors[tile.color],
@@ -290,8 +290,8 @@ class GameActionScreen extends StatelessWidget {
     );
   }
 
-  _buildDragTarget(BuildContext context, int index, {int? counter, String? direction}) {
-    bool flag = false;
+  DragTarget<Tile> _buildDragTarget(BuildContext context, int index, {int? counter, String? direction}) {
+    var flag = false;
     return DragTarget<Tile>(
       builder: (BuildContext context, List<dynamic> accepted, List<dynamic> rejected) {
         return flag ?
@@ -325,29 +325,29 @@ class GameActionScreen extends StatelessWidget {
   }
 
   Future<bool> _onWillPop(BuildContext context) async {
-    final GameActionPanelCubit gameActionPanelCubit = BlocProvider.of<GameActionPanelCubit>(context);
+    final gameActionPanelCubit = BlocProvider.of<GameActionPanelCubit>(context);
     return await showDialog(
       context: context,
-      builder: (context) => new AlertDialog(
-        title: new Text('Are you sure?'),
-        content: new Text('Do you want to leave the Game?'),
+      builder: (context) => AlertDialog(
+        title: Text('Are you sure?'),
+        content: Text('Do you want to leave the Game?'),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: new Text('No'),
+            child: Text('No'),
           ),
           TextButton(
             onPressed: () {
-              gameActionPanelCubit.leftGame();
+              gameActionPanelCubit.leaveGameBeforeEnd();
             },
-            child: new Text('Yes'),
+            child: Text('Yes'),
           ),
         ],
       ),
     );
   }
 
-  _createListenerActionPanel() {
+  BlocListener<GameActionPanelCubit, GameActionPanelState> _createListenerActionPanel() {
     return BlocListener<GameActionPanelCubit, GameActionPanelState>(
       listener: (context, state) {
         if (state is PanelInfo) {
@@ -356,12 +356,16 @@ class GameActionScreen extends StatelessWidget {
             msg: state.message,
             backgroundColor: Colors.grey,
           );
-          if (state.message.startsWith("Your")) {
-            if (BlocProvider.of<GameActionBoardCubit>(context).timePassed()) {
-              BlocProvider.of<GameActionRackCubit>(context).confirmRackModifications();
-            } else {
-              BlocProvider.of<GameActionRackCubit>(context).restorePreviousRack();
-            }
+        } else if (state is MissedTurn) {
+          if (BlocProvider.of<GameActionBoardCubit>(context).timePassed()) {
+            BlocProvider.of<GameActionRackCubit>(context).confirmRackModifications();
+          } else {
+            BlocProvider.of<GameActionRackCubit>(context).restorePreviousRack();
+            Fluttertoast.showToast(
+              gravity: ToastGravity.TOP,
+              msg: 'Your turn is missed',
+              backgroundColor: Colors.grey,
+            );
           }
         } else if (state is GameCancelled) {
           Fluttertoast.showToast(
@@ -383,7 +387,7 @@ class GameActionScreen extends StatelessWidget {
     );
   }
 
-  _createListenerActionBoard() {
+  BlocListener<GameActionBoardCubit, GameActionBoardState> _createListenerActionBoard() {
     return BlocListener<GameActionBoardCubit, GameActionBoardState>(
       listener: (context, state) {
         if (state is BoardInfo) {
