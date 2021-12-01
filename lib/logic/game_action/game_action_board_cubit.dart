@@ -145,28 +145,39 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
       }
     }
     if (!initialMeld) {
-      _isInitialMeld();
+      return _isInitialMeld();
     }
     return true;
   }
 
   bool _isRun(List<Tile> set) {
-    for (var i = 0; i < set.length - 1; i++) {
-      if (set[i].number == 0 || set[i+1].number == 0) {
-        continue;
-      }
-      if (set[i].number + 1 != set[i+1].number || set[i].color != set[i+1].color) {
+    var i = 0;
+    var currentNumber = 0;
+    if (set[0].number == 0 && set[1].number == 0) {
+      i = 2;
+    } else if (set[0].number == 0) {
+      i = 1;
+    }
+    currentNumber = set[i].number;
+    if ((i == 2 && currentNumber < 3) || (i == 1 && currentNumber < 2)) {
+      return false;
+    }
+    i++;
+    for (i; i < set.length; i++) {
+      if (set[i].number != currentNumber + 1 && set[i].number != 0) {
         return false;
       }
+      currentNumber += 1;
     }
     return true;
   }
 
   bool _isGroup(List<Tile> set) {
+    var size = set.length;
     set.removeWhere((e) => e.number == 0);
     var uniqueColors = set.map((tile) => tile.color).toSet();
     var uniqueNumbers = set.map((tile) => tile.number).toSet();
-    return uniqueColors.length == set.length && uniqueNumbers.length == 1;
+    return size < 5 && uniqueColors.length == set.length && uniqueNumbers.length == 1;
   }
 
   bool _isInitialMeld() {
@@ -176,24 +187,29 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
     if (currentSets.isEmpty) {
       return true;
     }
-    var tilesValue = 0;
+    var sum = 0;
     for (var set in currentSets) {
-      for (var i = 0; i < set.length; i++) {
-        if (!set[i].isMine) {
-          return false;
+      if (_isRun(set)) {
+        var firstNumber = set[0].number;
+        if (set[0].number == 0 && set[1].number == 0) {
+          firstNumber = set[2].number - 3;
+        } else if (set[0].number == 0) {
+          firstNumber = set[1].number - 1;
         }
-        if (set[i].number == 0) {
-          if (_isRun(set)) {
-            tilesValue += i > 0 ? set[i-1].number + 1 : set[i+1].number - 1;
-          } else {
-            tilesValue += i > 0 ? set[i-1].number : set[i+1].number;
+        for (var i = 0; i < set.length; i++) {
+          sum += firstNumber;
+          firstNumber += 1;
+        }
+      } else {
+        for (var tile in set) {
+          if (tile.number != 0) {
+            sum += tile.number * set.length;
+            break;
           }
-        } else {
-          tilesValue += set[i].number;
         }
       }
     }
-    if (tilesValue < 30) {
+    if (sum < 30) {
       return false;
     }
     initialMeld = true;

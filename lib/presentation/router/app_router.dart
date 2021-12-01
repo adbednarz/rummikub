@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:rummikub/data/bot/bot.dart';
+import 'package:rummikub/data/bot/local_game.dart';
 import 'package:rummikub/data/firebase_repository.dart';
 import 'package:rummikub/data/repository.dart';
 import 'package:rummikub/logic/auth_cubit.dart';
@@ -61,7 +61,7 @@ class AppRouter {
       if (settings.name == '/play') {
         server = _firebaseRepository;
       } else {
-        server = Bot();
+        server = LocalGame();
       }
       return MaterialPageRoute(
           builder: (context) =>

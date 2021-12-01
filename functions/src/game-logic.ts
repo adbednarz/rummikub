@@ -64,6 +64,10 @@ export class GameLogic {
             }
           } else {
             for (const key in playerSets) {
+              // pomijamy usunięte zbiory na skutek modyfikacji gracza
+              if (playerSets[key]) {
+                continue;
+              }
               if (!this.validateSet(playerSets[key])) {
                 return "empty";
               }
@@ -147,53 +151,67 @@ export class GameLogic {
         winner.push(playersQueue.docs[i].id);
       }
     }
-    game.ref.update({"winner": winner});
+    await game.ref.update({"winner": winner});
   }
 
   private static validateSetInitialMeld(set: Tile[]): number {
-    let value = -1;
+    let sum = 0;
     if (this.isRun(set)) {
-      value = 1;
+      let firstNumber = set[0].number;
+      if (set[0].number == 0 && set[1].number == 0) {
+        firstNumber = set[2].number - 3;
+      } else if (set[0].number == 0) {
+        firstNumber = set[1].number - 1;
+      }
+      for (let i = 0; i < set.length; i++) {
+        sum += firstNumber;
+        firstNumber += 1;
+      }
     } else if (this.isGroup(set)) {
-      value = 0;
+      for (const tile of set) {
+        if (tile.number != 0) {
+          sum += tile.number * set.length;
+          break;
+        }
+      }
     }
-    if (set.length < 3 || value === -1) {
+    if (set.length < 3) {
       return 0;
     }
-    let total = 0;
-    for (let i = 0; i < set.length; i++) {
-      if (set[i].number === 0) {
-        total += i > 0 ? set[i - 1].number + value : set[i + 1].number - value;
-      }
-      total += set[i].number;
-    }
-    return total;
+    return sum;
   }
 
 
   private static validateSet(set: Tile[]): boolean {
-    if (set.length < 3 || (!this.isRun(set) && !this.isGroup(set))) {
-      return false;
-    }
-    return true;
+    return !(set.length < 3 || (!this.isRun(set) && !this.isGroup(set)));
   }
 
   private static isRun(set: Tile[]): boolean {
-    for (let i = 0; i < set.length - 1; i++) {
-      if (set[i].number === 0 || set[i+1].number === 0) {
-        continue;
-      }
-      if (set[i].number + 1 !== set[i+1].number || set[i].color !== set[i+1].color) {
+    let index = 0;
+    if (set[0].number == 0 && set[1].number == 0) {
+      index = 2;
+    } else if (set[0].number == 0) {
+      index = 1;
+    }
+    let currentNumber = set[index].number;
+    if ((index == 2 && currentNumber < 3) || (index == 1 && currentNumber < 2)) {
+      return false;
+    }
+    index++;
+    for (let i = index; i < set.length; i++) {
+      if (set[i].number != currentNumber + 1 && set[i].number != 0) {
         return false;
       }
+      currentNumber += 1;
     }
     return true;
   }
 
   private static isGroup(set: Tile[]): boolean {
+    const size = set.length;
     set = set.filter((e) => e.number != 0);
     const uniqueColors = new Set(set.map((tile) => tile.color));
     const uniqueNumbers = new Set(set.map((tile) => tile.number));
-    return uniqueColors.size === set.length && uniqueNumbers.size === 1;
+    return size < 5 && uniqueColors.size === set.length && uniqueNumbers.size === 1;
   }
 }

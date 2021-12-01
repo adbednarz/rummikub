@@ -11,7 +11,7 @@ import 'package:rummikub/shared/models/tiles_set.dart';
 import 'bot_engine.dart';
 import 'game.dart';
 
-class Bot implements Repository {
+class LocalGame implements Repository {
   final Game game = Game();
   final BotEngine botEngine = BasicBot();
 
@@ -52,7 +52,7 @@ class Bot implements Repository {
     if (playerSets.isEmpty) {
       var tile = game.getTileFromPool();
       if (tile != null) {
-        playerTilesController.add([tile]);
+        playerTilesController.add([Tile(tile.color, tile.number, true)]);
       } else {
         var winner = game.pointTheWinner();
         gameStatusController.add({'winner': winner});
@@ -61,8 +61,25 @@ class Bot implements Repository {
     } else {
       game.sets = tiles;
     }
+    _botMove();
+  }
+
+  void _botMove() {
     gameStatusController.add({'currentTurn': '1'});
-    botEngine.move();
+    var result = botEngine.move(game.sets, game.botRack);
+    if (result.isNotEmpty) {
+      tilesSetsController.add(result);
+    } else {
+      var tile = game.getTileFromPool();
+      if (tile != null) {
+        game.botRack.add(tile);
+      } else {
+        var winner = game.pointTheWinner();
+        gameStatusController.add({'winner': winner});
+        return;
+      }
+    }
+    gameStatusController.add({'currentTurn': '0'});
   }
 
   @override

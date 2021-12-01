@@ -31,7 +31,6 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
         emit(GameFinished(state.players, state.procent, players.map((player) => player.name).toList()));
       } else {
         currentTurn = result['currentTurn'];
-        print(currentTurn);
         _changeTurn();
       }
     });
