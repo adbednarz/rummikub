@@ -181,14 +181,21 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
   }
 
   bool _isInitialMeld() {
-    var currentSets = state.sets.map((set) => set.tiles).toList();
-    var previousSets = setsBeforeModification.map((set) => set.tiles).toList();
-    currentSets.removeWhere((x) => previousSets.any((y) => listEquals(x, y)));
-    if (currentSets.isEmpty) {
+    var setsCopy = List<TilesSet>.from(state.sets);
+    setsCopy.removeWhere((set) => setsBeforeModification.contains(set));
+    // gracz wysyła kości bez zmian
+    if (setsCopy.isEmpty) {
       return true;
     }
+
     var sum = 0;
+    var currentSets = setsCopy.map((set) => set.tiles).toList();
     for (var set in currentSets) {
+      // nie można modyfikować zbiorów na planszy
+      var notMyTiles = set.where((tile) => tile.isMine == false).toList();
+      if (notMyTiles.isNotEmpty) {
+        return false;
+      }
       if (_isRun(set)) {
         var firstNumber = set[0].number;
         if (set[0].number == 0 && set[1].number == 0) {

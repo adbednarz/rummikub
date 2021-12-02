@@ -91,6 +91,7 @@ class GameActionScreen extends StatelessWidget {
                           child: Text(
                             player.name,
                             style: TextStyle(
+                              fontSize: 20,
                               decoration: TextDecoration.none,
                               color: Colors.black,
                             ),
@@ -268,8 +269,8 @@ class GameActionScreen extends StatelessWidget {
 
   Container _tile(Tile tile) {
     return Container(
-      width: 10,
-      height: 10,
+      width: 20,
+      height: 20,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.all(Radius.circular(10)),
         color: Colors.amber[100],
@@ -381,7 +382,11 @@ class GameActionScreen extends StatelessWidget {
             backgroundColor: Colors.grey,
           );
         } else if (state is GameAbandoned) {
-          Navigator.of(context).popUntil(ModalRoute.withName('/game'));
+          if (BlocProvider.of<GameActionPanelCubit>(context).gameId == '0') {
+            Navigator.of(context).popUntil(ModalRoute.withName('/'));
+          } else {
+            Navigator.of(context).popUntil(ModalRoute.withName('/game'));
+          }
         }
         },
     );

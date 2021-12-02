@@ -46,29 +46,41 @@ class LocalGame implements Repository {
 
   @override
   Future<void> putTiles(String gameId, List<TilesSet> tiles) async {
-    var playerSets = tiles.map((set) => set.tiles).toList();
-    var previousSets = game.sets.map((set) => set.tiles).toList();
-    playerSets.removeWhere((x) => previousSets.any((y) => listEquals(x, y)));
-    if (playerSets.isEmpty) {
+    var playerTiles = tiles.expand((set) => set.tiles.map((tile) => Tile(tile.color, tile.number, false)).toList()).toList();
+    var previousTiles = game.sets.expand((set) => set.tiles).toList();
+    var tilesToDeleteFromPlayerRack = [];
+    for (var tile in playerTiles) {
+      if (previousTiles.contains(tile)) {
+        previousTiles.remove(tile);
+      } else {
+        tilesToDeleteFromPlayerRack.add(tile);
+      }
+    }
+    if (tilesToDeleteFromPlayerRack.isEmpty) {
       var tile = game.getTileFromPool();
       if (tile != null) {
         playerTilesController.add([Tile(tile.color, tile.number, true)]);
+        game.playerRack.add(tile);
       } else {
         var winner = game.pointTheWinner();
         gameStatusController.add({'winner': winner});
         return;
       }
     } else {
-      game.sets = tiles;
+      game.sets = List.from(tiles);
+      for (var tile in tilesToDeleteFromPlayerRack) {
+        game.playerRack.remove(tile);
+      }
     }
     _botMove();
   }
 
   void _botMove() {
     gameStatusController.add({'currentTurn': '1'});
-    var result = botEngine.move(game.sets, game.botRack);
-    if (result.isNotEmpty) {
-      tilesSetsController.add(result);
+    var result = botEngine.move(List.from(game.sets), List.from(game.botRack));
+    if (result[0].isNotEmpty) {
+      tilesSetsController.add(List.from(result[0]));
+      game.botRack = result[1];
     } else {
       var tile = game.getTileFromPool();
       if (tile != null) {
@@ -83,9 +95,7 @@ class LocalGame implements Repository {
   }
 
   @override
-  Future<void> leaveGame(String gameId, String playerId, bool isFinished) async {
-    // TODO
-  }
+  Future<void> leaveGame(String gameId, String playerId, bool isFinished) async {}
 
   @override
   Stream<int> getMissingPlayersNumberToStartGame(String gameId) {

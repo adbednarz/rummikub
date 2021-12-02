@@ -35,7 +35,21 @@ class Game {
   }
 
   List<String> pointTheWinner() {
-    return [];
+    var playerSum = 0;
+    for (var tile in playerRack) {
+      playerSum += tile.number;
+    }
+    var botSum = 0;
+    for (var tile in botRack) {
+      botSum += tile.number;
+    }
+    if (playerSum < botSum) {
+      return ['0'];
+    } else if (playerSum == botSum) {
+      return ['0', '1'];
+    } else {
+      return ['1'];
+    }
   }
 
   static bool isRun(List<Tile> set) {

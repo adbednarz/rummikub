@@ -1,15 +1,21 @@
+import 'package:flutter/foundation.dart';
 import 'package:rummikub/shared/models/tile.dart';
 import 'package:rummikub/shared/models/tiles_set.dart';
 import 'game.dart';
 
 abstract class BotEngine {
 
-  List<TilesSet> move(List<TilesSet> sets, List<Tile> botRack);
+  List<dynamic> move(List<TilesSet> sets, List<Tile> botRack);
 
-  List<TilesSet> checkSetsPositions(List<TilesSet> sets) {
-    var newSets = List<TilesSet>.from(sets);
+  List<TilesSet> checkSetsPositions(List<TilesSet> currentSets, List<TilesSet> previousSets) {
+    var currentSetsCopy = List<TilesSet>.from(currentSets);
+    currentSetsCopy.removeWhere((set) => previousSets.contains(set));
+    if (currentSetsCopy.isEmpty) {
+      return [];
+    }
+    var newSets = List<TilesSet>.from(currentSets);
     newSets.removeWhere((set) => set.position != -1);
-    var modifiedSets = List<TilesSet>.from(sets);
+    var modifiedSets = List<TilesSet>.from(currentSets);
     modifiedSets.removeWhere((set) => set.position == -1);
     var takenPlacesList = <List<int>>[];
 
@@ -18,11 +24,13 @@ abstract class BotEngine {
       if (_checkBoard(set.position, set.position + set.tiles.length - 1) == -1) {
         takenPlacesList.add([for (var i = set.position; i < set.position + set.tiles.length; i++) i]);
       } else {
-        newSets.add(set);
+        setsToChange.add(set);
       }
     }
 
-    modifiedSets.removeWhere((set) => setsToChange.contains(set));
+    for (var set in setsToChange) {
+      modifiedSets.remove(set);
+    }
     newSets.addAll(setsToChange);
 
     for (var set in newSets) {
@@ -31,24 +39,21 @@ abstract class BotEngine {
       for (var takenPlaces in takenPlacesList) {
         if (newTakenPlaces.any((place) => takenPlaces.contains(place))) {
           newTakenPlaces = [for (var i = takenPlaces.last + 2; i < takenPlaces.last + 2 + set.tiles.length; i++) i];
-          var offset = _checkBoard(newTakenPlaces[0], newTakenPlaces.last);
+          var offset = _checkBoard(newTakenPlaces.first, newTakenPlaces.last);
           if (offset != -1) {
-            newTakenPlaces = [for (var i = takenPlaces.last + offset; i < takenPlaces.last + offset + set.tiles.length; i++) i];
+            newTakenPlaces = [for (var i = takenPlaces.first + offset; i < takenPlaces.last + 1 + offset; i++) i];
           }
         } else {
-          takenPlacesList.add(newTakenPlaces);
-          set.position = newTakenPlaces[0];
           break;
         }
       }
-
-      if (takenPlacesList.isEmpty) {
-        takenPlacesList.add(newTakenPlaces);
-        set.position = newTakenPlaces[0];
-      }
+      takenPlacesList.add(newTakenPlaces);
+      takenPlacesList.sort((x, y) => x.first.compareTo(y.first));
+      set.position = newTakenPlaces.first;
     }
 
     modifiedSets.addAll(newSets);
+    modifiedSets.sort((a, b) => a.position.compareTo(b.position));
     return modifiedSets;
   }
 
@@ -117,7 +122,6 @@ abstract class BotEngine {
       return false;
     }
     while (set.length > 4) {
-      print('moze');
       for (var i = 0; i < set.length; i++) {
         if (set[i].number == 0) {
           set.removeAt(i);
@@ -133,7 +137,7 @@ abstract class BotEngine {
     var lastPosition = y % 13;
     if (lastPosition < firstPosition) {
       var offset = 0;
-      while ((firstPosition + offset) % 13 == 0) {
+      while ((firstPosition + offset) % 13 != 0) {
         offset++;
       }
       return offset;

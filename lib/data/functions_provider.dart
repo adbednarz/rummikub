@@ -8,7 +8,7 @@ class FunctionsProvider {
   final FirebaseFunctions _functions = FirebaseFunctions.instance;
 
   FunctionsProvider() {
-    var localhost = kIsWeb ? 'localhost' : '192.168.194.172';
+    var localhost = kIsWeb ? 'localhost' : '192.168.8.104';
     _functions.useFunctionsEmulator(localhost, 5001);
   }
 

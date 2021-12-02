@@ -13,5 +13,10 @@ class Tile {
     isMine
   );
 
+  @override
+  bool operator == (other) {
+    return (other is Tile) && other.color == color && other.number == number;
+  }
+
   Map<String, dynamic> asMap() => {'color' : color, 'number' : number};
 }

@@ -9,7 +9,7 @@ class FirestoreProvider {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   
   FirestoreProvider() {
-    var localhost = kIsWeb ? 'localhost' : '192.168.194.172';
+    var localhost = kIsWeb ? 'localhost' : '192.168.8.104';
     _firestore.useFirestoreEmulator(localhost, 8080);
   }
 
