@@ -27,7 +27,8 @@ class GameScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  _buildMaterialButton(context, 'PLAY'),
+                  _buildMaterialButton(context, 'PLAY', '/game_settings'),
+                  _buildMaterialButton(context, 'FIND_PLAYERS', '/find_players'),
                 ],
               )
           ),
@@ -35,14 +36,14 @@ class GameScreen extends StatelessWidget {
     );
   }
 
-  MaterialButton _buildMaterialButton(BuildContext context, String text) {
+  MaterialButton _buildMaterialButton(BuildContext context, String text, String path) {
     return MaterialButton(
       elevation: 0,
       minWidth: double.maxFinite,
       height: 50,
       onPressed: () {
         var playerId = (BlocProvider.of<AuthCubit>(context).state as AuthLogged).user.uid;
-        Navigator.of(context).pushNamed('/game_settings', arguments: playerId);
+        Navigator.of(context).pushNamed(path, arguments: playerId);
       },
       color: logoGreen,
       child: Text(text, style: TextStyle(color: Colors.white, fontSize: 16)),

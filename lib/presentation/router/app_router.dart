@@ -3,11 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rummikub/data/bot/local_game.dart';
 import 'package:rummikub/data/firebase_repository.dart';
 import 'package:rummikub/data/repository.dart';
+import 'package:rummikub/logic/active_players_cubit.dart';
 import 'package:rummikub/logic/auth_cubit.dart';
 import 'package:rummikub/logic/game_action/game_action_board_cubit.dart';
 import 'package:rummikub/logic/game_action/game_action_panel_cubit.dart';
 import 'package:rummikub/logic/game_action/game_action_rack_cubit.dart';
 import 'package:rummikub/logic/game_searching_cubit.dart';
+import 'package:rummikub/presentation/screens/active_players_screen.dart';
 import 'package:rummikub/presentation/screens/game_action_screen.dart';
 import 'package:rummikub/presentation/screens/game_screen.dart';
 import 'package:rummikub/presentation/screens/game_searching_screen.dart';
@@ -54,6 +56,16 @@ class AppRouter {
                     GameSearchingCubit(
                         _firebaseRepository, settings.arguments as String),
                 child: GameSearchingScreen(),
+              )
+      );
+    } else if (settings.name == '/find_players') {
+      return MaterialPageRoute(
+          builder: (context) =>
+              BlocProvider<ActivePlayersCubit>(
+                create: (context) =>
+                    ActivePlayersCubit(
+                        _firebaseRepository, settings.arguments as String),
+                child: ActivePlayersScreen(),
               )
       );
     } else if (settings.name!.startsWith('/play')) {

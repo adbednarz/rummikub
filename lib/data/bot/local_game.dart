@@ -113,7 +113,7 @@ class LocalGame implements Repository {
   }
 
   @override
-  Future<String> searchGame(String playerId, int playersNumber) {
+  Future<String> searchGame(String playerId, int playersNumber, int timeForMove) {
     throw UnimplementedError();
   }
 

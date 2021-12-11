@@ -8,18 +8,38 @@ import {Tile} from "./model/tile";
 admin.initializeApp(functions.config().firebase);
 export const firestore: FirebaseFirestore.Firestore = admin.firestore();
 
+export const createGame = functions.https.onCall((data, context) => {
+  const playerId: string = GameUtils.checkAuthentication(context.auth?.uid);
+  const playerName: string = context.auth?.token.name ?? null;
+  const players: string[] = data.players;
+  const timeForMove: number = data.timeForMove;
+  let gameId: string;
+
+  return firestore.runTransaction((transaction) => {
+    return transaction.get(GameUtils.getPlayers(players))
+        .then(async (playersResult) => {
+          // size jest równy 1, żeby gracze niezaproszeni nie mogli dołączać
+          gameId = await GameUtils.createGame(transaction, playerId, playerName, 0, timeForMove);
+          GameUtils.inviteToPlay(playersResult, playerName, gameId);
+        });
+  }).then(() => {
+    return {"gameId": gameId};
+  });
+});
+
 export const searchGame = functions.https.onCall((data, context) => {
   const playerId: string = GameUtils.checkAuthentication(context.auth?.uid);
   const playerName: string = context.auth?.token.name ?? null;
   const size: number = data.playersNumber;
+  const timeForMove: number = data.timeForMove;
   let gameId: string;
   let isGameFull: boolean;
 
   return firestore.runTransaction((transaction) => {
-    return transaction.get(GameUtils.findGame(size))
+    return transaction.get(GameUtils.findGame(size, timeForMove))
         .then((gameResult) => {
           if (gameResult.size == 0) {
-            gameId = GameUtils.createGame(transaction, playerId, playerName, size);
+            gameId = GameUtils.createGame(transaction, playerId, playerName, size, timeForMove);
           } else {
             const result = GameUtils.addToGame(transaction, playerId, playerName, gameResult.docs[0]);
             gameId = result[0];
@@ -32,6 +52,24 @@ export const searchGame = functions.https.onCall((data, context) => {
     }
     return {"gameId": gameId};
   });
+});
+
+export const addToExistingGame = functions.https.onCall((data, context) => {
+  const playerId: string = GameUtils.checkAuthentication(context.auth?.uid);
+  const playerName: string = context.auth?.token.name ?? null;
+  const gameId: string = data.gameId;
+
+  return firestore.runTransaction((transaction) => {
+    return transaction.get(firestore.collection("games").doc(gameId))
+        .then((gameResult) => {
+          GameUtils.addToGame(transaction, playerId, playerName, gameResult);
+        });
+  });
+});
+
+export const startGame = functions.https.onCall((data) => {
+  const gameId: string = data.gameId;
+  GameUtils.startGame(gameId);
 });
 
 export const putTiles = functions.https.onCall(async (data, context) => {

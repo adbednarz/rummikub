@@ -12,9 +12,10 @@ class FunctionsProvider {
     _functions.useFunctionsEmulator(localhost, 5001);
   }
 
-  Future<String> searchGame(int playersNumber) async {
+  Future<String> searchGame(int playersNumber, int timeForMove) async {
     try {
-      final results = await _functions.httpsCallable('searchGame').call({'playersNumber': playersNumber});
+      final results = await _functions.httpsCallable('searchGame')
+          .call({'playersNumber': playersNumber, 'timeForMove': timeForMove});
       return results.data['gameId'];
     } catch(error) {
       print(error);

@@ -1,7 +1,7 @@
 // import * as functions from "firebase-functions";
 import {firestore} from "./index";
 import * as functions from "firebase-functions";
-import {QueryDocumentSnapshot} from "firebase-functions/lib/providers/firestore";
+import {DocumentSnapshot} from "firebase-functions/lib/providers/firestore";
 
 export class GameUtils {
   static checkAuthentication(playerId: string | undefined): string {
@@ -14,10 +14,10 @@ export class GameUtils {
   }
 
   static createGame(transaction: FirebaseFirestore.Transaction,
-      playerId: string, playerName: string, size: number): string {
+      playerId: string, playerName: string, size: number, timeForMove: number): string {
     const gameRef: FirebaseFirestore.DocumentReference = firestore.collection("games").doc();
 
-    transaction.set(gameRef, {available: size - 1, currentTurn: "", size: size});
+    transaction.set(gameRef, {available: size - 1, currentTurn: "", size: size, timeForMove: timeForMove});
 
     transaction.set(
         gameRef.collection("playersQueue").doc(playerId),
@@ -43,7 +43,7 @@ export class GameUtils {
   }
 
   static addToGame(transaction: FirebaseFirestore.Transaction, playerId: string, playerName: string,
-      gameDoc: QueryDocumentSnapshot): [string, boolean] {
+      gameDoc: DocumentSnapshot): [string, boolean] {
     transaction.set(
         gameDoc.ref.collection("playersQueue").doc(playerId),
         {initialMeld: false, name: playerName}
@@ -53,10 +53,11 @@ export class GameUtils {
     return [gameDoc.id, availablePlaces == 0];
   }
 
-  static findGame(size: number): FirebaseFirestore.Query {
+  static findGame(size: number, timeForMove: number): FirebaseFirestore.Query {
     return firestore.collection("games")
         .where("available", ">", 0)
         .where("size", "==", size)
+        .where("timeForMove", "==", timeForMove)
         .limit(1);
   }
 

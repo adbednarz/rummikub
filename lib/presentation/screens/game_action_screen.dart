@@ -78,7 +78,7 @@ class GameActionScreen extends StatelessWidget {
                 Stack(
                   children: [
                     FAProgressBar(
-                      maxValue: 60,
+                      maxValue: BlocProvider.of<GameActionPanelCubit>(context).timeForMove,
                       progressColor: Colors.green,
                       backgroundColor: Colors.white70,
                       currentValue:
@@ -352,11 +352,6 @@ class GameActionScreen extends StatelessWidget {
     return BlocListener<GameActionPanelCubit, GameActionPanelState>(
       listener: (context, state) {
         if (state is PanelInfo) {
-          Fluttertoast.showToast(
-            gravity: ToastGravity.TOP,
-            msg: state.message,
-            backgroundColor: Colors.grey,
-          );
         } else if (state is MissedTurn) {
           if (BlocProvider.of<GameActionBoardCubit>(context).timePassed()) {
             BlocProvider.of<GameActionRackCubit>(context).confirmRackModifications();

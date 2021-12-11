@@ -12,6 +12,7 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
   final Repository _firebaseRepository;
   late final String playerId;
   late final String gameId;
+  late final int timeForMove;
   late final StreamSubscription playersQueue;
   late final StreamSubscription gameStatus;
   String? currentTurn;
@@ -20,6 +21,7 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
   GameActionPanelCubit(this._firebaseRepository, Map<String, String> params) : super(GameActionPanelInitial()) {
     gameId = params['gameId']!;
     playerId = params['playerId']!;
+    timeForMove = int.parse(params['timeForMove']!);
     playersQueue = _firebaseRepository.getPlayersQueue(gameId).listen((result) {
       _changePanel(result);
     });
@@ -49,15 +51,15 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
 
   void _changeTurn() {
     _timer?.cancel();
-    emit(CurrentPlayersQueue(state.players, 60));
+    emit(CurrentPlayersQueue(state.players, timeForMove));
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-      if (timer.tick > 60) {
+      if (timer.tick > timeForMove) {
         timer.cancel();
         if(isMyTurn()) {
           emit(MissedTurn(state.players, 0));
         }
       } else {
-        emit(CurrentPlayersQueue(state.players, timer.tick > 60 ? 0 : 60 - timer.tick));
+        emit(CurrentPlayersQueue(state.players, timer.tick > timeForMove ? 0 : timeForMove - timer.tick));
       }
     });
   }

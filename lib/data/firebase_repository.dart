@@ -34,9 +34,9 @@ class FirebaseRepository implements Repository {
   }
 
   @override
-  Future<String> searchGame(String playerId, int playersNumber) async {
+  Future<String> searchGame(String playerId, int playersNumber, int timeForMove) async {
     await _firestoreProvider.changeUserActiveStatus(playerId, false);
-    return await _functionsProvider.searchGame(playersNumber);
+    return await _functionsProvider.searchGame(playersNumber, timeForMove);
   }
 
   @override
