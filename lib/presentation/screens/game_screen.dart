@@ -34,8 +34,8 @@ class GameScreen extends StatelessWidget {
             }
           },
           child: Container(
-            color: Color(0xff18203d),
-              margin: EdgeInsets.symmetric(horizontal: 30),
+              color: Color(0xff18203d),
+              padding: EdgeInsets.symmetric(horizontal: 30),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[

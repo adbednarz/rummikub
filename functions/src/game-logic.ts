@@ -33,11 +33,6 @@ export class GameLogic {
           let boardTiles: Tile[] = [];
           let playerTiles: Tile[] = [];
 
-          // jeśli gracz nie zmienia tablicy bierze kość z banku
-          if (_.isEqual(boardSets, playerSets) || _.isEmpty(playerSets)) {
-            return "empty";
-          }
-
           // usuwamy niezmienione zbiory kości, różniące się zbiory rozdzielamy na tablicę kości
           for (const key in boardSets) {
             if (_.isEqual(boardSets[key], playerSets[key])) {
@@ -83,6 +78,11 @@ export class GameLogic {
             }
             return false;
           }));
+
+          // zbiory były  takie same, gracz nie wyłożył żadnej kości
+          if (difference.length == 0) {
+            return "empty";
+          }
 
           const playerTilesRack: FirebaseFirestore.DocumentReference[] = [];
           playerRack.docs.forEach((tile) => {

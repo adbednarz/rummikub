@@ -13,18 +13,24 @@ import 'game.dart';
 
 class GameBot implements GameRepository {
   final Game game = Game();
-  late final BotEngine botEngine;
+  final String botType;
+  final List<BotEngine> bots = [];
 
-  final StreamController<Map<String, dynamic>> gameStatusController = StreamController<Map<String, dynamic>>();
-  final StreamController<List<Tile>> playerTilesController = StreamController<List<Tile>>();
-  final StreamController<List<TilesSet>> tilesSetsController = StreamController<List<TilesSet>>();
+  final StreamController<
+      Map<String, dynamic>> gameStatusController = StreamController<
+      Map<String, dynamic>>();
+  final StreamController<List<Tile>> playerTilesController = StreamController<
+      List<Tile>>();
+  final StreamController<List<TilesSet>> tilesSetsController = StreamController<
+      List<TilesSet>>();
 
-  GameBot(String botType) {
-    botEngine = botType == 'basicBot' ? BasicBot() : AdvancedBot();
-  }
+  GameBot(this.botType);
 
   @override
   Future<String> searchGame(String playerId, int playersNumber, int timeForMove) async {
+    for (var i = 0; i < playersNumber - 1; i++) {
+      bots.add(botType == 'basicBot' ? BasicBot() : AdvancedBot());
+    }
     game.initialize(playersNumber - 1, timeForMove);
     return '0';
   }
@@ -38,7 +44,8 @@ class GameBot implements GameRepository {
 
   @override
   Stream<Map<String, dynamic>> getGameStatus(String gameId) {
-    gameStatusController.add({'currentTurn': '0', 'timeForMove': game.timeForMove});
+    gameStatusController.add(
+        {'currentTurn': '0', 'timeForMove': game.timeForMove});
     return gameStatusController.stream;
   }
 
@@ -66,7 +73,9 @@ class GameBot implements GameRepository {
 
   @override
   Future<void> putTiles(String gameId, List<TilesSet> tiles) async {
-    var playerTiles = tiles.expand((set) => set.tiles.map((tile) => Tile(tile.color, tile.number, false)).toList()).toList();
+    var playerTiles = tiles.expand((set) =>
+        set.tiles.map((tile) => Tile(tile.color, tile.number, false)).toList())
+        .toList();
     var previousTiles = game.sets.expand((set) => set.tiles).toList();
     var tilesToDeleteFromPlayerRack = [];
     for (var tile in playerTiles) {
@@ -97,12 +106,13 @@ class GameBot implements GameRepository {
 
   Future<void> _botMove() async {
     for (var i = 0; i < game.botsRacks.length; i++) {
-      gameStatusController.add({'currentTurn': (i+1).toString()});
+      gameStatusController.add({'currentTurn': (i + 1).toString()});
       final stopwatch = Stopwatch()..start();
-      var result = botEngine.move(List.from(game.sets), List.from(game.botsRacks[i]));
+      var result = bots[i].move(List.from(game.sets), List.from(game.botsRacks[i]));
       var time = stopwatch.elapsed.inSeconds;
       if (time < 5) {
-        await Future.delayed(Duration(seconds: 5 + Random().nextInt(game.timeForMove - 5)));
+        await Future.delayed(
+            Duration(seconds: 5 + Random().nextInt(game.timeForMove - 5)));
       }
       if (result[0].isNotEmpty) {
         tilesSetsController.add(List.from(result[0]));
@@ -128,32 +138,7 @@ class GameBot implements GameRepository {
   Future<void> joinGame(bool accepted, String gameId) async {}
 
   @override
-  Stream<Map<String, String>> getUserDocumentChanges(String playerId) {
-    throw UnimplementedError();
-  }
-
-  @override
-  Stream<List<String>> getActivePlayers(String playerId) {
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<User> logIn(String email, String password) {
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> logOut(String playerId) {
-    throw UnimplementedError();
-  }
-
-  @override
   Future<String> createGame(String playerId, List<String> plyersSelected, int timeForMove) {
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<User> signUp(String email, String username, String password) {
     throw UnimplementedError();
   }
 

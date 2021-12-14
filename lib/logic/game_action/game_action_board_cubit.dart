@@ -177,13 +177,20 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
   }
 
   bool _isInitialMeld() {
-    var setsCopy = List<TilesSet>.from(state.sets);
-    setsCopy.removeWhere((set) => setsBeforeModification.contains(set));
+    var previousTilesNumber = 0;
+    var currentTilesNumber = 0;
+    for (var set in setsBeforeModification) {
+      previousTilesNumber += set.tiles.length;
+    }
+    for (var set in state.sets) {
+      currentTilesNumber += set.tiles.length;
+    }
     // gracz wysyła kości bez zmian
-    if (setsCopy.isEmpty) {
+    if (previousTilesNumber == currentTilesNumber) {
       return true;
     }
 
+    var setsCopy = List<TilesSet>.from(state.sets);
     var sum = 0;
     var currentSets = setsCopy.map((set) => set.tiles).toList();
     for (var set in currentSets) {
