@@ -4,28 +4,26 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:meta/meta.dart';
-import 'package:rummikub/data/repository.dart';
+import 'package:rummikub/data/game_repository.dart';
 import 'package:rummikub/shared/models/player.dart';
 
 part 'game_action_panel_state.dart';
 
 class GameActionPanelCubit extends Cubit<GameActionPanelState> {
-  final Repository _firebaseRepository;
-  late final String playerId;
-  late final String gameId;
+  final GameRepository _repository;
+  final String gameId;
+  final String playerId;
   late final StreamSubscription playersQueue;
   late final StreamSubscription gameStatus;
   int? timeForMove;
   String? currentTurn;
   Timer? _timer;
 
-  GameActionPanelCubit(this._firebaseRepository, Map<String, String> params) : super(GameActionPanelInitial()) {
-    gameId = params['gameId']!;
-    playerId = params['playerId']!;
-    playersQueue = _firebaseRepository.getPlayersQueue(gameId).listen((result) {
+  GameActionPanelCubit(this._repository, this.gameId, this.playerId) : super(GameActionPanelInitial()) {
+    playersQueue = _repository.getPlayersQueue(gameId).listen((result) {
       _changePanel(result);
     });
-    gameStatus = _firebaseRepository.getGameStatus(gameId).listen((result) {
+    gameStatus = _repository.getGameStatus(gameId).listen((result) {
       if (result['winner'] != null) {
         var winners = <String>[...result['winner']];
         var players = List<Player>.from(state.players);
@@ -76,12 +74,12 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
   }
 
   void leaveGameBeforeEnd() {
-    _firebaseRepository.leaveGame(gameId, playerId, false);
+    _repository.leaveGame(gameId, playerId, false);
     emit(GameAbandoned());
   }
 
   void leaveGame() {
-    _firebaseRepository.leaveGame(gameId, playerId, true);
+    _repository.leaveGame(gameId, playerId, true);
     emit(GameCancelled(state.players, state.procent));
   }
 

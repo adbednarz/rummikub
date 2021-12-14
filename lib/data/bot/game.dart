@@ -1,11 +1,13 @@
 import 'package:rummikub/shared/models/tile.dart';
 import 'package:rummikub/shared/models/tiles_set.dart';
+import 'dart:math';
 
 class Game {
   final List<Tile> pool = [];
   late final List<Tile> playerRack;
-  List<Tile> botRack = [];
+  List<List<Tile>> botsRacks = [];
   List<TilesSet> sets = [];
+  late int timeForMove;
 
   Game() {
     for (var i = 0; i < 2; i++) {
@@ -21,8 +23,15 @@ class Game {
     pool.shuffle();
     playerRack = pool.take(14).map((tile) => Tile(tile.color, tile.number, true)).toList();
     pool.removeRange(0, 14);
-    botRack = pool.take(14).toList();
-    pool.removeRange(0, 14);
+  }
+
+  void initialize(int number, int timeForMove) {
+    this.timeForMove = timeForMove;
+    for (var i = 0; i < number; i++) {
+      var botRack = pool.take(14).toList();
+      pool.removeRange(0, 14);
+      botsRacks.add(botRack);
+    }
   }
 
   Tile? getTileFromPool() {
@@ -35,21 +44,34 @@ class Game {
   }
 
   List<String> pointTheWinner() {
+    var sums = [];
+    var min = 0;
+
     var playerSum = 0;
     for (var tile in playerRack) {
       playerSum += tile.number;
     }
-    var botSum = 0;
-    for (var tile in botRack) {
-      botSum += tile.number;
+    sums.add(playerSum);
+    min = playerSum;
+
+    for (var botRack in botsRacks) {
+      var botSum = 0;
+      for (var tile in botRack) {
+        botSum += tile.number;
+      }
+      sums.add(botSum);
+      if (min > botSum) {
+        min = botSum;
+      }
     }
-    if (playerSum < botSum) {
-      return ['0'];
-    } else if (playerSum == botSum) {
-      return ['0', '1'];
-    } else {
-      return ['1'];
+
+    var winners = <String>[];
+    for (var i = 0; i < botsRacks.length; i++) {
+      if (sums[i] == min) {
+        winners.add(i.toString());
+      }
     }
+    return winners;
   }
 
   static bool isRun(List<Tile> set) {

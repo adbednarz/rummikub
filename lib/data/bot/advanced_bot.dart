@@ -2,7 +2,7 @@ import 'package:rummikub/data/bot/bot_engine.dart';
 import 'package:rummikub/shared/models/tile.dart';
 import 'package:rummikub/shared/models/tiles_set.dart';
 
-class BasicBot extends BotEngine {
+class AdvancedBot extends BotEngine {
 
   @override
   List<dynamic> move(List<TilesSet> sets, List<Tile> botRack) {
@@ -63,7 +63,7 @@ class BasicBot extends BotEngine {
             for (var tile in run) {
               cards_left.remove(tile);
             }
-            if (cards_left.length == 0) {
+            if (cards_left.isEmpty) {
               return [[[List.from(suit) + List.from(run), cards_left], 0]];
             }
             all_combinations.add([List.from(suit) + List.from(run), cards_left]);

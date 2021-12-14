@@ -1,27 +1,23 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
-import 'package:rummikub/data/repository.dart';
+import 'package:rummikub/data/game_repository.dart';
 import 'package:rummikub/shared/models/tile.dart';
 import 'package:rummikub/shared/models/tiles_set.dart';
 
 part 'game_action_board_state.dart';
 
 class GameActionBoardCubit extends Cubit<GameActionBoardState> {
-  final Repository _firebaseRepository;
-  late String gameId;
-  late String playerId;
+  final GameRepository _repository;
+  final String gameId;
+  final String playerId;
   late StreamSubscription tilesSetsSubscription;
   List<TilesSet> setsBeforeModification = [];
   List<int> draggable = List.filled(2, -1, growable: false);
   bool initialMeld = false;
 
-  GameActionBoardCubit(this._firebaseRepository, Map<String, String> params) : super(GameActionBoardInitial()) {
-    gameId = params['gameId']!;
-    playerId = params['playerId']!;
-    tilesSetsSubscription = _firebaseRepository.getTilesSets(gameId).listen((result) {
+  GameActionBoardCubit(this._repository, this.gameId, this.playerId) : super(GameActionBoardInitial()) {
+    tilesSetsSubscription = _repository.getTilesSets(gameId).listen((result) {
       emit(BoardChanged(result));
       setsBeforeModification = result.map((set) => set.copy()).toList();
     });
@@ -114,7 +110,7 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
 
   bool wantToPutTiles() {
     if (_isValid()) {
-      _firebaseRepository.putTiles(gameId, state.sets);
+      _repository.putTiles(gameId, state.sets);
       return true;
     }
     if (initialMeld) {
@@ -129,10 +125,10 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
 
   bool timePassed() {
     if (_isValid()) {
-      _firebaseRepository.putTiles(gameId, state.sets);
+      _repository.putTiles(gameId, state.sets);
       return true;
     } else {
-      _firebaseRepository.putTiles(gameId, setsBeforeModification);
+      _repository.putTiles(gameId, setsBeforeModification);
       emit(BoardChanged(setsBeforeModification.map((set) => set.copy()).toList()));
       return false;
     }

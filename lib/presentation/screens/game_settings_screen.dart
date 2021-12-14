@@ -25,9 +25,10 @@ class GameSettingsScreen extends StatelessWidget {
                         CustomErrorDialog('Error', state.message)
                 );
               } else if (state is GameFound) {
-                var playerId =  BlocProvider.of<GameSettingsCubit>(context).playerId;
+                var playerId = BlocProvider.of<GameSettingsCubit>(context).playerId;
+                var serverType = BlocProvider.of<GameSettingsCubit>(context).repository;
                 Navigator.of(context).pushNamed('/play', arguments:
-                {'gameId': state.gameId, 'playerId': playerId});
+                {'gameId': state.gameId, 'playerId': playerId, 'serverType': serverType});
               }
             },
             builder: (context, state) {

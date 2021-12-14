@@ -15,7 +15,7 @@ class HomeScreen  extends StatelessWidget {
               SizedBox(height: 20),
               _buildMaterialButton(context, '/registration', 'REGISTRATION'),
               SizedBox(height: 20),
-              _buildMaterialButton(context, '/play_with_bot', 'PLAY WITH BOT'),
+              _buildMaterialButton(context, '/bot_settings', 'PLAY WITH BOT'),
             ],
           )
       ),
@@ -27,14 +27,7 @@ class HomeScreen  extends StatelessWidget {
       elevation: 0,
       minWidth: double.maxFinite,
       height: 50,
-      onPressed: () {
-        if (path == '/play_with_bot') {
-          Navigator.of(context).pushNamed('/game_settings', arguments: {'playerId': '0'});
-          // Navigator.of(context).pushNamed('/play_with_bot', arguments: {'gameId': '0', 'playerId': '0'});
-        } else {
-          Navigator.of(context).pushNamed(path);
-        }
-      },
+      onPressed: () => Navigator.of(context).pushNamed(path),
       color: Colors.cyan,
       child: Text(name, style: TextStyle(color: Colors.white, fontSize: 16)),
     );

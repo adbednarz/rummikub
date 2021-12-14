@@ -1,25 +1,31 @@
 import 'dart:async';
-
+import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:rummikub/data/bot/basic_bot.dart';
-import 'package:rummikub/data/repository.dart';
 import 'package:rummikub/shared/models/player.dart';
 import 'package:rummikub/shared/models/tile.dart';
 import 'package:rummikub/shared/models/tiles_set.dart';
 
+import '../game_repository.dart';
+import 'advanced_bot.dart';
 import 'bot_engine.dart';
 import 'game.dart';
 
-class LocalGame implements Repository {
+class GameBot implements GameRepository {
   final Game game = Game();
-  final BotEngine botEngine = BasicBot();
+  late final BotEngine botEngine;
 
   final StreamController<Map<String, dynamic>> gameStatusController = StreamController<Map<String, dynamic>>();
   final StreamController<List<Tile>> playerTilesController = StreamController<List<Tile>>();
   final StreamController<List<TilesSet>> tilesSetsController = StreamController<List<TilesSet>>();
 
+  GameBot(String botType) {
+    botEngine = botType == 'basicBot' ? BasicBot() : AdvancedBot();
+  }
+
   @override
   Future<String> searchGame(String playerId, int playersNumber, int timeForMove) async {
+    game.initialize(playersNumber - 1, timeForMove);
     return '0';
   }
 
@@ -32,7 +38,7 @@ class LocalGame implements Repository {
 
   @override
   Stream<Map<String, dynamic>> getGameStatus(String gameId) {
-    gameStatusController.add({'currentTurn': '0', 'timeForMove': 120});
+    gameStatusController.add({'currentTurn': '0', 'timeForMove': game.timeForMove});
     return gameStatusController.stream;
   }
 
@@ -44,7 +50,10 @@ class LocalGame implements Repository {
 
   @override
   Stream<List<Player>> getPlayersQueue(String gameId) {
-    var players = <Player>[Player('You', '0'), Player('Bot', '1')];
+    var players = <Player>[Player('You', '0')];
+    for (var i = 1; i <= game.botsRacks.length; i++) {
+      players.add(Player('Bot ' + i.toString(), i.toString()));
+    }
     var controller = StreamController<List<Player>>();
     controller.add(players);
     return controller.stream;
@@ -83,23 +92,30 @@ class LocalGame implements Repository {
         game.playerRack.remove(tile);
       }
     }
-    _botMove();
+    await _botMove();
   }
 
-  void _botMove() {
-    gameStatusController.add({'currentTurn': '1'});
-    var result = botEngine.move(List.from(game.sets), List.from(game.botRack));
-    if (result[0].isNotEmpty) {
-      tilesSetsController.add(List.from(result[0]));
-      game.botRack = result[1];
-    } else {
-      var tile = game.getTileFromPool();
-      if (tile != null) {
-        game.botRack.add(tile);
+  Future<void> _botMove() async {
+    for (var i = 0; i < game.botsRacks.length; i++) {
+      gameStatusController.add({'currentTurn': (i+1).toString()});
+      final stopwatch = Stopwatch()..start();
+      var result = botEngine.move(List.from(game.sets), List.from(game.botsRacks[i]));
+      var time = stopwatch.elapsed.inSeconds;
+      if (time < 5) {
+        await Future.delayed(Duration(seconds: 5 + Random().nextInt(game.timeForMove - 5)));
+      }
+      if (result[0].isNotEmpty) {
+        tilesSetsController.add(List.from(result[0]));
+        game.botsRacks[i] = result[1];
       } else {
-        var winner = game.pointTheWinner();
-        gameStatusController.add({'winner': winner});
-        return;
+        var tile = game.getTileFromPool();
+        if (tile != null) {
+          game.botsRacks[i].add(tile);
+        } else {
+          var winner = game.pointTheWinner();
+          gameStatusController.add({'winner': winner});
+          continue;
+        }
       }
     }
     gameStatusController.add({'currentTurn': '0'});

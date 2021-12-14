@@ -47,7 +47,6 @@ dependencies:
   fluttertoast: ^8.0.8
 
   json_annotation: ^4.0.1
-  mockito: ^5.0.16
 
 dev_dependencies:
   flutter_test:

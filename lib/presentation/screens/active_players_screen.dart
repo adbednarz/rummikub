@@ -92,7 +92,8 @@ class ActivePlayersScreen extends StatelessWidget {
           Navigator.of(context).pushNamed('/game_settings', arguments:
           {
             'playerId': BlocProvider.of<ActivePlayersCubit>(context).playerId,
-            'selectedPlayers': state.selectedPlayers
+            'selectedPlayers': state.selectedPlayers,
+            'serverType': 'firebase'
           });
         } else {
           Fluttertoast.showToast(

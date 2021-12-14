@@ -99,8 +99,12 @@ class GameScreen extends StatelessWidget {
         TextButton(
           onPressed: () {
             authCubit.acceptInvitation(true);
-            Navigator.of(context).pushNamed('/game_settings',
-                arguments: {'joinGame': state.gameId, 'playerId': state.user!.uid});
+            Navigator.of(context).pushNamed('/game_settings', arguments:
+            {
+              'playerId': state.user!.uid,
+              'gameId': state.gameId,
+              'serverType': 'firebase'
+            });
           },
           child: Text('Yes'),
         ),
