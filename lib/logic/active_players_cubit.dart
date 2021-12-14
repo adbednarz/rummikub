@@ -12,17 +12,17 @@ class ActivePlayersCubit extends Cubit<ActivePlayersState> {
   StreamSubscription? getActivePlayers;
   String filter = '';
   List<String> activePlayers = [];
-  List<String> selectedPlayers = [];
 
   ActivePlayersCubit(this._repository, this.playerId) : super(ActivePlayersInitial()) {
-    getActivePlayers = _repository.getActivePlayers.listen((change) {
+    getActivePlayers = _repository.getActivePlayers(playerId).listen((change) {
       activePlayers = change;
       if (filter != '') {
         emit(ActivePlayersChanged(
-            activePlayers.where((name) => name.toLowerCase().startsWith(filter)).toList()
+            activePlayers.where((name) => name.toLowerCase().startsWith(filter)).toList(),
+            state.selectedPlayers
         ));
       } else {
-        emit(ActivePlayersChanged(activePlayers));
+        emit(ActivePlayersChanged(activePlayers, state.selectedPlayers));
       }
     });
   }
@@ -30,16 +30,19 @@ class ActivePlayersCubit extends Cubit<ActivePlayersState> {
   void filtrActivePlayers(String value) {
     filter = value;
     emit(ActivePlayersChanged(
-        activePlayers.where((name) => name.toLowerCase().startsWith(filter)).toList()
+      activePlayers.where((name) => name.toLowerCase().startsWith(filter)).toList(),
+      state.selectedPlayers
     ));
   }
 
-  bool addPlayer(String player) {
-    if (selectedPlayers.length < 4) {
+  void addPlayer(String player) {
+    var selectedPlayers = state.selectedPlayers;
+    if (selectedPlayers.contains(player)) {
+      selectedPlayers.remove(player);
+      emit(ActivePlayersChanged(state.activePlayers, selectedPlayers));
+    } else if (selectedPlayers.length < 4) {
       selectedPlayers.add(player);
-      return true;
-    } else {
-      return false;
+      emit(ActivePlayersChanged(state.activePlayers, selectedPlayers));
     }
   }
 

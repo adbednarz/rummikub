@@ -4,7 +4,6 @@ import 'package:rummikub/logic/auth_cubit.dart';
 import 'package:rummikub/shared/custom_error_dialog.dart';
 
 class GameScreen extends StatelessWidget {
-  final Color logoGreen = Color(0xff25bcbb);
 
   @override
   Widget build(BuildContext context) {
@@ -18,17 +17,31 @@ class GameScreen extends StatelessWidget {
               showDialog(context: context, builder: (context) =>
                   CustomErrorDialog('Error', state.errorMessage)
               );
+            } else if (state is AuthInvited) {
+              final authCubit = BlocProvider.of<AuthCubit>(context);
+              showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (context) {
+                    return WillPopScope(
+                      onWillPop: () async => false,
+                      child: _buildAlertDialog(context, state, authCubit),
+                    );
+                  }
+              );
             } else if (state is AuthLoggedOut) {
               Navigator.of(context).popUntil(ModalRoute.withName('/'));
             }
           },
           child: Container(
+            color: Color(0xff18203d),
               margin: EdgeInsets.symmetric(horizontal: 30),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   _buildMaterialButton(context, 'PLAY', '/game_settings'),
-                  _buildMaterialButton(context, 'FIND_PLAYERS', '/find_players'),
+                  SizedBox(height: 20),
+                  _buildMaterialButton(context, 'FIND PLAYERS', '/find_players'),
                 ],
               )
           ),
@@ -42,10 +55,10 @@ class GameScreen extends StatelessWidget {
       minWidth: double.maxFinite,
       height: 50,
       onPressed: () {
-        var playerId = (BlocProvider.of<AuthCubit>(context).state as AuthLogged).user.uid;
-        Navigator.of(context).pushNamed(path, arguments: playerId);
+        var playerId = BlocProvider.of<AuthCubit>(context).state.user!.uid;
+        Navigator.of(context).pushNamed(path, arguments: {'playerId': playerId});
       },
-      color: logoGreen,
+      color: Colors.cyan,
       child: Text(text, style: TextStyle(color: Colors.white, fontSize: 16)),
     );
   }
@@ -63,13 +76,35 @@ class GameScreen extends StatelessWidget {
             child: Text('No'),
           ),
           TextButton(
-            onPressed: () {
-              authCubit.logOut();
-            },
+            onPressed: () => authCubit.logOut(),
             child: Text('Yes'),
           ),
         ],
       ),
+    );
+  }
+
+  AlertDialog _buildAlertDialog(BuildContext context, AuthInvited state, AuthCubit authCubit) {
+    return AlertDialog(
+      title: Text('Invitation'),
+      content: Text('Player ' + state.player + ' wants you to join his game. Do you accept?'),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () {
+            authCubit.acceptInvitation(false);
+            Navigator.of(context).pop();
+          },
+          child: Text('No'),
+        ),
+        TextButton(
+          onPressed: () {
+            authCubit.acceptInvitation(true);
+            Navigator.of(context).pushNamed('/game_settings',
+                arguments: {'joinGame': state.gameId, 'playerId': state.user!.uid});
+          },
+          child: Text('Yes'),
+        ),
+      ],
     );
   }
 }

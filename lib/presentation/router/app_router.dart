@@ -8,11 +8,11 @@ import 'package:rummikub/logic/auth_cubit.dart';
 import 'package:rummikub/logic/game_action/game_action_board_cubit.dart';
 import 'package:rummikub/logic/game_action/game_action_panel_cubit.dart';
 import 'package:rummikub/logic/game_action/game_action_rack_cubit.dart';
-import 'package:rummikub/logic/game_searching_cubit.dart';
+import 'package:rummikub/logic/game_settings_cubit.dart';
 import 'package:rummikub/presentation/screens/active_players_screen.dart';
 import 'package:rummikub/presentation/screens/game_action_screen.dart';
 import 'package:rummikub/presentation/screens/game_screen.dart';
-import 'package:rummikub/presentation/screens/game_searching_screen.dart';
+import 'package:rummikub/presentation/screens/game_settings_screen.dart';
 import 'package:rummikub/presentation/screens/home_screen.dart';
 import 'package:rummikub/presentation/screens/login_screen.dart';
 import 'package:rummikub/presentation/screens/registration_screen.dart';
@@ -51,20 +51,21 @@ class AppRouter {
     } else if (settings.name == '/game_settings') {
       return MaterialPageRoute(
           builder: (context) =>
-              BlocProvider<GameSearchingCubit>(
+              BlocProvider<GameSettingsCubit>(
                 create: (context) =>
-                    GameSearchingCubit(
-                        _firebaseRepository, settings.arguments as String),
-                child: GameSearchingScreen(),
+                    GameSettingsCubit(
+                        _firebaseRepository, settings.arguments as Map<String, dynamic>),
+                child: GameSettingsScreen(),
               )
       );
     } else if (settings.name == '/find_players') {
+      var params = settings.arguments as Map<String, String>;
       return MaterialPageRoute(
           builder: (context) =>
               BlocProvider<ActivePlayersCubit>(
                 create: (context) =>
                     ActivePlayersCubit(
-                        _firebaseRepository, settings.arguments as String),
+                        _firebaseRepository, params['playerId']!),
                 child: ActivePlayersScreen(),
               )
       );

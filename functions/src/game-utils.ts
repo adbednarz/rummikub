@@ -14,10 +14,10 @@ export class GameUtils {
   }
 
   static createGame(transaction: FirebaseFirestore.Transaction,
-      playerId: string, playerName: string, size: number, timeForMove: number): string {
+      playerId: string, playerName: string, available: number, size: number, timeForMove: number): string {
     const gameRef: FirebaseFirestore.DocumentReference = firestore.collection("games").doc();
 
-    transaction.set(gameRef, {available: size - 1, currentTurn: "", size: size, timeForMove: timeForMove});
+    transaction.set(gameRef, {available: available, currentTurn: "", size: size, timeForMove: timeForMove});
 
     transaction.set(
         gameRef.collection("playersQueue").doc(playerId),

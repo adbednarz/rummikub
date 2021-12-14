@@ -5,17 +5,10 @@ import 'package:rummikub/logic/auth_cubit.dart';
 import 'package:rummikub/shared/custom_error_dialog.dart';
 
 class RegistrationScreen extends StatelessWidget {
-
-  final Color primaryColor = Color(0xff18203d);
-  final Color secondaryColor = Color(0xff232c51);
-
-  final Color logoGreen = Color(0xff25bcbb);
-
   final TextEditingController emailController = TextEditingController();
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
-
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -25,7 +18,7 @@ class RegistrationScreen extends StatelessWidget {
           backgroundColor: Colors.transparent,
           elevation: 0,
         ),
-        backgroundColor: primaryColor,
+        backgroundColor: Color(0xff18203d),
         body: BlocConsumer<AuthCubit, AuthState>(
           listener: (context, state) {
             if (state is AuthFailure) {
@@ -82,7 +75,7 @@ class RegistrationScreen extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-          color: secondaryColor, border: Border.all(color: Colors.blue)),
+          color: Color(0xff232c51), border: Border.all(color: Colors.blue)),
       child: TextFormField(
         controller: controller,
         obscureText: labelText.endsWith('Password') ? true : false,
@@ -124,7 +117,7 @@ class RegistrationScreen extends StatelessWidget {
                 password: passwordController.text);
         }
       },
-      color: logoGreen,
+      color: Colors.cyan,
       child: Text('REGISTER', style: TextStyle(color: Colors.white, fontSize: 16)),
     );
   }

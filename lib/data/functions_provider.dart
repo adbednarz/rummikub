@@ -12,11 +12,32 @@ class FunctionsProvider {
     _functions.useFunctionsEmulator(localhost, 5001);
   }
 
+  Future<String> createGame(List<String> playersSelected, int timeForMove) async {
+    try {
+      final results = await _functions.httpsCallable('createGame')
+          .call({'playersSelected': playersSelected, 'timeForMove': timeForMove});
+      return results.data['gameId'];
+    } catch(error) {
+      print(error);
+      throw CustomException('Error occurred');
+    }
+  }
+
   Future<String> searchGame(int playersNumber, int timeForMove) async {
     try {
       final results = await _functions.httpsCallable('searchGame')
           .call({'playersNumber': playersNumber, 'timeForMove': timeForMove});
       return results.data['gameId'];
+    } catch(error) {
+      print(error);
+      throw CustomException('Error occurred');
+    }
+  }
+
+  Future<void> joinGame(bool accepted, String gameId) async {
+    try {
+      await _functions.httpsCallable('addToExistingGame')
+          .call({'accepted': accepted, 'gameId': gameId});
     } catch(error) {
       print(error);
       throw CustomException('Error occurred');

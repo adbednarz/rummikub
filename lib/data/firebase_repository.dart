@@ -34,9 +34,30 @@ class FirebaseRepository implements Repository {
   }
 
   @override
+  Future<String> createGame(String playerId, List<String> playersSelected, int timeForMove) async {
+    await _firestoreProvider.changeUserActiveStatus(playerId, false);
+    return _functionsProvider.createGame(playersSelected, timeForMove);
+  }
+
+  @override
   Future<String> searchGame(String playerId, int playersNumber, int timeForMove) async {
     await _firestoreProvider.changeUserActiveStatus(playerId, false);
-    return await _functionsProvider.searchGame(playersNumber, timeForMove);
+    return _functionsProvider.searchGame(playersNumber, timeForMove);
+  }
+
+  @override
+  Future<void> joinGame(bool accepted, String gameId) async {
+    _functionsProvider.joinGame(accepted, gameId);
+  }
+
+  @override
+  Stream<Map<String, String>> getUserDocumentChanges(String playerId) {
+    return _firestoreProvider.getUserDocumentChanges(playerId);
+  }
+
+  @override
+  Stream<List<String>> getActivePlayers(String playerId) {
+    return _firestoreProvider.getActivePlayers(playerId);
   }
 
   @override

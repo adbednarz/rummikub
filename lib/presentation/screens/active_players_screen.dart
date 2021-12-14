@@ -5,10 +5,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:rummikub/logic/active_players_cubit.dart';
 
 class ActivePlayersScreen extends StatelessWidget {
-  final Color primaryColor = Color(0xff18203d);
-  final Color secondaryColor = Color(0xff232c51);
-
-  final Color logoGreen = Color(0xff25bcbb);
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +13,7 @@ class ActivePlayersScreen extends StatelessWidget {
           backgroundColor: Colors.transparent,
           elevation: 0,
         ),
-        backgroundColor: primaryColor,
+        backgroundColor: Colors.lightBlueAccent,
         body: BlocConsumer<ActivePlayersCubit, ActivePlayersState>(
             listener: (context, state) {
               if (state is Message) {
@@ -32,20 +28,24 @@ class ActivePlayersScreen extends StatelessWidget {
               return Container(
                 alignment: Alignment.topCenter,
                 margin: EdgeInsets.symmetric(horizontal: 30),
-                child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        TextField(
-                          onChanged: (value) =>
-                              BlocProvider.of<ActivePlayersCubit>(context).filtrActivePlayers(value),
-                          decoration: const InputDecoration(
-                              labelText: 'Search',
-                              suffixIcon: Icon(Icons.search)),
-                        ),
-                        _buildList(context, state),
-                        _buildButton(context),
-                      ],
-                    )
+                child: Column(
+                  children: [
+                    TextField(
+                      onChanged: (value) =>
+                          BlocProvider.of<ActivePlayersCubit>(context).filtrActivePlayers(value),
+                      decoration: const InputDecoration(
+                          labelText: 'Search',
+                          suffixIcon: Icon(Icons.search)),
+                    ),
+                    SizedBox(height: 20),
+                    Expanded(
+                      flex: 6,
+                      child: _buildList(context, state),
+                    ),
+                    SizedBox(height: 20),
+                    _buildButton(context, state),
+                    SizedBox(height: 20),
+                  ],
                 ),
               );
             }
@@ -53,21 +53,25 @@ class ActivePlayersScreen extends StatelessWidget {
     );
   }
 
-  _buildList(BuildContext context, ActivePlayersState state) {
+  StatelessWidget _buildList(BuildContext context, ActivePlayersState state) {
     return state.activePlayers.isNotEmpty
         ? ListView.builder(
+            scrollDirection: Axis.vertical,
+            shrinkWrap: true,
             itemCount: state.activePlayers.length,
             itemBuilder: (context, index) {
-              var flag = false;
               return Card(
-                color: flag ? Colors.amberAccent : Colors.transparent,
+                color: state.selectedPlayers.contains(state.activePlayers[index])
+                    ? Colors.amberAccent : Colors.blueAccent,
                 elevation: 4,
                 margin: const EdgeInsets.symmetric(vertical: 10),
                 child: ListTile(
                   title: Text(state.activePlayers[index]),
-                  onTap: () =>
-                    flag = BlocProvider.of<ActivePlayersCubit>(context)
-                        .addPlayer(state.activePlayers[index])
+                  onTap: () {
+                    BlocProvider.of<ActivePlayersCubit>(context)
+                        .addPlayer(state.activePlayers[index]);
+                  }
+
                 ),
               );
             }
@@ -78,24 +82,17 @@ class ActivePlayersScreen extends StatelessWidget {
           );
   }
 
-  MaterialButton _buildButton(BuildContext context) {
+  MaterialButton _buildButton(BuildContext context, ActivePlayersState state) {
     return MaterialButton(
       elevation: 0,
       minWidth: double.maxFinite,
       height: 50,
       onPressed: () {
-        if (BlocProvider.of<ActivePlayersCubit>(context).selectedPlayers.isNotEmpty) {
-          var playerId = BlocProvider
-              .of<ActivePlayersCubit>(context)
-              .playerId;
-          var selectedPlayers = BlocProvider
-              .of<ActivePlayersCubit>(context)
-              .selectedPlayers;
-          Navigator.of(context).pushNamed(
-              '/game_settings', arguments:
+        if (state.selectedPlayers.isNotEmpty) {
+          Navigator.of(context).pushNamed('/game_settings', arguments:
           {
-            'playerId': playerId,
-            'selectedPlayers': selectedPlayers
+            'playerId': BlocProvider.of<ActivePlayersCubit>(context).playerId,
+            'selectedPlayers': state.selectedPlayers
           });
         } else {
           Fluttertoast.showToast(
@@ -105,8 +102,8 @@ class ActivePlayersScreen extends StatelessWidget {
           );
         }
       },
-      color: logoGreen,
-      child: Text('Login', style: TextStyle(
+      color: Color(0xff25bcbb),
+      child: Text('CREATE GAME', style: TextStyle(
           color: Colors.white, fontSize: 16)),
     );
   }

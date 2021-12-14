@@ -42,6 +42,27 @@ class FirestoreProvider {
         });
   }
 
+  Stream<Map<String, String>> getUserDocumentChanges(String playerId) {
+    return _firestore.collection('users').doc(playerId).snapshots()
+        .map((snapshots) {
+          if (snapshots.data()!.containsKey('invitation')) {
+            var snap = snapshots.get('invitation');
+            return {'gameId': snap['gameId'], 'player': snap['player']};
+          } else {
+            return {};
+          }
+        });
+  }
+
+  Stream<List<String>> getActivePlayers(String playerId) {
+    return _firestore.collection('users')
+        .where('active', isEqualTo: true)
+        .where(FieldPath.documentId, isNotEqualTo: playerId).snapshots()
+        .map((snapshots) {
+          return snapshots.docs.map((doc) => doc.get('name').toString()).toList();
+        });
+  }
+
   Stream<int> getMissingPlayersNumberToStartGame(String gameId) {
     return _firestore.collection('games').doc(gameId).snapshots()
               .map((snapshots) => snapshots.get('available'));
@@ -60,7 +81,10 @@ class FirestoreProvider {
           if (snapshots.data()!.containsKey('winner')) {
             return {'winner': snapshots.get('winner')};
           }
-          return {'currentTurn': snapshots.get('currentTurn')};
+          return {
+            'currentTurn': snapshots.get('currentTurn'),
+            'timeForMove': snapshots.get('timeForMove')
+          };
     });
   }
 

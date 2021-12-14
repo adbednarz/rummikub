@@ -78,7 +78,7 @@ class GameActionScreen extends StatelessWidget {
                 Stack(
                   children: [
                     FAProgressBar(
-                      maxValue: BlocProvider.of<GameActionPanelCubit>(context).timeForMove,
+                      maxValue: BlocProvider.of<GameActionPanelCubit>(context).timeForMove ?? 120,
                       progressColor: Colors.green,
                       backgroundColor: Colors.white70,
                       currentValue:

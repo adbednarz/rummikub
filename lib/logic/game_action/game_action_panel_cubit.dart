@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:meta/meta.dart';
 import 'package:rummikub/data/repository.dart';
 import 'package:rummikub/shared/models/player.dart';
@@ -12,16 +13,15 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
   final Repository _firebaseRepository;
   late final String playerId;
   late final String gameId;
-  late final int timeForMove;
   late final StreamSubscription playersQueue;
   late final StreamSubscription gameStatus;
+  int? timeForMove;
   String? currentTurn;
   Timer? _timer;
 
   GameActionPanelCubit(this._firebaseRepository, Map<String, String> params) : super(GameActionPanelInitial()) {
     gameId = params['gameId']!;
     playerId = params['playerId']!;
-    timeForMove = int.parse(params['timeForMove']!);
     playersQueue = _firebaseRepository.getPlayersQueue(gameId).listen((result) {
       _changePanel(result);
     });
@@ -33,7 +33,8 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
         emit(GameFinished(state.players, state.procent, players.map((player) => player.name).toList()));
       } else {
         currentTurn = result['currentTurn'];
-        _changeTurn();
+        timeForMove ??= result['timeForMove'];
+        _changeTurn(timeForMove!);
       }
     });
   }
@@ -49,7 +50,7 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
     }
   }
 
-  void _changeTurn() {
+  void _changeTurn(int timeForMove) {
     _timer?.cancel();
     emit(CurrentPlayersQueue(state.players, timeForMove));
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {

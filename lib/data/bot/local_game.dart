@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:rummikub/data/bot/basic_bot.dart';
 import 'package:rummikub/data/repository.dart';
 import 'package:rummikub/shared/models/player.dart';
@@ -20,8 +19,20 @@ class LocalGame implements Repository {
   final StreamController<List<TilesSet>> tilesSetsController = StreamController<List<TilesSet>>();
 
   @override
+  Future<String> searchGame(String playerId, int playersNumber, int timeForMove) async {
+    return '0';
+  }
+
+  @override
+  Stream<int> getMissingPlayersNumberToStartGame(String gameId) {
+    final missingPlayersController = StreamController<int>();
+    missingPlayersController.add(0);
+    return missingPlayersController.stream;
+  }
+
+  @override
   Stream<Map<String, dynamic>> getGameStatus(String gameId) {
-    gameStatusController.add({'currentTurn': '0'});
+    gameStatusController.add({'currentTurn': '0', 'timeForMove': 120});
     return gameStatusController.stream;
   }
 
@@ -98,7 +109,15 @@ class LocalGame implements Repository {
   Future<void> leaveGame(String gameId, String playerId, bool isFinished) async {}
 
   @override
-  Stream<int> getMissingPlayersNumberToStartGame(String gameId) {
+  Future<void> joinGame(bool accepted, String gameId) async {}
+
+  @override
+  Stream<Map<String, String>> getUserDocumentChanges(String playerId) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Stream<List<String>> getActivePlayers(String playerId) {
     throw UnimplementedError();
   }
 
@@ -113,7 +132,7 @@ class LocalGame implements Repository {
   }
 
   @override
-  Future<String> searchGame(String playerId, int playersNumber, int timeForMove) {
+  Future<String> createGame(String playerId, List<String> plyersSelected, int timeForMove) {
     throw UnimplementedError();
   }
 

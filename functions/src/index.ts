@@ -10,17 +10,19 @@ export const firestore: FirebaseFirestore.Firestore = admin.firestore();
 
 export const createGame = functions.https.onCall((data, context) => {
   const playerId: string = GameUtils.checkAuthentication(context.auth?.uid);
-  const playerName: string = context.auth?.token.name ?? null;
-  const players: string[] = data.players;
+  const playerName: string = context.auth?.token.name ?? "";
+  const players: string[] = data.playersSelected;
   const timeForMove: number = data.timeForMove;
   let gameId: string;
 
   return firestore.runTransaction((transaction) => {
-    return transaction.get(GameUtils.getPlayers(players))
+    return transaction.get(firestore.collection("users").where("name", "in", players))
         .then(async (playersResult) => {
           // size jest równy 1, żeby gracze niezaproszeni nie mogli dołączać
-          gameId = await GameUtils.createGame(transaction, playerId, playerName, 0, timeForMove);
-          GameUtils.inviteToPlay(playersResult, playerName, gameId);
+          gameId = GameUtils.createGame(transaction, playerId, playerName, players.length, 0, timeForMove);
+          playersResult.forEach((doc) => {
+            doc.ref.update({"invitation": {"gameId": gameId, "player": playerName}});
+          });
         });
   }).then(() => {
     return {"gameId": gameId};
@@ -29,7 +31,7 @@ export const createGame = functions.https.onCall((data, context) => {
 
 export const searchGame = functions.https.onCall((data, context) => {
   const playerId: string = GameUtils.checkAuthentication(context.auth?.uid);
-  const playerName: string = context.auth?.token.name ?? null;
+  const playerName: string = context.auth?.token.name ?? "";
   const size: number = data.playersNumber;
   const timeForMove: number = data.timeForMove;
   let gameId: string;
@@ -39,7 +41,7 @@ export const searchGame = functions.https.onCall((data, context) => {
     return transaction.get(GameUtils.findGame(size, timeForMove))
         .then((gameResult) => {
           if (gameResult.size == 0) {
-            gameId = GameUtils.createGame(transaction, playerId, playerName, size, timeForMove);
+            gameId = GameUtils.createGame(transaction, playerId, playerName, size - 1, size, timeForMove);
           } else {
             const result = GameUtils.addToGame(transaction, playerId, playerName, gameResult.docs[0]);
             gameId = result[0];
@@ -58,18 +60,27 @@ export const addToExistingGame = functions.https.onCall((data, context) => {
   const playerId: string = GameUtils.checkAuthentication(context.auth?.uid);
   const playerName: string = context.auth?.token.name ?? null;
   const gameId: string = data.gameId;
+  const accepted: boolean = data.accepted;
+
+  firestore.collection("users").doc(playerId).update({"invitation": admin.firestore.FieldValue.delete()});
 
   return firestore.runTransaction((transaction) => {
     return transaction.get(firestore.collection("games").doc(gameId))
         .then((gameResult) => {
-          GameUtils.addToGame(transaction, playerId, playerName, gameResult);
+          let isGameFull: boolean;
+          if (accepted) {
+            const result = GameUtils.addToGame(transaction, playerId, playerName, gameResult);
+            isGameFull = result[1];
+          } else {
+            const availablePlaces: number = gameResult.get("available") - 1;
+            transaction.update(gameResult.ref, {available: availablePlaces});
+            isGameFull = availablePlaces == 0;
+          }
+          if (isGameFull) {
+            GameUtils.startGame(gameId);
+          }
         });
   });
-});
-
-export const startGame = functions.https.onCall((data) => {
-  const gameId: string = data.gameId;
-  GameUtils.startGame(gameId);
 });
 
 export const putTiles = functions.https.onCall(async (data, context) => {
@@ -111,10 +122,10 @@ export const leftGame = functions.https.onCall((data, context) => {
   const playerId: string = GameUtils.checkAuthentication(context.auth?.uid);
   const gameId: string = data.gameId;
 
-  firestore.collection("games/" + gameId + "/playersRacks/" + playerId + "/rack").get()
-      .then((snapshot) => {
-        snapshot.docs.forEach((doc) => doc.ref.delete());
-      });
+  // firestore.collection("games/" + gameId + "/playersRacks/" + playerId + "/rack").get()
+  //     .then((snapshot) => {
+  //       snapshot.docs.forEach((doc) => doc.ref.delete());
+  //     });
 
   firestore.collection("games").doc(gameId).get().then(async (snapshotGame) => {
     if (snapshotGame.get("currentTurn") === playerId) {

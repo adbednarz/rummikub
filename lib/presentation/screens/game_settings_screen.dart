@@ -3,31 +3,33 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:numberpicker/numberpicker.dart';
-import 'package:rummikub/logic/game_searching_cubit.dart';
+import 'package:rummikub/logic/game_settings_cubit.dart';
 import 'package:rummikub/shared/custom_error_dialog.dart';
 
-class GameSearchingScreen extends StatelessWidget {
-  final Color logoGreen = Color(0xff25bcbb);
+class GameSettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: BlocConsumer<GameSearchingCubit, GameSearchingState>(
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
+        backgroundColor: Colors.lightBlueAccent,
+        body: BlocConsumer<GameSettingsCubit, GameSettingsState>(
             listener: (context, state) {
               if (state is Failure) {
                 showDialog(
                     context: context,
                     builder: (context) =>
-                        CustomErrorDialog('Error', state.errorMessage)
+                        CustomErrorDialog('Error', state.message)
                 );
               } else if (state is GameFound) {
-                var playerId =  BlocProvider.of<GameSearchingCubit>(context).playerId;
+                var playerId =  BlocProvider.of<GameSettingsCubit>(context).playerId;
                 Navigator.of(context).pushNamed('/play', arguments:
-                {'gameId': state.gameId, 'playerId': playerId,
-                'timeForMove': state.timeForMove.toString()});
+                {'gameId': state.gameId, 'playerId': playerId});
               }
             },
-
             builder: (context, state) {
               if (state is Loading) {
                 return Center(
@@ -50,10 +52,10 @@ class GameSearchingScreen extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      Text("Time for move"),
+                      Text('Time for move'),
                       _buildTimeSizeInput(context, state),
                       SizedBox(height: 60),
-                      Text("Number of players"),
+                      Text('Number of players'),
                       _buildGameSizeInput(context, state),
                       SizedBox(height: 60),
                       _buildMaterialButton(context),
@@ -66,7 +68,7 @@ class GameSearchingScreen extends StatelessWidget {
 
   }
 
-  ScrollConfiguration _buildTimeSizeInput(BuildContext context, GameSearchingState state) {
+  ScrollConfiguration _buildTimeSizeInput(BuildContext context, GameSettingsState state) {
     return ScrollConfiguration(
       behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {
         PointerDeviceKind.touch,
@@ -78,13 +80,13 @@ class GameSearchingScreen extends StatelessWidget {
         minValue: 40,
         maxValue: 120,
         step: 20,
-        onChanged: (value) => BlocProvider.of<GameSearchingCubit>(context).changeTimeForMove(value),
+        onChanged: (value) => BlocProvider.of<GameSettingsCubit>(context).changeTimeForMove(value),
       ),
     );
   }
 
-  ScrollConfiguration _buildGameSizeInput(BuildContext context, GameSearchingState state) {
-    var players = BlocProvider.of<GameSearchingCubit>(context).selectedPlayers;
+  ScrollConfiguration _buildGameSizeInput(BuildContext context, GameSettingsState state) {
+    var size = BlocProvider.of<GameSettingsCubit>(context).gameSize;
     return ScrollConfiguration(
       behavior: ScrollConfiguration.of(context).copyWith(dragDevices: {
         PointerDeviceKind.touch,
@@ -93,24 +95,24 @@ class GameSearchingScreen extends StatelessWidget {
       child: NumberPicker(
         axis: Axis.horizontal,
         value: state.playersNumber,
-        minValue: players != null ? players.length : 2,
-        maxValue: players != null ? players.length : 4,
-        onChanged: (value) => BlocProvider.of<GameSearchingCubit>(context).changePlayersNumber(value),
+        minValue: size ?? 2,
+        maxValue: size ?? 4,
+        onChanged: (value) => BlocProvider.of<GameSettingsCubit>(context).changePlayersNumber(value),
       ),
     );
   }
 
   MaterialButton _buildMaterialButton(BuildContext context) {
-    var players = BlocProvider.of<GameSearchingCubit>(context).selectedPlayers;
+    var players = BlocProvider.of<GameSettingsCubit>(context).selectedPlayers;
     return MaterialButton(
       elevation: 0,
       minWidth: double.maxFinite,
       height: 50,
       onPressed: () => players != null
-          ? BlocProvider.of<GameSearchingCubit>(context).createGame()
-          : BlocProvider.of<GameSearchingCubit>(context).searchGame(),
-      color: logoGreen,
-      child: Text('SEARCH GAME', style: TextStyle(color: Colors.white, fontSize: 16)),
+          ? BlocProvider.of<GameSettingsCubit>(context).createGame()
+          : BlocProvider.of<GameSettingsCubit>(context).searchGame(),
+      color: Colors.teal,
+      child: Text('START GAME', style: TextStyle(color: Colors.white, fontSize: 16)),
     );
   }
 }

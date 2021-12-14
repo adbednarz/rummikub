@@ -7,7 +7,11 @@ abstract class Repository {
   Future<User> signUp(String email, String username, String password);
   Future<User> logIn(String email, String password);
   Future<void> logOut(String playerId);
+  Future<String> createGame(String playerId, List<String> playersSelected, int timeForMove);
   Future<String> searchGame(String playerId, int playersNumber, int timeForMove);
+  Future<void> joinGame(bool accepted, String gameId);
+  Stream<Map<String, String>> getUserDocumentChanges(String playerId);
+  Stream<List<String>> getActivePlayers(String playerId);
   Stream<int> getMissingPlayersNumberToStartGame(String gameId);
   Stream<List<Tile>> getPlayerTiles(String gameId, String playerId);
   Stream<List<Player>> getPlayersQueue(String gameId);

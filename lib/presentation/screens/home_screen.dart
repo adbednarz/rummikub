@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 class HomeScreen  extends StatelessWidget {
-  final Color logoGreen = Color(0xff25bcbb);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xff18203d),
       body: Container(
           margin: EdgeInsets.symmetric(horizontal: 30),
           child: Column(
@@ -29,12 +29,13 @@ class HomeScreen  extends StatelessWidget {
       height: 50,
       onPressed: () {
         if (path == '/play_with_bot') {
-          Navigator.of(context).pushNamed('/play_with_bot', arguments: {'gameId': '0', 'playerId': '0'});
+          Navigator.of(context).pushNamed('/game_settings', arguments: {'playerId': '0'});
+          // Navigator.of(context).pushNamed('/play_with_bot', arguments: {'gameId': '0', 'playerId': '0'});
         } else {
           Navigator.of(context).pushNamed(path);
         }
       },
-      color: logoGreen,
+      color: Colors.cyan,
       child: Text(name, style: TextStyle(color: Colors.white, fontSize: 16)),
     );
   }
