@@ -107,11 +107,12 @@ export const putTiles = functions.https.onCall(async (data, context) => {
 
   GameLogic.addNewTiles(gameId, currentPlayer, currentPlayerRack, sets).then((result) => {
     if (result === "winner") {
-      firestore.collection("games").doc(gameId).update({winner: [currentPlayer.id]});
+      GameLogic.endGame(game, [currentPlayer.id], playersQueue);
     } else if (result === "empty") {
-      GameLogic.getTileFromPool(gameId, playerId).then((result) => {
+      GameLogic.getTileFromPool(gameId, playerId).then(async (result) => {
         if (!result) {
-          GameLogic.pointTheWinner(game, playersQueue);
+          const winners = await GameLogic.pointTheWinner(game, playersQueue);
+          GameLogic.endGame(game, winners, playersQueue);
         }
       });
     }
@@ -122,14 +123,9 @@ export const leftGame = functions.https.onCall((data, context) => {
   const playerId: string = GameUtils.checkAuthentication(context.auth?.uid);
   const gameId: string = data.gameId;
 
-  // firestore.collection("games/" + gameId + "/playersRacks/" + playerId + "/rack").get()
-  //     .then((snapshot) => {
-  //       snapshot.docs.forEach((doc) => doc.ref.delete());
-  //     });
-
   firestore.collection("games").doc(gameId).get().then(async (snapshotGame) => {
+    const playersQueue: FirebaseFirestore.QuerySnapshot = await snapshotGame.ref.collection("playersQueue").get();
     if (snapshotGame.get("currentTurn") === playerId) {
-      const playersQueue: FirebaseFirestore.QuerySnapshot = await snapshotGame.ref.collection("playersQueue").get();
       for (let i = 0; i < playersQueue.docs.length; i++) {
         if (playersQueue.docs[i].id === playerId) {
           await snapshotGame.ref.update({"currentTurn": playersQueue.docs[(i + 1) % playersQueue.size].id});
@@ -137,6 +133,15 @@ export const leftGame = functions.https.onCall((data, context) => {
         }
       }
     }
+
+    // w przypadku, gdy po odejściu gracza zostaje tylko jeden oboje wychodzą z gry
+    if (playersQueue.size == 2) {
+      await firestore.collection("users").doc(playersQueue.docs[0].id).update({"active": true});
+      await firestore.collection("users").doc(playersQueue.docs[1].id).update({"active": true});
+    } else {
+      await firestore.collection("users").doc(playerId).update({"active": true});
+    }
+
     await firestore.collection("games/" + gameId + "/playersQueue").doc(playerId).delete();
   });
 });

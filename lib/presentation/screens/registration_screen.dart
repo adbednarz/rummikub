@@ -112,9 +112,10 @@ class RegistrationScreen extends StatelessWidget {
       onPressed: () {
         if (_formKey.currentState!.validate()) {
             BlocProvider.of<AuthCubit>(context).register(
-                email: emailController.text,
-                username: usernameController.text,
-                password: passwordController.text);
+                emailController.text,
+                usernameController.text,
+                passwordController.text
+            );
         }
       },
       color: Colors.cyan,

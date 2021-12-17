@@ -10,11 +10,7 @@ class AuthenticationProvider {
     _firebaseAuth.useAuthEmulator(localhost, 9090);
   }
 
-  Future<User> signUp({
-    required String email,
-    required String username,
-    required String password})
-  async {
+  Future<User> signUp(String email, String username, String password) async {
     try {
       var result = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email,
@@ -31,10 +27,7 @@ class AuthenticationProvider {
     }
   }
 
-  Future<User> logIn({
-    required String email,
-    required String password})
-  async {
+  Future<User> logIn(String email, String password) async {
     try {
       var result = await _firebaseAuth.signInWithEmailAndPassword(
         email: email,
@@ -43,7 +36,7 @@ class AuthenticationProvider {
       return result.user!;
     }
     on FirebaseException catch (e) {
-    throw CustomException(e.message ?? 'Error occurred');
+      throw CustomException(e.message ?? 'Error occurred');
     } catch(error) {
       print(error);
       throw CustomException('Error occurred');
@@ -53,6 +46,8 @@ class AuthenticationProvider {
   Future<void> logOut() async {
     try {
       await _firebaseAuth.signOut();
+    } on FirebaseException catch (e) {
+      throw CustomException(e.message ?? 'Error occurred');
     } catch(error) {
       print(error);
       throw CustomException('Error occurred');

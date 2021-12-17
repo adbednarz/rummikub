@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:rummikub/data/bot/basic_bot.dart';
 import 'package:rummikub/shared/models/player.dart';
 import 'package:rummikub/shared/models/tile.dart';
@@ -13,50 +12,48 @@ import 'game.dart';
 
 class GameBot implements GameRepository {
   final Game game = Game();
-  final String botType;
   final List<BotEngine> bots = [];
+  final String botType;
+  late final int timeForMove;
 
-  final StreamController<
-      Map<String, dynamic>> gameStatusController = StreamController<
-      Map<String, dynamic>>();
-  final StreamController<List<Tile>> playerTilesController = StreamController<
-      List<Tile>>();
-  final StreamController<List<TilesSet>> tilesSetsController = StreamController<
-      List<TilesSet>>();
+  final gameStatusController = StreamController<Map<String, dynamic>>();
+  final playerTilesController = StreamController<List<Tile>>();
+  final tilesSetsController = StreamController<List<TilesSet>>();
 
   GameBot(this.botType);
 
   @override
-  Future<String> searchGame(String playerId, int playersNumber, int timeForMove) async {
+  Future<String> searchGame(String playerId, int playersNumber, timeForMove) async {
+    this.timeForMove = timeForMove;
     for (var i = 0; i < playersNumber - 1; i++) {
       bots.add(botType == 'basicBot' ? BasicBot() : AdvancedBot());
     }
-    game.initialize(playersNumber - 1, timeForMove);
+    game.initialize(playersNumber - 1);
     return '0';
   }
 
   @override
-  Stream<int> getMissingPlayersNumberToStartGame(String gameId) {
+  Stream<int> missingPlayers(String gameId) {
     final missingPlayersController = StreamController<int>();
     missingPlayersController.add(0);
     return missingPlayersController.stream;
   }
 
   @override
-  Stream<Map<String, dynamic>> getGameStatus(String gameId) {
+  Stream<Map<String, dynamic>> gameStatus(String gameId) {
     gameStatusController.add(
-        {'currentTurn': '0', 'timeForMove': game.timeForMove});
+        {'currentTurn': '0', 'timeForMove': timeForMove});
     return gameStatusController.stream;
   }
 
   @override
-  Stream<List<Tile>> getPlayerTiles(String gameId, String playerId) {
+  Stream<List<Tile>> playerTiles(String gameId, String playerId) {
     playerTilesController.add(game.playerRack);
     return playerTilesController.stream;
   }
 
   @override
-  Stream<List<Player>> getPlayersQueue(String gameId) {
+  Stream<List<Player>> playersQueue(String gameId) {
     var players = <Player>[Player('You', '0')];
     for (var i = 1; i <= game.botsRacks.length; i++) {
       players.add(Player('Bot ' + i.toString(), i.toString()));
@@ -67,7 +64,7 @@ class GameBot implements GameRepository {
   }
 
   @override
-  Stream<List<TilesSet>> getTilesSets(String gameId) {
+  Stream<List<TilesSet>> tilesSets(String gameId) {
     return tilesSetsController.stream;
   }
 
@@ -104,6 +101,9 @@ class GameBot implements GameRepository {
     await _botMove();
   }
 
+  @override
+  Future<void> leaveGame(String gameId, String playerId) async {}
+
   Future<void> _botMove() async {
     for (var i = 0; i < game.botsRacks.length; i++) {
       gameStatusController.add({'currentTurn': (i + 1).toString()});
@@ -112,7 +112,7 @@ class GameBot implements GameRepository {
       var time = stopwatch.elapsed.inSeconds;
       if (time < 5) {
         await Future.delayed(
-            Duration(seconds: 5 + Random().nextInt(game.timeForMove - 5)));
+            Duration(seconds: 5 + Random().nextInt(timeForMove - 5)));
       }
       if (result[0].isNotEmpty) {
         tilesSetsController.add(List.from(result[0]));
@@ -131,14 +131,16 @@ class GameBot implements GameRepository {
     gameStatusController.add({'currentTurn': '0'});
   }
 
+  // w przypadku gry z botami:
+  // nie dołączamy do istniejących gier
   @override
-  Future<void> leaveGame(String gameId, String playerId, bool isFinished) async {}
+  Future<void> joinGame(bool accepted, String gameId) async {
+    throw UnimplementedError();
+  }
 
+  // nie zapraszamy innych graczy do gry
   @override
-  Future<void> joinGame(bool accepted, String gameId) async {}
-
-  @override
-  Future<String> createGame(String playerId, List<String> plyersSelected, int timeForMove) {
+  Future<String> createGame(String playerId, List<String> playersSelected, int timeForMove) {
     throw UnimplementedError();
   }
 

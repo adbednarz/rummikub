@@ -20,10 +20,10 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
   Timer? _timer;
 
   GameActionPanelCubit(this._repository, this.gameId, this.playerId) : super(GameActionPanelInitial()) {
-    playersQueue = _repository.getPlayersQueue(gameId).listen((result) {
+    playersQueue = _repository.playersQueue(gameId).listen((result) {
       _changePanel(result);
     });
-    gameStatus = _repository.getGameStatus(gameId).listen((result) {
+    gameStatus = _repository.gameStatus(gameId).listen((result) {
       if (result['winner'] != null) {
         var winners = <String>[...result['winner']];
         var players = List<Player>.from(state.players);
@@ -74,12 +74,11 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
   }
 
   void leaveGameBeforeEnd() {
-    _repository.leaveGame(gameId, playerId, false);
+    _repository.leaveGame(gameId, playerId);
     emit(GameAbandoned());
   }
 
   void leaveGame() {
-    _repository.leaveGame(gameId, playerId, true);
     emit(GameCancelled(state.players, state.procent));
   }
 

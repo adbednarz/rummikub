@@ -1,13 +1,11 @@
 import 'package:rummikub/shared/models/tile.dart';
 import 'package:rummikub/shared/models/tiles_set.dart';
-import 'dart:math';
 
 class Game {
   final List<Tile> pool = [];
   late final List<Tile> playerRack;
   List<List<Tile>> botsRacks = [];
   List<TilesSet> sets = [];
-  late int timeForMove;
 
   Game() {
     for (var i = 0; i < 2; i++) {
@@ -25,8 +23,7 @@ class Game {
     pool.removeRange(0, 14);
   }
 
-  void initialize(int number, int timeForMove) {
-    this.timeForMove = timeForMove;
+  void initialize(int number) {
     for (var i = 0; i < number; i++) {
       var botRack = pool.take(14).toList();
       pool.removeRange(0, 14);
@@ -74,25 +71,4 @@ class Game {
     return winners;
   }
 
-  static bool isRun(List<Tile> set) {
-    var i = 0;
-    var currentNumber;
-    if (set[0].number == 0 && set[1].number == 0) {
-      i = 2;
-    } else if (set[0].number == 0) {
-      i = 1;
-    }
-    currentNumber = set[i].number;
-    if ((i == 2 && currentNumber < 3) || (i == 1 && currentNumber < 2)) {
-      return false;
-    }
-    i++;
-    for (i; i < set.length; i++) {
-      if (set[i].number != currentNumber + 1 && set[i].number != 0) {
-        return false;
-      }
-      currentNumber += 1;
-    }
-    return true;
-  }
 }

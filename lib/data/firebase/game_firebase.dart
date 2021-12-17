@@ -1,6 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:rummikub/data/auth_repository.dart';
-import 'package:rummikub/data/firebase/authentication_provider.dart';
 import 'package:rummikub/data/firebase/firestore_provider.dart';
 import 'package:rummikub/data/firebase/functions_provider.dart';
 import 'package:rummikub/shared/models/player.dart';
@@ -10,8 +7,10 @@ import 'package:rummikub/shared/models/tiles_set.dart';
 import '../game_repository.dart';
 
 class GameFirebase implements GameRepository  {
-  final FirestoreProvider _firestoreProvider = FirestoreProvider();
+  final FirestoreProvider _firestoreProvider;
   final FunctionsProvider _functionsProvider = FunctionsProvider();
+
+  GameFirebase(this._firestoreProvider);
 
   @override
   Future<String> createGame(String playerId, List<String> playersSelected, int timeForMove) async {
@@ -31,22 +30,22 @@ class GameFirebase implements GameRepository  {
   }
 
   @override
-  Stream<int> getMissingPlayersNumberToStartGame(String gameId) {
+  Stream<int> missingPlayers(String gameId) {
     return _firestoreProvider.getMissingPlayersNumberToStartGame(gameId);
   }
 
   @override
-  Stream<List<Tile>> getPlayerTiles(String gameId, String playerId) {
+  Stream<List<Tile>> playerTiles(String gameId, String playerId) {
     return _firestoreProvider.getPlayerTiles(gameId, playerId);
   }
 
   @override
-  Stream<List<Player>> getPlayersQueue(String gameId) {
+  Stream<List<Player>> playersQueue(String gameId) {
     return _firestoreProvider.getPlayersQueue(gameId);
   }
 
   @override
-  Stream<Map<String, dynamic>> getGameStatus(String gameId) {
+  Stream<Map<String, dynamic>> gameStatus(String gameId) {
     return _firestoreProvider.getGameStatus(gameId);
   }
 
@@ -56,16 +55,13 @@ class GameFirebase implements GameRepository  {
   }
 
   @override
-  Stream<List<TilesSet>> getTilesSets(String gameId) {
+  Stream<List<TilesSet>> tilesSets(String gameId) {
     return _firestoreProvider.getTilesSets(gameId);
   }
 
   @override
-  Future<void> leaveGame(String gameId, String playerId, bool isFinished) async {
-    if (!isFinished) {
-      await _functionsProvider.leftGame(gameId);
-    }
-    await _firestoreProvider.changeUserActiveStatus(playerId, true);
+  Future<void> leaveGame(String gameId, String playerId) async {
+    await _functionsProvider.leftGame(gameId);
   }
 
 }

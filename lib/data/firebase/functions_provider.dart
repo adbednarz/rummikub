@@ -1,7 +1,6 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rummikub/shared/custom_exception.dart';
-import 'package:rummikub/shared/models/tile.dart';
 import 'package:rummikub/shared/models/tiles_set.dart';
 
 class FunctionsProvider {

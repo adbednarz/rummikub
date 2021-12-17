@@ -1,7 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:rummikub/shared/models/tile.dart';
 import 'package:rummikub/shared/models/tiles_set.dart';
-import 'game.dart';
 
 abstract class BotEngine {
 
@@ -60,7 +58,7 @@ abstract class BotEngine {
   bool isUnder30Points(List<List<Tile>> sets) {
     var sum = 0;
     for (var set in sets) {
-      if (Game.isRun(set)) {
+      if (isRun(set)) {
         var firstNumber = set[0].number;
         if (set[0].number == 0 && set[1].number == 0) {
           firstNumber = set[2].number - 3;
@@ -143,6 +141,28 @@ abstract class BotEngine {
       return offset;
     }
     return -1;
+  }
+
+  bool isRun(List<Tile> set) {
+    var i = 0;
+    var currentNumber;
+    if (set[0].number == 0 && set[1].number == 0) {
+      i = 2;
+    } else if (set[0].number == 0) {
+      i = 1;
+    }
+    currentNumber = set[i].number;
+    if ((i == 2 && currentNumber < 3) || (i == 1 && currentNumber < 2)) {
+      return false;
+    }
+    i++;
+    for (i; i < set.length; i++) {
+      if (set[i].number != currentNumber + 1 && set[i].number != 0) {
+        return false;
+      }
+      currentNumber += 1;
+    }
+    return true;
   }
 
 }

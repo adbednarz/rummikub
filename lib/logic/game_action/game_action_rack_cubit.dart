@@ -16,7 +16,7 @@ class GameActionRackCubit extends Cubit<GameActionRackState> {
   late List<Tile?> rackBeforeModification;
 
   GameActionRackCubit(this._repository, this.gameId, this.playerId) : super(GameActionRackInitial()) {
-    playerTitlesSubscription = _repository.getPlayerTiles(gameId, playerId).listen((result) {
+    playerTitlesSubscription = _repository.playerTiles(gameId, playerId).listen((result) {
       var rack = List<Tile?>.from(state.rack);
       var counter = 0;
       for (var i = 0; i < rack.length; i++) {

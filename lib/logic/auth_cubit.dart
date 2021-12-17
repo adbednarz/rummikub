@@ -1,31 +1,27 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:meta/meta.dart';
 import 'package:rummikub/data/auth_repository.dart';
 import 'package:rummikub/data/game_repository.dart';
 import 'package:rummikub/shared/custom_exception.dart';
+import 'package:rummikub/shared/models/player.dart';
 
 part 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
   final AuthRepository _authRepository;
   final GameRepository _gameRepository;
-  StreamSubscription? userDocument;
+  StreamSubscription? invitationToGame;
 
   AuthCubit(this._authRepository, this._gameRepository) : super(AuthInitial());
 
-  Future<void> register({
-    required String email,
-    required String username,
-    required String password,
-  }) async {
+  Future<void> register(String email, String username, String password) async {
     emit(AuthLoading());
     try {
-      var user = await _authRepository.signUp(email, username, password);
+      var user = await _authRepository.signUp(email, username, password).then((value) => null);
       emit(AuthLogged(user));
-      listenToChangesInUserDocument();
+      listenToInvitationToGame();
     } on CustomException catch(error) {
       emit(AuthFailure(state.user, error.cause));
     }
@@ -36,14 +32,15 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       var user = await _authRepository.logIn(email, password);
       emit(AuthLogged(user));
-      listenToChangesInUserDocument();
+      listenToInvitationToGame();
     } on CustomException catch(error) {
       emit(AuthFailure(state.user, error.cause));
     }
   }
 
-  void listenToChangesInUserDocument() {
-    userDocument = _authRepository.getUserDocumentChanges(state.user!.uid).listen((change) {
+  void listenToInvitationToGame() {
+    var playerId = state.user!.playerId;
+    invitationToGame = _authRepository.invitationToGame(playerId).listen((change) {
       if (change.isNotEmpty) {
         emit(AuthInvited(state.user, change['gameId']!, change['player']!));
       }
@@ -52,7 +49,7 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> logOut() async {
     try {
-      var playerId = state.user!.uid;
+      var playerId = state.user!.playerId;
       emit(AuthLoading());
       await _authRepository.logOut(playerId);
       emit(AuthLoggedOut());
@@ -70,7 +67,7 @@ class AuthCubit extends Cubit<AuthState> {
 
   @override
   Future<void> close() async {
-    await userDocument?.cancel();
+    await invitationToGame?.cancel();
     await super.close();
   }
 

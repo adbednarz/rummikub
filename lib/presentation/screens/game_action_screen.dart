@@ -8,7 +8,7 @@ import 'package:rummikub/logic/game_action/game_action_panel_cubit.dart';
 import 'package:rummikub/logic/game_action/game_action_rack_cubit.dart';
 import 'package:rummikub/shared/models/player.dart';
 import 'package:rummikub/shared/models/tile.dart';
-import 'package:rummikub/shared/strings.dart';
+import 'package:rummikub/shared/colors.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class GameActionScreen extends StatelessWidget {

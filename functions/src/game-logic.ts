@@ -137,8 +137,8 @@ export class GameLogic {
 
   static async pointTheWinner(
       game: FirebaseFirestore.DocumentSnapshot,
-      playersQueue: FirebaseFirestore.QuerySnapshot): Promise<void> {
-    let winner: string[] = [];
+      playersQueue: FirebaseFirestore.QuerySnapshot): Promise<string[]> {
+    let winners: string[] = [];
     let number = 2548; // suma wszystkich kostek
     const playersNumber: number = playersQueue.size;
     for (let i = 0; i < playersNumber; i++) {
@@ -146,12 +146,12 @@ export class GameLogic {
       const sum = tiles.docs.reduce((acc, x) => acc + x.get("number"), 0);
       if (number > sum) {
         number = sum;
-        winner = [playersQueue.docs[i].id];
+        winners = [playersQueue.docs[i].id];
       } else if (number === sum) {
-        winner.push(playersQueue.docs[i].id);
+        winners.push(playersQueue.docs[i].id);
       }
     }
-    await game.ref.update({"winner": winner});
+    return winners;
   }
 
   private static validateSetInitialMeld(set: Tile[]): number {
@@ -213,5 +213,14 @@ export class GameLogic {
     const uniqueColors = new Set(set.map((tile) => tile.color));
     const uniqueNumbers = new Set(set.map((tile) => tile.number));
     return size < 5 && uniqueColors.size === set.length && uniqueNumbers.size === 1;
+  }
+
+  static endGame(game: FirebaseFirestore.DocumentSnapshot,
+      winners: string[],
+      playersQueue: FirebaseFirestore.QuerySnapshot): void {
+    playersQueue.forEach((doc) => {
+      firestore.collection("users").doc(doc.id).update({"active": true});
+    });
+    game.ref.update({"winner": winners});
   }
 }

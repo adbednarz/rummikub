@@ -17,7 +17,7 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
   bool initialMeld = false;
 
   GameActionBoardCubit(this._repository, this.gameId, this.playerId) : super(GameActionBoardInitial()) {
-    tilesSetsSubscription = _repository.getTilesSets(gameId).listen((result) {
+    tilesSetsSubscription = _repository.tilesSets(gameId).listen((result) {
       emit(BoardChanged(result));
       setsBeforeModification = result.map((set) => set.copy()).toList();
     });

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rummikub/data/auth_repository.dart';
 import 'package:rummikub/data/bot/game_bot.dart';
 import 'package:rummikub/data/firebase/auth_firebase.dart';
+import 'package:rummikub/data/firebase/firestore_provider.dart';
 import 'package:rummikub/data/firebase/game_firebase.dart';
 import 'package:rummikub/data/game_repository.dart';
 import 'package:rummikub/logic/active_players_cubit.dart';
@@ -21,8 +22,14 @@ import 'package:rummikub/presentation/screens/login_screen.dart';
 import 'package:rummikub/presentation/screens/registration_screen.dart';
 
 class AppRouter {
-  final AuthRepository _authRepository = AuthFirebase();
-  final GameRepository _gameRepository = GameFirebase();
+  final _firestoreProvider = FirestoreProvider();
+  late final AuthRepository _authRepository;
+  late final GameRepository _gameRepository;
+
+  AppRouter() {
+    _authRepository = AuthFirebase(_firestoreProvider);
+    _gameRepository = GameFirebase(_firestoreProvider);
+  }
 
   Route? onGenerateRoute(RouteSettings settings) {
     if (settings.name == '/') {
@@ -94,7 +101,6 @@ class AppRouter {
               )
       );
     } else if (settings.name == '/play') {
-      
       var params = settings.arguments as Map<String, dynamic>;
       return MaterialPageRoute(
           builder: (context) =>

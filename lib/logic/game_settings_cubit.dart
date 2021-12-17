@@ -13,7 +13,7 @@ class GameSettingsCubit extends Cubit<GameSettingsState> {
   final String playerId;
   List<String>? selectedPlayers;
   int? gameSize;
-  StreamSubscription? missingPlayersNumber;
+  StreamSubscription? missingPlayers;
   String? gameId;
 
   GameSettingsCubit(this.repository, this.playerId, {this.selectedPlayers, this.gameSize, String? gameId}) : super(GameSettingsInitial()) {
@@ -51,11 +51,11 @@ class GameSettingsCubit extends Cubit<GameSettingsState> {
   }
 
   void _waitingToStartGame(String gameId) {
-    missingPlayersNumber?.cancel();
-    missingPlayersNumber = repository.getMissingPlayersNumberToStartGame(gameId).listen((change) {
+    missingPlayers?.cancel();
+    missingPlayers = repository.missingPlayers(gameId).listen((change) {
       if (change == 0) {
         emit(GameFound(gameId, state.playersNumber, state.timeForMove));
-        missingPlayersNumber?.cancel();
+        missingPlayers?.cancel();
       } else {
         emit(Waiting(change, state.playersNumber, state.timeForMove));
       }
@@ -64,9 +64,9 @@ class GameSettingsCubit extends Cubit<GameSettingsState> {
 
   @override
   Future<void> close() async {
-    await missingPlayersNumber?.cancel();
+    await missingPlayers?.cancel();
     if (gameId != null) {
-      await repository.leaveGame(gameId!, playerId, false);
+      await repository.leaveGame(gameId!, playerId);
     }
     await super.close();
   }

@@ -1,9 +1,7 @@
 import 'package:rummikub/shared/models/tile.dart';
-
 import 'package:rummikub/shared/models/tiles_set.dart';
 
 import 'bot_engine.dart';
-import 'game.dart';
 
 class BasicBot extends BotEngine {
   bool initialMeld = false;
@@ -58,7 +56,7 @@ class BasicBot extends BotEngine {
   List<dynamic> _modifySets(List<TilesSet> sets, List<Tile> botRack) {
     for (var set in sets) {
       var botRackCopy = List.from(botRack);
-      if (Game.isRun(set.tiles)) {
+      if (isRun(set.tiles)) {
         for (var i = 0; i < botRackCopy.length; i++) {
           if (botRackCopy[i].color == set.tiles[0].color) {
             if (botRackCopy[i].number == set.tiles[0].number - 1) {

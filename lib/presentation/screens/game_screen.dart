@@ -55,7 +55,7 @@ class GameScreen extends StatelessWidget {
       minWidth: double.maxFinite,
       height: 50,
       onPressed: () {
-        var playerId = BlocProvider.of<AuthCubit>(context).state.user!.uid;
+        var playerId = BlocProvider.of<AuthCubit>(context).state.user!.playerId;
         Navigator.of(context).pushNamed(path, arguments: {'playerId': playerId});
       },
       color: Colors.cyan,
@@ -101,7 +101,7 @@ class GameScreen extends StatelessWidget {
             authCubit.acceptInvitation(true);
             Navigator.of(context).pushNamed('/game_settings', arguments:
             {
-              'playerId': state.user!.uid,
+              'playerId': state.user!.playerId,
               'gameId': state.gameId,
               'serverType': 'firebase'
             });

@@ -14,11 +14,11 @@ class ActivePlayersCubit extends Cubit<ActivePlayersState> {
   List<String> activePlayers = [];
 
   ActivePlayersCubit(this._repository, this.playerId) : super(ActivePlayersInitial()) {
-    getActivePlayers = _repository.getActivePlayers(playerId).listen((change) {
+    getActivePlayers = _repository.activePlayers(playerId).listen((change) {
       activePlayers = change;
       if (filter != '') {
         emit(ActivePlayersChanged(
-            activePlayers.where((name) => name.toLowerCase().startsWith(filter)).toList(),
+            activePlayers.where((name) => name.toLowerCase().startsWith(filter)).take(30).toList(),
             state.selectedPlayers
         ));
       } else {
@@ -30,7 +30,7 @@ class ActivePlayersCubit extends Cubit<ActivePlayersState> {
   void filtrActivePlayers(String value) {
     filter = value;
     emit(ActivePlayersChanged(
-      activePlayers.where((name) => name.toLowerCase().startsWith(filter)).toList(),
+      activePlayers.where((name) => name.toLowerCase().startsWith(filter)).take(30).toList(),
       state.selectedPlayers
     ));
   }
