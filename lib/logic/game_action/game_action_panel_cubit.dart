@@ -39,7 +39,7 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
 
   void _changePanel(List<Player> players) {
     if (players.length == 1) {
-      leaveGame();
+      emit(GameCancelled(state.players, state.procent));
     } else if (state.players.length > players.length) {
       var removedPlayer = state.players.where((e) => !players.contains(e)).first;
       emit(PanelInfo(players, state.procent, 'Player ' + removedPlayer.name + ' left the game.'));
@@ -76,10 +76,6 @@ class GameActionPanelCubit extends Cubit<GameActionPanelState> {
   void leaveGameBeforeEnd() {
     _repository.leaveGame(gameId, playerId);
     emit(GameAbandoned());
-  }
-
-  void leaveGame() {
-    emit(GameCancelled(state.players, state.procent));
   }
 
   @override

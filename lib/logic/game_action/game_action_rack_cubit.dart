@@ -12,29 +12,13 @@ class GameActionRackCubit extends Cubit<GameActionRackState> {
   final GameRepository _repository;
   final String gameId;
   final String playerId;
-  late StreamSubscription playerTitlesSubscription;
+  late StreamSubscription playerTitlesListener;
   late List<Tile?> rackBeforeModification;
 
   GameActionRackCubit(this._repository, this.gameId, this.playerId) : super(GameActionRackInitial()) {
-    playerTitlesSubscription = _repository.playerTiles(gameId, playerId).listen((result) {
+    playerTitlesListener = _repository.playerTiles(gameId, playerId).listen((result) {
       var rack = List<Tile?>.from(state.rack);
-      var counter = 0;
-      for (var i = 0; i < rack.length; i++) {
-        if (counter == result.length) {
-          break;
-        }
-        if (rack[i] == null) {
-          rack[i] = result[counter];
-          counter++;
-        }
-      }
-      while(counter < result.length) {
-        rack.add(result[counter]);
-        counter++;
-      }
-      if (rack.length % 2 != 0) {
-        rack.add(null);
-      }
+      _addTilesToRack(rack, result);
       rackBeforeModification = List.from(rack);
       emit(RackChanged(rack));
     });
@@ -54,9 +38,29 @@ class GameActionRackCubit extends Cubit<GameActionRackState> {
     emit(RackChanged(List.from(rackBeforeModification)));
   }
 
+  void _addTilesToRack(List<Tile?> rack, List<Tile> result) {
+    var counter = 0;
+    for (var i = 0; i < rack.length; i++) {
+      if (counter == result.length) {
+        break;
+      }
+      if (rack[i] == null) {
+        rack[i] = result[counter];
+        counter++;
+      }
+    }
+    while(counter < result.length) {
+      rack.add(result[counter]);
+      counter++;
+    }
+    if (rack.length % 2 != 0) {
+      rack.add(null);
+    }
+  }
+
   @override
   Future<void> close() async {
-    await playerTitlesSubscription.cancel();
+    await playerTitlesListener.cancel();
     await super.close();
   }
 }

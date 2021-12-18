@@ -11,13 +11,13 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
   final GameRepository _repository;
   final String gameId;
   final String playerId;
-  late StreamSubscription tilesSetsSubscription;
+  late StreamSubscription tilesSetsListener;
   List<TilesSet> setsBeforeModification = [];
   List<int> draggable = List.filled(2, -1, growable: false);
   bool initialMeld = false;
 
   GameActionBoardCubit(this._repository, this.gameId, this.playerId) : super(GameActionBoardInitial()) {
-    tilesSetsSubscription = _repository.tilesSets(gameId).listen((result) {
+    tilesSetsListener = _repository.tilesSets(gameId).listen((result) {
       emit(BoardChanged(result));
       setsBeforeModification = result.map((set) => set.copy()).toList();
     });
@@ -108,7 +108,7 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
     removeDraggable();
   }
 
-  bool wantToPutTiles() {
+  bool putTiles() {
     if (_isValid()) {
       _repository.putTiles(gameId, state.sets);
       return true;
@@ -228,7 +228,7 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
 
   @override
   Future<void> close() async {
-    await tilesSetsSubscription.cancel();
+    await tilesSetsListener.cancel();
     await super.close();
   }
 }

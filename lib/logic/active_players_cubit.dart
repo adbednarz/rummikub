@@ -9,12 +9,12 @@ part 'active_players_state.dart';
 class ActivePlayersCubit extends Cubit<ActivePlayersState> {
   final AuthRepository _repository;
   final String playerId;
-  StreamSubscription? getActivePlayers;
+  StreamSubscription? activePlayersListener;
   String filter = '';
   List<String> activePlayers = [];
 
   ActivePlayersCubit(this._repository, this.playerId) : super(ActivePlayersInitial()) {
-    getActivePlayers = _repository.activePlayers(playerId).listen((change) {
+    activePlayersListener = _repository.activePlayers(playerId).listen((change) {
       activePlayers = change;
       if (filter != '') {
         emit(ActivePlayersChanged(
@@ -48,7 +48,7 @@ class ActivePlayersCubit extends Cubit<ActivePlayersState> {
 
   @override
   Future<void> close() async {
-    await getActivePlayers?.cancel();
+    await activePlayersListener?.cancel();
     await super.close();
   }
 }

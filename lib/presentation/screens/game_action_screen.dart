@@ -109,7 +109,7 @@ class GameActionScreen extends StatelessWidget {
             child: OutlinedButton(
               onPressed: () {
                 if (BlocProvider.of<GameActionPanelCubit>(context).isMyTurn()) {
-                  if (BlocProvider.of<GameActionBoardCubit>(context).wantToPutTiles()) {
+                  if (BlocProvider.of<GameActionBoardCubit>(context).putTiles()) {
                     BlocProvider.of<GameActionPanelCubit>(context).tilesWasPut();
                     BlocProvider.of<GameActionRackCubit>(context).confirmRackModifications();
                   }

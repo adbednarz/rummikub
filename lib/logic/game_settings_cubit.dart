@@ -43,11 +43,11 @@ class GameSettingsCubit extends Cubit<GameSettingsState> {
   }
 
   void changePlayersNumber(int value) {
-    emit(GameChangingSettings(value, state.timeForMove));
+    emit(GameSettingsChanged(value, state.timeForMove));
   }
 
   void changeTimeForMove(int value) {
-    emit(GameChangingSettings(state.playersNumber, value));
+    emit(GameSettingsChanged(state.playersNumber, value));
   }
 
   void _waitingToStartGame(String gameId) {

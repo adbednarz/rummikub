@@ -15,8 +15,8 @@ class GameSettingsInitial extends GameSettingsState {
   GameSettingsInitial() : super(2, 60);
 }
 
-class GameChangingSettings extends GameSettingsState {
-  GameChangingSettings(int playersNumber, int timeForMove) : super(playersNumber, timeForMove);
+class GameSettingsChanged extends GameSettingsState {
+  GameSettingsChanged(int playersNumber, int timeForMove) : super(playersNumber, timeForMove);
 }
 
 class Loading extends GameSettingsState {
