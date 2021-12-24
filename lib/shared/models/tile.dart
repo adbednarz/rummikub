@@ -19,4 +19,8 @@ class Tile {
   }
 
   Map<String, dynamic> asMap() => {'color' : color, 'number' : number};
+
+  bool isEqual(Tile tile) {
+    return color == tile.color && number == tile.number && isMine == tile.isMine;
+  }
 }

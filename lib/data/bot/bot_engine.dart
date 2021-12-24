@@ -11,48 +11,42 @@ abstract class BotEngine {
     if (currentSetsCopy.isEmpty) {
       return [];
     }
-    var newSets = List<TilesSet>.from(currentSets);
-    newSets.removeWhere((set) => set.position != -1);
-    var modifiedSets = List<TilesSet>.from(currentSets);
-    modifiedSets.removeWhere((set) => set.position == -1);
-    var takenPlacesList = <List<int>>[];
 
     var setsToChange = <TilesSet>[];
-    for (var set in modifiedSets) {
-      if (_checkBoard(set.position, set.position + set.tiles.length - 1) == -1) {
-        takenPlacesList.add([for (var i = set.position; i < set.position + set.tiles.length; i++) i]);
-      } else {
+    var otherSets = <TilesSet>[];
+    for (var set in currentSets) {
+      if (set.position == -1 || _checkBoard(set.position, set.position + set.tiles.length - 1) != -1) {
         setsToChange.add(set);
+      } else {
+        otherSets.add(set);
       }
     }
 
-    for (var set in setsToChange) {
-      modifiedSets.remove(set);
-    }
-    newSets.addAll(setsToChange);
-
-    for (var set in newSets) {
-      var newTakenPlaces = [for (var i = 0; i < set.tiles.length; i++) i];
-
-      for (var takenPlaces in takenPlacesList) {
-        if (newTakenPlaces.any((place) => takenPlaces.contains(place))) {
-          newTakenPlaces = [for (var i = takenPlaces.last + 2; i < takenPlaces.last + 2 + set.tiles.length; i++) i];
-          var offset = _checkBoard(newTakenPlaces.first, newTakenPlaces.last);
-          if (offset != -1) {
-            newTakenPlaces = [for (var i = takenPlaces.first + offset; i < takenPlaces.last + 1 + offset; i++) i];
-          }
+    for (var setToChange in setsToChange) {
+      var setToChangeStart = 0;
+      var setToChangeEnd = setToChange.tiles.length - 1;
+      for (var set in otherSets) {
+        var setStart = set.position;
+        var setEnd = set.position + set.tiles.length - 1;
+        if (setToChangeStart <= setEnd && setStart <= setToChangeEnd) {
+          setToChangeStart += 2;
+          setToChangeEnd += 2;
         } else {
-          break;
+          var offset = _checkBoard(setToChangeStart, setToChangeEnd);
+          if (offset != -1) {
+            setToChangeStart += offset;
+            setToChangeEnd += offset;
+          }  else {
+            break;
+          }
         }
       }
-      takenPlacesList.add(newTakenPlaces);
-      takenPlacesList.sort((x, y) => x.first.compareTo(y.first));
-      set.position = newTakenPlaces.first;
+      setToChange.position = setToChangeStart;
     }
 
-    modifiedSets.addAll(newSets);
-    modifiedSets.sort((a, b) => a.position.compareTo(b.position));
-    return modifiedSets;
+    otherSets.addAll(setsToChange);
+    otherSets.sort((a, b) => a.position.compareTo(b.position));
+    return otherSets;
   }
 
   bool isUnder30Points(List<List<Tile>> sets) {
