@@ -7,7 +7,7 @@ class Game {
   List<List<Tile>> botsRacks = [];
   List<TilesSet> sets = [];
 
-  Game() {
+  Game(String botType) {
     for (var i = 0; i < 2; i++) {
       for (var color in ['black', 'red', 'orange', 'blue']) {
         for (var j = 1; j < 14; j++) {
@@ -15,8 +15,10 @@ class Game {
         }
       }
     }
-    for (var color in ['black', 'red']) {
-      pool.add(Tile(color, 0, false));
+    if (botType == 'basicBot') {
+      for (var color in ['black', 'red']) {
+        pool.add(Tile(color, 0, false));
+      }
     }
     pool.shuffle();
     playerRack = pool.take(14).map((tile) => Tile(tile.color, tile.number, true)).toList();

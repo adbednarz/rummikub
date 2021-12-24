@@ -11,9 +11,9 @@ import 'bot_engine.dart';
 import 'game.dart';
 
 class GameBot implements GameRepository {
-  final Game game = Game();
   final List<BotEngine> bots = [];
   final String botType;
+  late final Game game = Game(botType);
   late final int timeForMove;
 
   final gameStatusController = StreamController<Map<String, dynamic>>();

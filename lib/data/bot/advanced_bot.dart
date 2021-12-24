@@ -4,7 +4,7 @@ import 'package:rummikub/shared/models/tiles_set.dart';
 
 class AdvancedBot extends BotEngine {
   final List<Map<List<List<int>>, Result>> results = [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}];
-  final List<List<Tile>> tiles = [[], [], [], [], [], [], [], [], [], [], [], [], [], []]; // 0 - joker
+  final List<List<Tile>> tiles = [[], [], [], [], [], [], [], [], [], [], [], [], []];
   final colors = ['black', 'blue', 'orange', 'red'];
   List<Tile> botRack = [];
 
@@ -12,11 +12,11 @@ class AdvancedBot extends BotEngine {
   List<dynamic> move(List<TilesSet> sets, List<Tile> botRack) {
     for (var set in sets) {
       for (var tile in set.tiles) {
-        tiles[tile.number].add(tile);
+        tiles[tile.number - 1].add(tile);
       }
     }
     for (var tile in botRack) {
-      tiles[tile.number].add(tile);
+      tiles[tile.number - 1].add(tile);
     }
     this.botRack = botRack;
     var result = _maxScore(1, [[0, 0], [0, 0], [0, 0], [0, 0]]);
@@ -43,7 +43,7 @@ class AdvancedBot extends BotEngine {
     }
     for (var possibleRuns in _makeRuns(value, runs)) {
       var sets = <TilesSet>[];
-      var leftTiles = List<Tile>.from(tiles[value]);
+      var leftTiles = List<Tile>.from(tiles[value - 1]);
       var runScores = _checkRuns(possibleRuns, runs, leftTiles, value);
       var groupScores = _totalGroupSize(leftTiles, sets, value);
       if (groupScores == -1) {
@@ -69,7 +69,7 @@ class AdvancedBot extends BotEngine {
 
   List<List<List<int>>> _makeRuns(int value, List<List<int>> runs) {
     var colors = [0, 0, 0, 0];
-    for (var tile in tiles[value]) {
+    for (var tile in tiles[value - 1]) {
       if (tile.color == 'black') {
         colors[0] += 1;
       } else if (tile.color == 'blue') {

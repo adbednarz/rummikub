@@ -4,6 +4,7 @@ class Tile {
   final String color;
   final int number;
   final bool isMine;
+  late final isJoker = number == 0;
 
   Tile(this.color, this.number, this.isMine);
 
