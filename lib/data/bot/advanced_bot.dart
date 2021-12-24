@@ -6,6 +6,7 @@ class AdvancedBot extends BotEngine {
   final List<Map<List<List<int>>, Result>> results = [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}];
   final List<List<Tile>> tiles = [[], [], [], [], [], [], [], [], [], [], [], [], [], []]; // 0 - joker
   final colors = ['black', 'blue', 'orange', 'red'];
+  List<Tile> botRack = [];
 
   @override
   List<dynamic> move(List<TilesSet> sets, List<Tile> botRack) {
@@ -17,7 +18,19 @@ class AdvancedBot extends BotEngine {
     for (var tile in botRack) {
       tiles[tile.number].add(tile);
     }
+    this.botRack = botRack;
     var result = _maxScore(1, [[0, 0], [0, 0], [0, 0], [0, 0]]);
+    if (!initialMeld) {
+      if (result.scores < 30) {
+        return [[], []];
+      } else {
+        initialMeld = true;
+      }
+    } else {
+      if (result.leftTiles.length == botRack.length) {
+        return [[], []];
+      }
+    }
     return [checkSetsPositions(sets, result.sets), result.leftTiles];
   }
 
@@ -33,18 +46,21 @@ class AdvancedBot extends BotEngine {
       var leftTiles = List<Tile>.from(tiles[value]);
       var runScores = _checkRuns(possibleRuns, runs, leftTiles, value);
       var groupScores = _totalGroupSize(leftTiles, sets, value);
+      if (groupScores == -1) {
+        continue;
+      }
       var maxResult = _maxScore(value + 1, possibleRuns);
       var scores = runScores + groupScores + maxResult.scores;
       if ((results[value - 1][runs]?.scores ?? -1) < scores) {
-        sets.addAll(maxResult.sets);
+        leftTiles.addAll(maxResult.leftTiles);
         var unfinishedRuns = _getRuns(maxResult.unfinishedRuns, possibleRuns, sets, leftTiles, value);
-        if (value == 1) {
+        if (value == 1 && unfinishedRuns != null) {
           _getRuns(unfinishedRuns, runs, sets, leftTiles, value);
         }
-        if (leftTiles.any((element) => element.isMine == false)) {
+        if (unfinishedRuns == null) {
           continue;
         }
-        leftTiles.addAll(maxResult.leftTiles);
+        sets.addAll(maxResult.sets);
         results[value - 1][runs] = Result(scores, unfinishedRuns, sets, leftTiles);
       }
     }
@@ -113,16 +129,20 @@ class AdvancedBot extends BotEngine {
     return score;
   }
 
-  List<List<List<Tile>>> _getRuns(List<List<List<Tile>>> unfinishedRuns, List<List<int>> runs, List<TilesSet> sets, List<Tile> leftTiles, int value) {
+  List<List<List<Tile>>>? _getRuns(List<List<List<Tile>>> unfinishedRuns, List<List<int>> runs, List<TilesSet> sets, List<Tile> leftTiles, int value) {
     for (var i = 0; i < 4; i++) {
       for (var j = 0; j < 2; j++) {
         if (runs[i][j] == 0 && unfinishedRuns[i][j].isNotEmpty) {
           if (unfinishedRuns[i][j].length >= 3) {
             sets.add(TilesSet(-1, unfinishedRuns[i][j]));
           } else {
-            leftTiles.add(unfinishedRuns[i][j][0]);
+            if (_checkTileProperty(unfinishedRuns[i][j][0], leftTiles) == false) {
+              return null;
+            }
             if (unfinishedRuns[i][j].length == 2) {
-              leftTiles.add(unfinishedRuns[i][j][1]);
+              if (_checkTileProperty(unfinishedRuns[i][j][1], leftTiles) == false) {
+                return null;
+              }
             }
           }
           unfinishedRuns[i][j] = [];
@@ -164,7 +184,20 @@ class AdvancedBot extends BotEngine {
       sum += distinctTiles.length;
       sets.add(TilesSet(-1, distinctTiles));
     }
+    if (leftTiles.any((element) => element.isMine == false)) {
+      return -1;
+    }
     return sum * value;
+  }
+
+  bool _checkTileProperty(Tile tile, List<Tile> leftTiles) {
+    leftTiles.add(Tile(tile.color, tile.number, true));
+    var res1 = botRack.map((element) => element == tile ? 1 : 0).reduce((value, element) => value + element);
+    var res2 = leftTiles.map((element) => element == tile ? 1 : 0).reduce((value, element) => value + element);
+    if (res1 < res2) {
+      return false;
+    }
+    return true;
   }
 
 }

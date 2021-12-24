@@ -4,7 +4,6 @@ import 'package:rummikub/shared/models/tiles_set.dart';
 import 'bot_engine.dart';
 
 class BasicBot extends BotEngine {
-  bool initialMeld = false;
 
   @override
   List<dynamic> move(List<TilesSet> boardSets, List<Tile> botRack) {

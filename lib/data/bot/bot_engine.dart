@@ -2,6 +2,7 @@ import 'package:rummikub/shared/models/tile.dart';
 import 'package:rummikub/shared/models/tiles_set.dart';
 
 abstract class BotEngine {
+  bool initialMeld = false;
 
   List<dynamic> move(List<TilesSet> sets, List<Tile> botRack);
 
