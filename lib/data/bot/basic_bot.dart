@@ -7,28 +7,28 @@ class BasicBot extends BotEngine {
 
   @override
   List<dynamic> move(List<TilesSet> boardSets, List<Tile> botRack) {
-    var sets = List<TilesSet>.from(boardSets);
-    var resultNewSets = _getSetsFromRack(botRack);
-    if (resultNewSets[0].isNotEmpty) {
+    var sets = boardSets.map((set) => set.copy()).toList();
+    var setsFromRack = _getSetsFromRack(botRack);
+    if (initialMeld) {
+      _modifySets(sets, botRack);
+    }
+    if (setsFromRack.isNotEmpty) {
       if (!initialMeld) {
-        if (isUnder30Points(resultNewSets[0])) {
+        if (_isUnder30Points(setsFromRack)) {
           return [[], []];
         } else {
           initialMeld = true;
         }
-      } else {
-        var resultModifiedSets = _modifySets(sets, resultNewSets[1]);
-        sets = resultModifiedSets[0];
-        botRack = resultModifiedSets[1];
       }
-      for (var set in resultNewSets[0]) {
-        sets.add(TilesSet(-1, set));
+      for (var set in setsFromRack) {
+        var tilesToAdd = set.map((tile) => Tile(tile.color, tile.number, false)).toList();
+        sets.add(TilesSet(-1, tilesToAdd));
       }
     }
     return [checkSetsPositions(sets, boardSets), botRack];
   }
 
-  List<dynamic> _getSetsFromRack(List<Tile> rack) {
+  List<List<Tile>> _getSetsFromRack(List<Tile> rack) {
     var sets = <List<Tile>>[];
     rack.sort((x, y) => x.number.compareTo(y.number));
     var index = 0;
@@ -36,9 +36,8 @@ class BasicBot extends BotEngine {
       var result = _findRun(rack, index);
       if (result[0].isNotEmpty) {
         sets.add(result[0]);
-        rack = result[1];
       }
-      index = result[2];
+      index = result[1];
     }
     index = 0;
     while (index < rack.length - 2) {
@@ -46,40 +45,53 @@ class BasicBot extends BotEngine {
       if (result[0].isNotEmpty) {
         sets.add(result[0]);
       }
-      rack = result[1];
-      index = result[2];
+      index = result[1];
     }
-    return [sets, rack];
+    return sets;
   }
 
-  List<dynamic> _modifySets(List<TilesSet> sets, List<Tile> botRack) {
+  void _modifySets(List<TilesSet> sets, List<Tile> botRack) {
     for (var set in sets) {
-      var botRackCopy = List.from(botRack);
+      var tileToDelete = <int>[];
       if (isRun(set.tiles)) {
-        for (var i = 0; i < botRackCopy.length; i++) {
-          if (botRackCopy[i].color == set.tiles[0].color) {
-            if (botRackCopy[i].number == set.tiles[0].number - 1) {
-              set.tiles.insert(0, botRackCopy[i]);
-              set.position -= 1;
-              botRack.remove(i);
-            } else if (botRackCopy[i].number == set.tiles[set.tiles.length - 1].number + 1) {
-              set.tiles.add(botRackCopy[i]);
-              botRack.remove(i);
+        for (var i = 0; i < botRack.length; i++) {
+          var setSize = set.tiles.length;
+          if (botRack[i].number == 0) {
+            if (set.tiles[0].number > 1) {
+              set.tiles.insert(0, Tile(botRack[i].color, botRack[i].number, false));
+            } else if (set.tiles.last.number != 13 && set.tiles.last.number != 0) {
+              set.tiles.add(Tile(botRack[i].color, botRack[i].number, false));
             }
+          } else if (botRack[i].color == set.tiles[0].color) {
+            if (botRack[i].number == set.tiles[0].number - 1) {
+              set.tiles.insert(0, Tile(botRack[i].color, botRack[i].number, false));
+            } else if (botRack[i].number == set.tiles[set.tiles.length - 1].number + 1) {
+              set.tiles.add(Tile(botRack[i].color, botRack[i].number, false));
+            }
+          }
+          if (setSize != set.tiles.length) {
+            tileToDelete.add(i);
           }
         }
       } else {
-        for (var i = 0; i < botRackCopy.length; i++) {
-          if (botRackCopy[i].number == set.tiles[0].number && set.tiles.length < 4) {
-            if (checkGroup(set.tiles + [botRackCopy[i]])) {
-              set.tiles.add(botRackCopy[i]);
-              botRack.remove(i);
+        for (var i = 0; i < botRack.length; i++) {
+          if (set.tiles.length < 4) {
+            if (botRack[i].number == set.tiles[0].number || botRack[i].number == 0) {
+              if (!set.tiles.contains(botRack[i])) {
+                set.tiles.add(Tile(botRack[i].color, botRack[i].number, false));
+                tileToDelete.add(i);
+              }
             }
           }
         }
       }
+      if (tileToDelete.isNotEmpty) {
+        set.position = -1;
+      }
+      for (var index in tileToDelete) {
+        botRack.removeAt(index);
+      }
     }
-    return [sets, botRack];
   }
 
   List<dynamic> _findRun(List<Tile> rack, int index) {
@@ -90,13 +102,13 @@ class BasicBot extends BotEngine {
         set.add(tile);
       }
     }
-    if (checkRun(set)) {
+    if (_checkRun(set)) {
       for (var tile in set) {
         rack.remove(tile);
       }
-      return [set, rack, index];
+      return [set, index];
     }
-    return [[], rack, index + 1];
+    return [[], index + 1];
   }
 
   List<dynamic> _findGroup(List<Tile> rack, int index) {
@@ -107,17 +119,89 @@ class BasicBot extends BotEngine {
         set.add(tile);
       }
     }
-    if (checkGroup(set)) {
+    if (_checkGroup(set)) {
       for (var tile in set) {
         rack.remove(tile);
       }
-      return [set, rack, index];
+      return [set, index];
     } else {
-      return [[], rack, index + 1];
+      return [[], index + 1];
     }
   }
 
+  bool _checkRun(List<Tile> set) {
+    if (set.length < 3) {
+      return false;
+    }
+
+    var tilesToRemoved = [];
+
+    if (set[0].number == 0 && set[1].number == 0 && set[2].number < 3) {
+      tilesToRemoved.add(set[0]);
+      if (set[2].number == 1) {
+        tilesToRemoved.add(set[1]);
+      }
+    }
+    if (set[0].number == 0 && set[1].number == 1) {
+      tilesToRemoved.add(set[0]);
+    }
+    if (set[set.length - 3].number >= 12 && set[set.length - 2].number == 0 && set[set.length - 1].number == 0) {
+      tilesToRemoved.add(set[set.length - 1]);
+      if (set[2].number == 13) {
+        tilesToRemoved.add(set[set.length - 2]);
+      }
+    }
+    if (set[set.length - 2].number == 13 && set[set.length - 1].number == 0) {
+      tilesToRemoved.add(set[set.length - 1]);
+    }
+
+    set.removeWhere((tile) => tilesToRemoved.contains(tile));
+
+    if (set.length < 3) {
+      return false;
+    }
+    return true;
+  }
+
+  bool _checkGroup(List<Tile> set) {
+    if (set.length < 3) {
+      return false;
+    }
+    while (set.length > 4) {
+      for (var i = 0; i < set.length; i++) {
+        if (set[i].number == 0) {
+          set.removeAt(i);
+          break;
+        }
+      }
+    }
+    return true;
+  }
+
+  bool _isUnder30Points(List<List<Tile>> sets) {
+    var sum = 0;
+    for (var set in sets) {
+      if (isRun(set)) {
+        var firstNumber = set[0].number;
+        if (set[0].number == 0 && set[1].number == 0) {
+          firstNumber = set[2].number - 3;
+        } else if (set[0].number == 0) {
+          firstNumber = set[1].number - 1;
+        }
+        for (var i = 0; i < set.length; i++) {
+          sum += firstNumber;
+          firstNumber += 1;
+        }
+      } else {
+        for (var tile in set) {
+          if (tile.number != 0) {
+            sum += tile.number * set.length;
+            break;
+          }
+        }
+      }
+    }
+    return sum < 30;
+  }
+
 }
-
-
-

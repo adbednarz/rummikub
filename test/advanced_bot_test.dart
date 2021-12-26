@@ -6,14 +6,21 @@ import 'package:rummikub/shared/models/tiles_set.dart';
 void main() {
   test('Bot should return correct score', () {
     final bot = AdvancedBot();
-    var tiles = [Tile('black', 4, false), Tile('black', 5, false),
-      Tile('black', 6, false), Tile('black', 7, false), Tile('blue', 6, false),
-      Tile('orange', 6, false), Tile('black', 6, false), Tile('red', 6, false),
-      Tile('black', 6, false), Tile('blue', 6, false), Tile('red', 6, false),
-      Tile('blue', 1, false), Tile('blue', 2, false), Tile('blue', 3, false),
-      Tile('blue', 7, false), Tile('orange', 7, false)];
-    var tiles2 = [Tile('orange', 11, true), Tile('red', 12, true), Tile('red', 10, true)];
-    var tileSet = TilesSet(0, tiles);
-    bot.move([tileSet], tiles2);
+    var tiles2 = [Tile('orange', 9, true),
+      Tile('orange', 10, true),
+      Tile('orange', 3, true),
+      Tile('orange', 9, true),
+      Tile('blue', 9, true),
+      Tile('black', 3, true),
+      Tile('red', 8, true),
+      Tile('black', 11, true),
+      Tile('orange', 7, true),
+      Tile('orange', 2, true),
+      Tile('red', 13, true),
+      Tile('blue', 12, true),
+      Tile('black', 8, true),
+      Tile('black', 13, true),
+    ];
+    bot.move([], tiles2);
   });
 }

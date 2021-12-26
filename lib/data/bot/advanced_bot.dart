@@ -3,16 +3,20 @@ import 'package:rummikub/shared/models/tile.dart';
 import 'package:rummikub/shared/models/tiles_set.dart';
 
 class AdvancedBot extends BotEngine {
-  final List<Map<List<List<int>>, Result>> results = [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}];
-  final List<List<Tile>> tiles = [[], [], [], [], [], [], [], [], [], [], [], [], []];
   final colors = ['black', 'blue', 'orange', 'red'];
-  List<Tile> botRack = [];
+  late List<Map<List<List<int>>, Result>> results;
+  late List<List<Tile>> tiles;
+  late List<Tile> botRack;
 
   @override
   List<dynamic> move(List<TilesSet> sets, List<Tile> botRack) {
-    for (var set in sets) {
-      for (var tile in set.tiles) {
-        tiles[tile.number - 1].add(tile);
+    results = [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}];
+    tiles = [[], [], [], [], [], [], [], [], [], [], [], [], []];
+    if (initialMeld) {
+      for (var set in sets) {
+        for (var tile in set.tiles) {
+          tiles[tile.number - 1].add(tile);
+        }
       }
     }
     for (var tile in botRack) {
@@ -25,13 +29,14 @@ class AdvancedBot extends BotEngine {
         return [[], []];
       } else {
         initialMeld = true;
+        return [checkSetsPositions(result.sets + sets, sets), result.leftTiles];
       }
     } else {
       if (result.leftTiles.length == botRack.length) {
         return [[], []];
       }
     }
-    return [checkSetsPositions(sets, result.sets), result.leftTiles];
+    return [checkSetsPositions(result.sets, sets), result.leftTiles];
   }
 
   Result _maxScore(int value, List<List<int>> runs) {
@@ -171,18 +176,21 @@ class AdvancedBot extends BotEngine {
         }
       }
       if (leftTiles.length >= 3) {
-        sets.add(TilesSet(-1, List.of(leftTiles)));
+        var tilesToAdd = List.of(leftTiles.map((tile) => Tile(tile.color, tile.number, false)).toList());
+        sets.add(TilesSet(-1, tilesToAdd));
         sum += leftTiles.length;
         leftTiles.clear();
       } else if (leftTiles.length == 2 && distinctTiles.length == 4) {
         var tile = distinctTiles.last;
         distinctTiles.removeLast();
-        sets.add(TilesSet(-1, List.of(leftTiles) + [tile]));
+        var tilesToAdd = List.of((leftTiles + [tile]).map((tile) => Tile(tile.color, tile.number, false)).toList());
+        sets.add(TilesSet(-1, tilesToAdd));
         sum += leftTiles.length + 1;
         leftTiles.clear();
       }
       sum += distinctTiles.length;
-      sets.add(TilesSet(-1, distinctTiles));
+      var tilesToAdd = List.of(distinctTiles.map((tile) => Tile(tile.color, tile.number, false)).toList());
+      sets.add(TilesSet(-1, tilesToAdd));
     }
     if (leftTiles.any((element) => element.isMine == false)) {
       return -1;

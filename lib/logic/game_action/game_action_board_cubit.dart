@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:flutter/foundation.dart';
 import 'package:rummikub/data/game_repository.dart';
 import 'package:rummikub/shared/models/tile.dart';
 import 'package:rummikub/shared/models/tiles_set.dart';
@@ -190,13 +191,14 @@ class GameActionBoardCubit extends Cubit<GameActionBoardState> {
       return true;
     }
 
-    var setsCopy = List<TilesSet>.from(state.sets);
     var sum = 0;
-    var currentSets = setsCopy.map((set) => set.tiles).toList();
+    var currentSets = state.sets.map((set) => set.tiles).toList();
     for (var set in currentSets) {
       // nie można modyfikować zbiorów na planszy
       var notMyTiles = set.where((tile) => tile.isMine == false).toList();
-      if (notMyTiles.isNotEmpty) {
+      if (listEquals(notMyTiles, set)) {
+        continue;
+      } else if (notMyTiles.isNotEmpty) {
         return false;
       }
       if (_isRun(set)) {

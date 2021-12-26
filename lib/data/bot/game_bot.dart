@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:rummikub/data/bot/basic_bot.dart';
 import 'package:rummikub/shared/models/player.dart';
 import 'package:rummikub/shared/models/tile.dart';
@@ -70,9 +69,7 @@ class GameBot implements GameRepository {
 
   @override
   Future<void> putTiles(String gameId, List<TilesSet> tiles) async {
-    var playerTiles = tiles.expand((set) =>
-        set.tiles.map((tile) => Tile(tile.color, tile.number, false)).toList())
-        .toList();
+    var playerTiles = tiles.expand((set) => set.tiles).toList();
     var previousTiles = game.sets.expand((set) => set.tiles).toList();
     var tilesToDeleteFromPlayerRack = [];
     for (var tile in playerTiles) {
@@ -93,12 +90,26 @@ class GameBot implements GameRepository {
         return;
       }
     } else {
-      game.sets = List.from(tiles);
+      //  aktualizacja stanu gry
+      var sets = tiles.map((set) => set.copy()).toList();
+      game.sets.clear();
+      // kolejno dodawanie zbiorów do planszy, każda kość planszy -> isMine = false
+      for (var set in sets) {
+        if (set.tiles.any((element) => element.isMine == true)) {
+          set.tiles = set.tiles.map((e) => Tile(e.color, e.number, false)).toList();
+        }
+        game.sets.add(set);
+      }
       for (var tile in tilesToDeleteFromPlayerRack) {
         game.playerRack.remove(tile);
       }
+      if (game.playerRack.isEmpty) {
+        gameStatusController.add({'winner': '0'});
+        return;
+      }
     }
-    await _botMove();
+    gameStatusController.add({'currentTurn': '1'});
+    //_botMove();
   }
 
   @override
@@ -108,15 +119,21 @@ class GameBot implements GameRepository {
     for (var i = 0; i < game.botsRacks.length; i++) {
       gameStatusController.add({'currentTurn': (i + 1).toString()});
       final stopwatch = Stopwatch()..start();
-      var result = bots[i].move(List.from(game.sets), List.from(game.botsRacks[i]));
+      var result = bots[i].move(game.sets, game.botsRacks[i]);
       var time = stopwatch.elapsed.inSeconds;
-      if (time < 5) {
-        await Future.delayed(
-            Duration(seconds: 5 + Random().nextInt(timeForMove - 5)));
-      }
+      // if (time < 5) {
+      //   await Future.delayed(
+      //       Duration(seconds: 5 + Random().nextInt(timeForMove - 5)));
+      // }
       if (result[0].isNotEmpty) {
-        tilesSetsController.add(List.from(result[0]));
+        List<TilesSet> tilesSets = result[0].cast<TilesSet>();
+        tilesSetsController.add(tilesSets.map((set) => set.copy()).toList());
+        game.sets = result[0];
         game.botsRacks[i] = result[1];
+        if (game.botsRacks[i].isEmpty) {
+          gameStatusController.add({'winner': (i+1).toString()});
+          return;
+        }
       } else {
         var tile = game.getTileFromPool();
         if (tile != null) {
@@ -124,7 +141,7 @@ class GameBot implements GameRepository {
         } else {
           var winner = game.pointTheWinner();
           gameStatusController.add({'winner': winner});
-          continue;
+          break;
         }
       }
     }

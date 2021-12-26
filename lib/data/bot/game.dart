@@ -27,7 +27,7 @@ class Game {
 
   void initialize(int number) {
     for (var i = 0; i < number; i++) {
-      var botRack = pool.take(14).toList();
+      var botRack = pool.take(14).map((tile) => Tile(tile.color, tile.number, true)).toList();
       pool.removeRange(0, 14);
       botsRacks.add(botRack);
     }
@@ -35,8 +35,8 @@ class Game {
 
   Tile? getTileFromPool() {
     if (pool.isNotEmpty) {
-      var tile = pool.first;
-      pool.removeAt(0);
+      var tile = pool.last;
+      pool.removeLast();
       return tile;
     }
     return null;
@@ -65,7 +65,7 @@ class Game {
     }
 
     var winners = <String>[];
-    for (var i = 0; i < botsRacks.length; i++) {
+    for (var i = 0; i <= botsRacks.length; i++) {
       if (sums[i] == min) {
         winners.add(i.toString());
       }
