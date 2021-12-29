@@ -11,23 +11,23 @@ class Game {
     for (var i = 0; i < 2; i++) {
       for (var color in ['black', 'red', 'orange', 'blue']) {
         for (var j = 1; j < 14; j++) {
-          pool.add(Tile(color, j, false));
+          pool.add(Tile(color, j, true));
         }
       }
     }
     if (botType == 'basicBot') {
       for (var color in ['black', 'red']) {
-        pool.add(Tile(color, 0, false));
+        pool.add(Tile(color, 0, true));
       }
     }
     pool.shuffle();
-    playerRack = pool.take(14).map((tile) => Tile(tile.color, tile.number, true)).toList();
+    playerRack = pool.take(14).toList();
     pool.removeRange(0, 14);
   }
 
   void initialize(int number) {
     for (var i = 0; i < number; i++) {
-      var botRack = pool.take(14).map((tile) => Tile(tile.color, tile.number, true)).toList();
+      var botRack = pool.take(14).toList();
       pool.removeRange(0, 14);
       botsRacks.add(botRack);
     }

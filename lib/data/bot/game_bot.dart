@@ -82,7 +82,7 @@ class GameBot implements GameRepository {
     if (tilesToDeleteFromPlayerRack.isEmpty) {
       var tile = game.getTileFromPool();
       if (tile != null) {
-        playerTilesController.add([Tile(tile.color, tile.number, true)]);
+        playerTilesController.add([tile]);
         game.playerRack.add(tile);
       } else {
         var winner = game.pointTheWinner();
@@ -104,12 +104,11 @@ class GameBot implements GameRepository {
         game.playerRack.remove(tile);
       }
       if (game.playerRack.isEmpty) {
-        gameStatusController.add({'winner': '0'});
+        gameStatusController.add({'winner': ['0']});
         return;
       }
     }
-    gameStatusController.add({'currentTurn': '1'});
-    //_botMove();
+    await _botMove();
   }
 
   @override
@@ -131,7 +130,7 @@ class GameBot implements GameRepository {
         game.sets = result[0];
         game.botsRacks[i] = result[1];
         if (game.botsRacks[i].isEmpty) {
-          gameStatusController.add({'winner': (i+1).toString()});
+          gameStatusController.add({'winner': [(i+1).toString()]});
           return;
         }
       } else {

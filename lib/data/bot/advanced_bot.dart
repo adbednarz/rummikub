@@ -4,9 +4,8 @@ import 'package:rummikub/shared/models/tiles_set.dart';
 
 class AdvancedBot extends BotEngine {
   final colors = ['black', 'blue', 'orange', 'red'];
-  late List<Map<List<List<int>>, Result>> results;
+  late List<Map<String, Result>> results;
   late List<List<Tile>> tiles;
-  late List<Tile> botRack;
 
   @override
   List<dynamic> move(List<TilesSet> sets, List<Tile> botRack) {
@@ -22,54 +21,57 @@ class AdvancedBot extends BotEngine {
     for (var tile in botRack) {
       tiles[tile.number - 1].add(tile);
     }
-    this.botRack = botRack;
-    var result = _maxScore(1, [[0, 0], [0, 0], [0, 0], [0, 0]]);
+    var result = _maxScore(
+        1,
+        [[0, 0], [0, 0], [0, 0], [0, 0]],
+        [[0, 0], [0, 0], [0, 0], [0, 0]]
+    );
+    var resultSets = <TilesSet>[];
+    var botTiles = <Tile>[];
     if (!initialMeld) {
       if (result.scores < 30) {
         return [[], []];
       } else {
         initialMeld = true;
-        return [checkSetsPositions(result.sets + sets, sets), result.leftTiles];
+        _getSolution(resultSets, botTiles);
+        return [checkSetsPositions(resultSets + sets, sets), botTiles];
       }
     } else {
-      if (result.leftTiles.length == botRack.length) {
+      _getSolution(resultSets, botTiles);
+      if (botTiles.length == botRack.length) {
         return [[], []];
       }
     }
-    return [checkSetsPositions(result.sets, sets), result.leftTiles];
+    return [checkSetsPositions(resultSets, sets), botTiles];
   }
 
-  Result _maxScore(int value, List<List<int>> runs) {
+  Result _maxScore(int value, List<List<int>> runs, List<List<int>> tableTiles) {
     if (value > 13) {
       return Result.empty();
     }
-    if (results[value - 1].containsKey(runs)) {
-      return results[value - 1][runs]!;
+    var runsKey = runs.expand((e) => e).map((e) => e.toString()).toList().join('');
+    if (results[value - 1].containsKey(runsKey)) {
+      return results[value - 1][runsKey]!;
     }
+
+    var scores = -1456;
+    results[value - 1][runsKey] = Result(scores, runs);
     for (var possibleRuns in _makeRuns(value, runs)) {
-      var sets = <TilesSet>[];
+      var tableTilesCopy = List<List<int>>.from(tableTiles);
       var leftTiles = List<Tile>.from(tiles[value - 1]);
-      var runScores = _checkRuns(possibleRuns, runs, leftTiles, value);
-      var groupScores = _totalGroupSize(leftTiles, sets, value);
-      if (groupScores == -1) {
+      var runScores = _getRunScores(possibleRuns, runs, tableTilesCopy, leftTiles, value);
+      var groupScores = _getGroupScores(leftTiles, value);
+      if (runScores == -1 || groupScores == -1) {
         continue;
       }
-      var maxResult = _maxScore(value + 1, possibleRuns);
-      var scores = runScores + groupScores + maxResult.scores;
-      if ((results[value - 1][runs]?.scores ?? -1) < scores) {
-        leftTiles.addAll(maxResult.leftTiles);
-        var unfinishedRuns = _getRuns(maxResult.unfinishedRuns, possibleRuns, sets, leftTiles, value);
-        if (value == 1 && unfinishedRuns != null) {
-          _getRuns(unfinishedRuns, runs, sets, leftTiles, value);
-        }
-        if (unfinishedRuns == null) {
-          continue;
-        }
-        sets.addAll(maxResult.sets);
-        results[value - 1][runs] = Result(scores, unfinishedRuns, sets, leftTiles);
+      var maxResult = _maxScore(value + 1, possibleRuns, tableTilesCopy);
+      var sum = runScores + groupScores + maxResult.scores;
+      if (scores < sum) {
+        scores = sum;
+        results[value - 1][runsKey] = Result(sum, possibleRuns);
       }
     }
-    return results[value - 1][runs] ?? Result.empty();
+    return results[value - 1][runsKey]!;
   }
 
   List<List<List<int>>> _makeRuns(int value, List<List<int>> runs) {
@@ -117,9 +119,10 @@ class AdvancedBot extends BotEngine {
     return possibleRuns;
   }
 
-  int _checkRuns(List<List<int>> possibleRuns, List<List<int>> runs, List<Tile> leftTiles, int value) {
+  int _getRunScores(List<List<int>> possibleRuns, List<List<int>> runs, List<List<int>> tableTiles, List<Tile> leftTiles, int value) {
     var score = 0;
     for (var i = 0; i < 4; i++) {
+      var tableTilesCurrentValue = 0;
       for (var j = 0; j < 2; j++) {
         if (possibleRuns[i][j] != 0) {
           if (runs[i][j] == 2 && possibleRuns[i][j] == 3) {
@@ -127,70 +130,49 @@ class AdvancedBot extends BotEngine {
           } else if (possibleRuns[i][j] == 3) {
             score += value;
           }
-          leftTiles.remove(Tile(colors[i], value, false));
+          var tile = Tile(colors[i], value, false);
+          if (possibleRuns[i][j] != 3 && leftTiles.any((e) => e.isEqual(tile))) {
+            tableTilesCurrentValue += 1;
+          }
+          leftTiles.remove(tile);
         }
       }
+      if (possibleRuns[i][0] == 0 && possibleRuns[i][1] == 0) {
+        if (tableTiles[i][0] != 0 || tableTiles[i][1] != 0) {
+          return -1;
+        }
+      } else if (possibleRuns[i][0] == 0 || possibleRuns[i][1] == 0) {
+        if (tableTiles[i][0] == 2 || tableTiles[i][1] == 2) {
+          return -1;
+        }
+      }
+      tableTiles[i].removeAt(0);
+      tableTiles[i].add(tableTilesCurrentValue);
     }
     return score;
   }
 
-  List<List<List<Tile>>>? _getRuns(List<List<List<Tile>>> unfinishedRuns, List<List<int>> runs, List<TilesSet> sets, List<Tile> leftTiles, int value) {
-    for (var i = 0; i < 4; i++) {
-      for (var j = 0; j < 2; j++) {
-        if (runs[i][j] == 0 && unfinishedRuns[i][j].isNotEmpty) {
-          if (unfinishedRuns[i][j].length >= 3) {
-            sets.add(TilesSet(-1, unfinishedRuns[i][j]));
-          } else {
-            if (_checkTileProperty(unfinishedRuns[i][j][0], leftTiles) == false) {
-              return null;
-            }
-            if (unfinishedRuns[i][j].length == 2) {
-              if (_checkTileProperty(unfinishedRuns[i][j][1], leftTiles) == false) {
-                return null;
-              }
-            }
-          }
-          unfinishedRuns[i][j] = [];
-        } else if (runs[i][j] != 0) {
-          unfinishedRuns[i][j].insert(0, Tile(colors[i], value, false));
-        }
-      }
-    }
-    return unfinishedRuns;
-  }
-
-  int _totalGroupSize(List<Tile> leftTiles, List<TilesSet> sets, int value) {
+  int _getGroupScores(List<Tile> leftTiles, int value) {
     var sum = 0;
     var distinctColors = leftTiles.map((tile) => tile.color).toSet();
     if (distinctColors.length >= 3) {
-      var distinctTiles = <Tile>[];
       for (var color in distinctColors) {
         var tile = Tile(color, value, false);
         var index = leftTiles.indexWhere((element) => element.isEqual(tile));
         if (index != -1) {
-          distinctTiles.add(tile);
           leftTiles.removeAt(index);
         } else {
-          distinctTiles.add(Tile(color, value, true));
           leftTiles.remove(tile);
         }
       }
+      sum += distinctColors.length;
       if (leftTiles.length >= 3) {
-        var tilesToAdd = List.of(leftTiles.map((tile) => Tile(tile.color, tile.number, false)).toList());
-        sets.add(TilesSet(-1, tilesToAdd));
         sum += leftTiles.length;
         leftTiles.clear();
-      } else if (leftTiles.length == 2 && distinctTiles.length == 4) {
-        var tile = distinctTiles.last;
-        distinctTiles.removeLast();
-        var tilesToAdd = List.of((leftTiles + [tile]).map((tile) => Tile(tile.color, tile.number, false)).toList());
-        sets.add(TilesSet(-1, tilesToAdd));
-        sum += leftTiles.length + 1;
+      } else if (leftTiles.length == 2 && distinctColors.length == 4) {
+        sum += 2;
         leftTiles.clear();
       }
-      sum += distinctTiles.length;
-      var tilesToAdd = List.of(distinctTiles.map((tile) => Tile(tile.color, tile.number, false)).toList());
-      sets.add(TilesSet(-1, tilesToAdd));
     }
     if (leftTiles.any((element) => element.isMine == false)) {
       return -1;
@@ -198,26 +180,68 @@ class AdvancedBot extends BotEngine {
     return sum * value;
   }
 
-  bool _checkTileProperty(Tile tile, List<Tile> leftTiles) {
-    leftTiles.add(Tile(tile.color, tile.number, true));
-    var res1 = botRack.map((element) => element == tile ? 1 : 0).reduce((value, element) => value + element);
-    var res2 = leftTiles.map((element) => element == tile ? 1 : 0).reduce((value, element) => value + element);
-    if (res1 < res2) {
-      return false;
+  void _getSolution(List<TilesSet> sets, List<Tile> botTiles) {
+    var result = Result.empty();
+    var unfinishedRuns = <List<List<Tile>>>[[[], []], [[], []], [[], []], [[], []]];
+    for (var i = 1; i <= 13; i++) {
+      var runsKey = result.chosenRuns.expand((e) => e).map((e) => e.toString()).toList().join('');
+      result = results[i-1][runsKey]!;
+      _getRuns(unfinishedRuns, result.chosenRuns, sets, i);
+      _getGroups(sets, botTiles, i);
     }
-    return true;
+  }
+
+  void _getGroups(List<TilesSet> sets, List<Tile> botTiles, int value) {
+    var distinct = tiles[value-1].map((tile) => tile.color).toSet().map((color) => Tile(color, value, false)).toList();
+    if (distinct.length >= 3) {
+      for (var tile in distinct) {
+        tiles[value-1].remove(tile);
+      }
+      if (tiles[value-1].length >= 3) {
+        var tilesToAdd = tiles[value-1].map((tile) => Tile(tile.color, tile.number, false)).toList();
+        tiles[value-1].clear();
+        sets.add(TilesSet(-1, tilesToAdd));
+      } else if (tiles[value-1].length == 2 && distinct.length == 4) {
+        var index = distinct.indexWhere((tile) => !tiles[value-1].contains(tile));
+        tiles[value-1].add(distinct[index]);
+        distinct.removeAt(index);
+        var tilesToAdd = tiles[value-1].map((tile) => Tile(tile.color, tile.number, false)).toList();
+        tiles[value-1].clear();
+        sets.add(TilesSet(-1, tilesToAdd));
+      }
+      sets.add(TilesSet(-1, distinct));
+    }
+    botTiles.addAll(tiles[value-1].map((tile) => Tile(tile.color, tile.number, true)).toList());
+  }
+
+  void _getRuns(List<List<List<Tile>>> unfinishedRuns, List<List<int>> runs, List<TilesSet> sets, int value) {
+    for (var i = 0; i < 4; i++) {
+      for (var j = 0; j < 2; j++) {
+        if (runs[i][j] == 0 && unfinishedRuns[i][j].isNotEmpty) {
+          if (unfinishedRuns[i][j].length >= 3) {
+            sets.add(TilesSet(-1, unfinishedRuns[i][j]));
+          } else {
+            for (var tile in unfinishedRuns[i][j]) {
+              tiles[tile.number-1].add(Tile(tile.color, tile.number, true));
+            }
+          }
+          unfinishedRuns[i][j] = [];
+        } else if (runs[i][j] != 0) {
+          unfinishedRuns[i][j].add(Tile(colors[i], value, false));
+          tiles[value-1].remove(Tile(colors[i], value, false));
+        }
+      }
+    }
   }
 
 }
 
 class Result {
-  int scores;
-  List<List<List<Tile>>> unfinishedRuns;
-  List<TilesSet> sets;
-  List<Tile> leftTiles;
+  final int scores;
+  final List<List<int>> chosenRuns;
 
-  Result(this.scores, this.unfinishedRuns, this.sets, this.leftTiles);
+  Result(this.scores, this.chosenRuns);
 
-  Result.empty(): this(0, [[[], []], [[], []], [[], []], [[], []]], [], []);
+  Result.empty(): this(0, [[0, 0], [0, 0], [0, 0], [0, 0]]);
 
 }
