@@ -6,9 +6,9 @@ import 'package:rummikub/shared/models/tiles_set.dart';
 void main() {
   test('Bot should return correct score', () {
     final bot = AdvancedBot();
-    var tiles2 = [Tile('orange', 9, true),
-      Tile('orange', 10, true),
-      Tile('orange', 8, true)
+    var tiles2 = [Tile('orange', 1, false),
+      Tile('orange', 2, false),
+      Tile('orange', 3, false)
     ];
     bot.move([], tiles2);
   });
