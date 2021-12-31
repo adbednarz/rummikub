@@ -106,7 +106,7 @@ class GameActionScreen extends StatelessWidget {
         Expanded(
           flex: 1,
           child: FittedBox(
-            child: OutlinedButton(
+            child: TextButton(
               onPressed: () {
                 if (BlocProvider.of<GameActionPanelCubit>(context).isMyTurn()) {
                   if (BlocProvider.of<GameActionBoardCubit>(context).putTiles()) {
@@ -210,18 +210,17 @@ class GameActionScreen extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: padding),
       crossAxisCount: 13,
       mainAxisSpacing: 5,
-      physics: NeverScrollableScrollPhysics(),
       children: children,
     );
   }
 
   GridView _rack(BuildContext context, GameActionRackState state) {
     var padding = (MediaQuery.of(context).size.width - (state.rack.length/2).ceil() * 35) / 2;
+    var divider = state.rack.length > 35 ? 3 : 2;
     return GridView.count(
       padding: EdgeInsets.symmetric(horizontal: padding > 0 ? padding : 0),
-      crossAxisCount: state.rack.length > 14 ? (state.rack.length/2).ceil() : 7,
+      crossAxisCount: state.rack.length > 14 ? (state.rack.length/divider).ceil() : 7,
       reverse: true,
-      physics: NeverScrollableScrollPhysics(),
       children: List.generate(state.rack.length, (index) {
         var flag = false;
         return state.rack[index] != null ?
