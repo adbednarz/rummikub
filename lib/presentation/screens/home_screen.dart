@@ -4,10 +4,11 @@ class HomeScreen  extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var width = (MediaQuery.of(context).size.width > 500 ? MediaQuery.of(context).size.width / 4 : 40).toDouble();
     return Scaffold(
       backgroundColor: Color(0xff18203d),
       body: Container(
-          margin: EdgeInsets.symmetric(horizontal: 30),
+          margin: EdgeInsets.symmetric(horizontal: width),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[

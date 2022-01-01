@@ -10,7 +10,7 @@ export const firestore: FirebaseFirestore.Firestore = admin.firestore();
 
 export const createGame = functions.https.onCall((data, context) => {
   const playerId: string = GameUtils.checkAuthentication(context.auth?.uid);
-  const playerName: string = context.auth?.token.name ?? "";
+  const playerName: string = data.playerName;
   const players: string[] = data.playersSelected;
   const timeForMove: number = data.timeForMove;
   let gameId: string;
@@ -31,7 +31,7 @@ export const createGame = functions.https.onCall((data, context) => {
 
 export const searchGame = functions.https.onCall((data, context) => {
   const playerId: string = GameUtils.checkAuthentication(context.auth?.uid);
-  const playerName: string = context.auth?.token.name ?? "";
+  const playerName: string = data.playerName;
   const size: number = data.playersNumber;
   const timeForMove: number = data.timeForMove;
   let gameId: string;
@@ -58,7 +58,7 @@ export const searchGame = functions.https.onCall((data, context) => {
 
 export const addToExistingGame = functions.https.onCall((data, context) => {
   const playerId: string = GameUtils.checkAuthentication(context.auth?.uid);
-  const playerName: string = context.auth?.token.name ?? null;
+  const playerName: string = data.playerName;
   const gameId: string = data.gameId;
   const accepted: boolean = data.accepted;
 

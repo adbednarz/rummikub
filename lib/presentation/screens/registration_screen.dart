@@ -13,6 +13,7 @@ class RegistrationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var width = (MediaQuery.of(context).size.width > 500 ? MediaQuery.of(context).size.width / 4 : 40).toDouble();
     return Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.transparent,
@@ -38,7 +39,7 @@ class RegistrationScreen extends StatelessWidget {
             }
             return Container(
               alignment: Alignment.topCenter,
-              margin: EdgeInsets.symmetric(horizontal: 30),
+              margin: EdgeInsets.symmetric(horizontal: width),
               child: SingleChildScrollView(
                 child: _buildForm(context),
               ),

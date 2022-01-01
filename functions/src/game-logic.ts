@@ -60,7 +60,7 @@ export class GameLogic {
           } else {
             for (const key in playerSets) {
               // pomijamy usunięte zbiory na skutek modyfikacji gracza
-              if (playerSets[key]) {
+              if (!playerSets[key]) {
                 continue;
               }
               if (!this.validateSet(playerSets[key])) {

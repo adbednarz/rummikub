@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:rummikub/shared/models/player.dart';
 
 class BotSettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var width = (MediaQuery.of(context).size.width > 500 ? MediaQuery.of(context).size.width / 4 : 40).toDouble();
     return Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.transparent,
@@ -11,7 +13,7 @@ class BotSettingsScreen extends StatelessWidget {
         ),
         backgroundColor: Colors.lightBlueAccent,
         body: Container(
-          margin: EdgeInsets.symmetric(horizontal: 30),
+          margin: EdgeInsets.symmetric(horizontal: width),
           child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
@@ -30,7 +32,7 @@ class BotSettingsScreen extends StatelessWidget {
       minWidth: double.maxFinite,
       height: 50,
       onPressed: () => Navigator.of(context).pushNamed('/game_settings',
-          arguments: {'playerId': '0', 'serverType': type}),
+          arguments: {'player': Player('You', '0'), 'serverType': type}),
       color: Colors.teal,
       child: Text(name, style: TextStyle(color: Colors.white, fontSize: 16)),
     );

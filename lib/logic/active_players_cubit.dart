@@ -3,18 +3,19 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 import 'package:rummikub/data/auth_repository.dart';
+import 'package:rummikub/shared/models/player.dart';
 
 part 'active_players_state.dart';
 
 class ActivePlayersCubit extends Cubit<ActivePlayersState> {
   final AuthRepository _repository;
-  final String playerId;
+  final Player player;
   StreamSubscription? activePlayersListener;
   String filter = '';
   List<String> activePlayers = [];
 
-  ActivePlayersCubit(this._repository, this.playerId) : super(ActivePlayersInitial()) {
-    activePlayersListener = _repository.activePlayers(playerId).listen((change) {
+  ActivePlayersCubit(this._repository, this.player) : super(ActivePlayersInitial()) {
+    activePlayersListener = _repository.activePlayers(player.playerId).listen((change) {
       activePlayers = change;
       if (filter != '') {
         emit(ActivePlayersChanged(

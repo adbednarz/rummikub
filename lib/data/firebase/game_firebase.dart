@@ -13,20 +13,20 @@ class GameFirebase implements GameRepository  {
   GameFirebase(this._firestoreProvider);
 
   @override
-  Future<String> createGame(String playerId, List<String> playersSelected, int timeForMove) async {
-    await _firestoreProvider.changeUserActiveStatus(playerId, false);
-    return _functionsProvider.createGame(playersSelected, timeForMove);
+  Future<String> createGame(Player player, List<String> playersSelected, int timeForMove) async {
+    await _firestoreProvider.changeUserActiveStatus(player.playerId, false);
+    return _functionsProvider.createGame(player.name, playersSelected, timeForMove);
   }
 
   @override
-  Future<String> searchGame(String playerId, int playersNumber, int timeForMove) async {
-    await _firestoreProvider.changeUserActiveStatus(playerId, false);
-    return _functionsProvider.searchGame(playersNumber, timeForMove);
+  Future<String> searchGame(Player player, int playersNumber, int timeForMove) async {
+    await _firestoreProvider.changeUserActiveStatus(player.playerId, false);
+    return _functionsProvider.searchGame(player.name, playersNumber, timeForMove);
   }
 
   @override
-  Future<void> joinGame(bool accepted, String gameId) async {
-    await _functionsProvider.joinGame(accepted, gameId);
+  Future<void> joinGame(Player player, bool accepted, String gameId) async {
+    await _functionsProvider.joinGame(player.name, accepted, gameId);
   }
 
   @override

@@ -7,6 +7,7 @@ class GameScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var width = (MediaQuery.of(context).size.width > 500 ? MediaQuery.of(context).size.width / 4 : 40).toDouble();
     return WillPopScope(
         onWillPop: () {
           return _onWillPop(context);
@@ -35,7 +36,7 @@ class GameScreen extends StatelessWidget {
           },
           child: Container(
               color: Color(0xff18203d),
-              padding: EdgeInsets.symmetric(horizontal: 30),
+              padding: EdgeInsets.symmetric(horizontal: width),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
@@ -55,8 +56,8 @@ class GameScreen extends StatelessWidget {
       minWidth: double.maxFinite,
       height: 50,
       onPressed: () {
-        var playerId = BlocProvider.of<AuthCubit>(context).state.user!.playerId;
-        Navigator.of(context).pushNamed(path, arguments: {'playerId': playerId});
+        var player = BlocProvider.of<AuthCubit>(context).state.user!;
+        Navigator.of(context).pushNamed(path, arguments: {'player': player});
       },
       color: Colors.cyan,
       child: Text(text, style: TextStyle(color: Colors.white, fontSize: 16)),
@@ -101,7 +102,7 @@ class GameScreen extends StatelessWidget {
             authCubit.acceptInvitation(true);
             Navigator.of(context).pushNamed('/game_settings', arguments:
             {
-              'playerId': state.user!.playerId,
+              'player': state.user!,
               'gameId': state.gameId,
               'serverType': 'firebase'
             });

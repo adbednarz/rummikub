@@ -19,8 +19,8 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> register(String email, String username, String password) async {
     emit(AuthLoading());
     try {
-      var user = await _authRepository.signUp(email, username, password).then((value) => null);
-      emit(AuthLogged(user));
+      var user = await _authRepository.signUp(email, username, password);
+      emit(AuthLogged(Player(username, user.playerId)));
       listenToInvitationToGame();
     } on CustomException catch(error) {
       emit(AuthFailure(state.user, error.cause));
@@ -62,7 +62,7 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   void acceptInvitation(bool accepted) {
-    _gameRepository.joinGame(accepted, (state as AuthInvited).gameId);
+    _gameRepository.joinGame(state.user!, accepted, (state as AuthInvited).gameId);
   }
 
   @override

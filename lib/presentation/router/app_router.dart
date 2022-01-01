@@ -20,6 +20,7 @@ import 'package:rummikub/presentation/screens/game_settings_screen.dart';
 import 'package:rummikub/presentation/screens/home_screen.dart';
 import 'package:rummikub/presentation/screens/login_screen.dart';
 import 'package:rummikub/presentation/screens/registration_screen.dart';
+import 'package:rummikub/shared/models/player.dart';
 
 class AppRouter {
   final _firestoreProvider = FirestoreProvider();
@@ -78,7 +79,7 @@ class AppRouter {
                 create: (context) =>
                     GameSettingsCubit(
                       server,
-                      params['playerId'],
+                      params['player'],
                       selectedPlayers: params['selectedPlayers'],
                       gameSize: gameSize,
                       gameId: params['gameId']
@@ -91,12 +92,12 @@ class AppRouter {
         builder: (context) => BotSettingsScreen(),
       );
     } else if (settings.name == '/find_players') {
-      var params = settings.arguments as Map<String, String>;
+      var params = settings.arguments as Map<String, Player>;
       return MaterialPageRoute(
           builder: (context) =>
               BlocProvider<ActivePlayersCubit>(
                 create: (context) =>
-                    ActivePlayersCubit(_authRepository, params['playerId']!),
+                    ActivePlayersCubit(_authRepository, params['player']!),
                 child: ActivePlayersScreen(),
               )
       );

@@ -22,7 +22,7 @@ class GameBot implements GameRepository {
   GameBot(this.botType);
 
   @override
-  Future<String> searchGame(String playerId, int playersNumber, timeForMove) async {
+  Future<String> searchGame(Player player, int playersNumber, timeForMove) async {
     this.timeForMove = timeForMove;
     for (var i = 0; i < playersNumber - 1; i++) {
       bots.add(botType == 'basicBot' ? BasicBot() : AdvancedBot());
@@ -150,13 +150,13 @@ class GameBot implements GameRepository {
   // w przypadku gry z botami:
   // nie dołączamy do istniejących gier
   @override
-  Future<void> joinGame(bool accepted, String gameId) async {
+  Future<void> joinGame(Player player, bool accepted, String gameId) async {
     throw UnimplementedError();
   }
 
   // nie zapraszamy innych graczy do gry
   @override
-  Future<String> createGame(String playerId, List<String> playersSelected, int timeForMove) {
+  Future<String> createGame(Player player, List<String> playersSelected, int timeForMove) {
     throw UnimplementedError();
   }
 

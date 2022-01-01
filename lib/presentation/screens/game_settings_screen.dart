@@ -10,6 +10,7 @@ class GameSettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var width = (MediaQuery.of(context).size.width > 500 ? MediaQuery.of(context).size.width / 4 : 40).toDouble();
     return Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.transparent,
@@ -25,7 +26,7 @@ class GameSettingsScreen extends StatelessWidget {
                         CustomErrorDialog('Error', state.message)
                 );
               } else if (state is GameFound) {
-                var playerId = BlocProvider.of<GameSettingsCubit>(context).playerId;
+                var playerId = BlocProvider.of<GameSettingsCubit>(context).player.playerId;
                 var serverType = BlocProvider.of<GameSettingsCubit>(context).repository;
                 Navigator.of(context).pushNamed('/play', arguments:
                 {'gameId': state.gameId, 'playerId': playerId, 'serverType': serverType});
@@ -49,7 +50,7 @@ class GameSettingsScreen extends StatelessWidget {
                 );
               }
               return Container(
-                  margin: EdgeInsets.symmetric(horizontal: 30),
+                  margin: EdgeInsets.symmetric(horizontal: width),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[

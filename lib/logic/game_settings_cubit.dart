@@ -5,18 +5,19 @@ import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart';
 import 'package:rummikub/data/game_repository.dart';
 import 'package:rummikub/shared/custom_exception.dart';
+import 'package:rummikub/shared/models/player.dart';
 
 part 'game_settings_state.dart';
 
 class GameSettingsCubit extends Cubit<GameSettingsState> {
   final GameRepository repository;
-  final String playerId;
+  final Player player;
   List<String>? selectedPlayers;
   int? gameSize;
   StreamSubscription? missingPlayers;
   String? gameId;
 
-  GameSettingsCubit(this.repository, this.playerId, {this.selectedPlayers, this.gameSize, String? gameId}) : super(GameSettingsInitial()) {
+  GameSettingsCubit(this.repository, this.player, {this.selectedPlayers, this.gameSize, String? gameId}) : super(GameSettingsInitial()) {
     if (gameId != null) {
       _waitingToStartGame(gameId);
     }
@@ -25,7 +26,7 @@ class GameSettingsCubit extends Cubit<GameSettingsState> {
   Future<void> searchGame() async {
     try {
       emit(Loading(state.playersNumber, state.timeForMove));
-      gameId = await repository.searchGame(playerId, state.playersNumber, state.timeForMove);
+      gameId = await repository.searchGame(player, state.playersNumber, state.timeForMove);
       _waitingToStartGame(gameId!);
     } on CustomException catch(error) {
       emit(Failure(error.cause, state.playersNumber, state.timeForMove));
@@ -35,7 +36,7 @@ class GameSettingsCubit extends Cubit<GameSettingsState> {
   Future<void> createGame() async {
     try {
       emit(Loading(state.playersNumber, state.timeForMove));
-      var gameId = await repository.createGame(playerId, selectedPlayers!, state.timeForMove);
+      var gameId = await repository.createGame(player, selectedPlayers!, state.timeForMove);
       _waitingToStartGame(gameId);
     } on CustomException catch(error) {
       emit(Failure(error.cause, state.playersNumber, state.timeForMove));
@@ -66,7 +67,7 @@ class GameSettingsCubit extends Cubit<GameSettingsState> {
   Future<void> close() async {
     await missingPlayers?.cancel();
     if (gameId != null) {
-      await repository.leaveGame(gameId!, playerId);
+      await repository.leaveGame(gameId!, player.playerId);
     }
     await super.close();
   }

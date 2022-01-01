@@ -26,6 +26,7 @@ class GameActionScreen extends StatelessWidget {
             listeners: [
               _createListenerActionPanel(),
               _createListenerActionBoard(),
+              _createListenerActionRack(),
             ],
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -200,14 +201,9 @@ class GameActionScreen extends StatelessWidget {
       counter++;
     }
 
-    var padding = 0.0;
-    if (kIsWeb) {
-      padding = MediaQuery.of(context).size.width * 1 / 4;
-    } else if (MediaQuery.of(context).size.width > MediaQuery.of(context).size.height){
-      padding = MediaQuery.of(context).size.width * 1 / 4;
-    }
+    var width = (MediaQuery.of(context).size.width > 500 ? MediaQuery.of(context).size.width / 4 : 40).toDouble();
     return GridView.count(
-      padding: EdgeInsets.symmetric(horizontal: padding),
+      padding: EdgeInsets.symmetric(horizontal: width),
       crossAxisCount: 13,
       mainAxisSpacing: 5,
       children: children,
@@ -394,6 +390,18 @@ class GameActionScreen extends StatelessWidget {
             gravity: ToastGravity.TOP,
             msg: state.message,
             backgroundColor: Colors.grey,
+          );
+        }
+      },
+    );
+  }
+
+  BlocListener<GameActionRackCubit, GameActionRackState> _createListenerActionRack() {
+    return BlocListener<GameActionRackCubit, GameActionRackState>(
+      listener: (context, state) {
+        if (state is GameActionRackInitial) {
+          Center(
+              child:  CircularProgressIndicator()
           );
         }
       },

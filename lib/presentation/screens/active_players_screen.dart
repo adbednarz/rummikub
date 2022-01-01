@@ -8,6 +8,7 @@ class ActivePlayersScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var width = (MediaQuery.of(context).size.width > 500 ? MediaQuery.of(context).size.width / 4 : 40).toDouble();
     return Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.transparent,
@@ -27,7 +28,7 @@ class ActivePlayersScreen extends StatelessWidget {
             builder: (context, state) {
               return Container(
                 alignment: Alignment.topCenter,
-                margin: EdgeInsets.symmetric(horizontal: 30),
+                margin: EdgeInsets.symmetric(horizontal: width),
                 child: Column(
                   children: [
                     TextField(
@@ -91,7 +92,7 @@ class ActivePlayersScreen extends StatelessWidget {
         if (state.selectedPlayers.isNotEmpty) {
           Navigator.of(context).pushNamed('/game_settings', arguments:
           {
-            'playerId': BlocProvider.of<ActivePlayersCubit>(context).playerId,
+            'player': BlocProvider.of<ActivePlayersCubit>(context).player,
             'selectedPlayers': state.selectedPlayers,
             'serverType': 'firebase'
           });
