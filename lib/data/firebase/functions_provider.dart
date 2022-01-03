@@ -1,15 +1,14 @@
 import 'package:cloud_functions/cloud_functions.dart';
-import 'package:flutter/foundation.dart';
 import 'package:rummikub/shared/custom_exception.dart';
 import 'package:rummikub/shared/models/tiles_set.dart';
 
 class FunctionsProvider {
-  final FirebaseFunctions _functions = FirebaseFunctions.instance;
+  final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(region: 'europe-central2');
 
-  FunctionsProvider() {
-    var localhost = kIsWeb ? 'localhost' : '192.168.8.104';
-    _functions.useFunctionsEmulator(localhost, 5001);
-  }
+  // FunctionsProvider() {
+  //   var localhost = kIsWeb ? 'localhost' : '192.168.8.104';
+  //   _functions.useFunctionsEmulator(localhost, 5001);
+  // }
 
   Future<String> createGame(String playerName, List<String> playersSelected, int timeForMove) async {
     try {

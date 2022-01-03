@@ -26,8 +26,8 @@ class AuthFirebase implements AuthRepository  {
 
   @override
   Future<void> logOut(String playerId) async {
-    await _authenticationProvider.logOut();
     await _firestoreProvider.changeUserActiveStatus(playerId, false);
+    await _authenticationProvider.logOut();
   }
 
   @override

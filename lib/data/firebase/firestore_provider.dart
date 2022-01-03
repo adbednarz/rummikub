@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 import 'package:rummikub/shared/custom_exception.dart';
 import 'package:rummikub/shared/models/player.dart';
 import 'package:rummikub/shared/models/tile.dart';
@@ -8,10 +7,10 @@ import 'package:rummikub/shared/models/tiles_set.dart';
 class FirestoreProvider {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   
-  FirestoreProvider() {
-    var localhost = kIsWeb ? 'localhost' : '192.168.8.104';
-    _firestore.useFirestoreEmulator(localhost, 8080);
-  }
+  // FirestoreProvider() {
+  //   var localhost = kIsWeb ? 'localhost' : '192.168.8.104';
+  //   _firestore.useFirestoreEmulator(localhost, 8080);
+  // }
 
   Future<void> checkUniqueness(String nickname) async {
     QuerySnapshot querySnapshot = await _firestore.collection('users')

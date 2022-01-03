@@ -1,14 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:rummikub/shared/custom_exception.dart';
 
 class AuthenticationProvider {
   final FirebaseAuth _firebaseAuth =  FirebaseAuth.instance;
 
-  AuthenticationProvider() {
-    var localhost = kIsWeb ? 'localhost' : '192.168.8.104';
-    _firebaseAuth.useAuthEmulator(localhost, 9090);
-  }
+  // AuthenticationProvider() {
+  //   var localhost = kIsWeb ? 'localhost' : '192.168.8.104';
+  //   _firebaseAuth.useAuthEmulator(localhost, 9090);
+  // }
 
   Future<User> signUp(String email, String username, String password) async {
     try {

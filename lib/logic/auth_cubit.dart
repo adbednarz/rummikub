@@ -51,6 +51,7 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       var playerId = state.user!.playerId;
       emit(AuthLoading());
+      await invitationToGame?.cancel();
       await _authRepository.logOut(playerId);
       emit(AuthLoggedOut());
     } on CustomException catch(error) {

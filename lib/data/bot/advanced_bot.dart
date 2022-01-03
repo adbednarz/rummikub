@@ -11,20 +11,15 @@ class AdvancedBot extends BotEngine {
   List<dynamic> move(List<TilesSet> sets, List<Tile> botRack) {
     results = [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}];
     tiles = [[], [], [], [], [], [], [], [], [], [], [], [], []];
-    var sum = 0;
-    var tmp = [];
     if (initialMeld) {
       for (var set in sets) {
         for (var tile in set.tiles) {
           tiles[tile.number - 1].add(tile);
-          sum += 1;
-          tmp.add(tile);
         }
       }
     }
     for (var tile in botRack) {
       tiles[tile.number - 1].add(tile);
-      sum += 1;
     }
     var result = _maxScore(
         1,
@@ -39,38 +34,12 @@ class AdvancedBot extends BotEngine {
       } else {
         initialMeld = true;
         _getSolution(resultSets, botTiles);
-        var sum2 = 0;
-        for (var set in resultSets) {
-          sum2 += set.tiles.length;
-        }
-        sum2 += botTiles.length;
-        if (sum != sum2) {
-          print('...');
-        }
         return [checkSetsPositions(resultSets + sets, sets), botTiles];
       }
     } else {
       _getSolution(resultSets, botTiles);
       if (botTiles.length == botRack.length) {
         return [[], []];
-      }
-    }
-    var sum2 = 0;
-    var tmp2 = [];
-    for (var set in resultSets) {
-      sum2 += set.tiles.length;
-      tmp2.addAll(set.tiles);
-    }
-    sum2 += botTiles.length;
-    if (sum != sum2) {
-      print('...');
-      var resultSets = <TilesSet>[];
-      var botTiles = <Tile>[];
-      _getSolution(resultSets, botTiles);
-    }
-    for (var tile in tmp) {
-      if (!tmp2.remove(tile)) {
-        print('...');
       }
     }
     return [checkSetsPositions(resultSets, sets), botTiles];
@@ -85,6 +54,8 @@ class AdvancedBot extends BotEngine {
       return results[value - 1][runsKey]!;
     }
 
+    // 754 jest to suma wszyskich kości, która zostanie zwrócona w przypadku, gdy wszystkie następne ruchy są nieprawidłowe
+    // gwarantuje to nam, że ta ścieżka nie zostanie wybrana, nawet jeśli poprzednie ruchy dały dużo punktów
     results[value - 1][runsKey] = Result(-754, [[0, 0], [0, 0], [0, 0], [0, 0]]);
     for (var possibleRuns in _makeRuns(value, runs)) {
       var tableTilesCopy = [for (var sublist in tableTiles) [...sublist]]; // kopiowanie wielowymiarowych list
@@ -178,9 +149,6 @@ class AdvancedBot extends BotEngine {
         }
       }
       if (possibleRuns[i][0] == 0 && possibleRuns[i][1] == 0) {
-        if (runs[i][1] == 1 && runs[i][0] == 1) {
-          print('tak');
-        }
         if (tableTiles[i][0] != 0 || tableTiles[i][1] != 0) {
           return -1;
         }
@@ -228,22 +196,20 @@ class AdvancedBot extends BotEngine {
     return sum * value;
   }
 
+  // iteruje po najlepszych rozwiązaniach dla danej wartości kości i zwraca utworzone zbiory
   void _getSolution(List<TilesSet> sets, List<Tile> botTiles) {
     var result = Result.empty();
     var unfinishedRuns = <List<List<Tile>>>[[[], []], [[], []], [[], []], [[], []]];
     for (var i = 1; i <= 13; i++) {
       var runsKey = result.chosenRuns.expand((e) => e).map((e) => e.toString()).toList().join('');
-      print(runsKey);
-      if (results[i-1][runsKey] == null) {
-        print(i);
-      }
-      result = results[i-1][runsKey]!;
+      result = results[i-1][runsKey] ?? Result.empty();
       _getRuns(unfinishedRuns, result.chosenRuns, sets, botTiles, i);
       _getGroups(sets, botTiles, i);
     }
     _getRuns(unfinishedRuns, [[0, 0], [0, 0], [0, 0], [0, 0]], sets, botTiles, 0);
   }
 
+  // tworzy jak największe grupy z kości o danej wartości liczbowej
   void _getGroups(List<TilesSet> sets, List<Tile> botTiles, int value) {
     var distinct = tiles[value-1].map((tile) => tile.color).toSet().map((color) => Tile(color, value, false)).toList();
     if (distinct.length >= 3) {
@@ -267,6 +233,7 @@ class AdvancedBot extends BotEngine {
     botTiles.addAll(tiles[value-1].map((tile) => Tile(tile.color, tile.number, true)).toList());
   }
 
+  // odczytuje zakodowane serie w runs i na tej podstawie tworzy zbiory kości
   void _getRuns(List<List<List<Tile>>> unfinishedRuns, List<List<int>> runs, List<TilesSet> sets, List<Tile> botTiles, int value) {
     for (var i = 0; i < 4; i++) {
       for (var j = 0; j < 2; j++) {
@@ -287,6 +254,7 @@ class AdvancedBot extends BotEngine {
     }
   }
 
+  // sprawdza, czy przerwanie serii, która ma długość mniejszą od 3 nie zawiera kości leżących na planszy
   bool _checkBoardTiles(int runsToDelete, int runs, List<int> tableTiles) {
     if (runsToDelete == 1) {
       if (runs == 1 || runs == 2) {

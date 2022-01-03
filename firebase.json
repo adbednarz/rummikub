@@ -1,39 +1,10 @@
 {
   "functions": {
+    "source": "functions",
     "predeploy": [
       "npm --prefix \"$RESOURCE_DIR\" run lint",
       "npm --prefix \"$RESOURCE_DIR\" run build"
-    ],
-    "source": "functions"
-  },
-  "emulators": {
-    "auth": {
-      "port": 9090,
-      "host": "0.0.0.0"
-    },
-    "functions": {
-      "port": 5001,
-      "host": "0.0.0.0"
-    },
-    "firestore": {
-      "port": 8080,
-      "host": "0.0.0.0"
-    },
-    "ui": {
-      "enabled": true
-    },
-    "hosting": {
-      "port": 5000
-    },
-    "pubsub": {
-      "port": 8085
-    },
-    "storage": {
-      "port": 9199
-    }
-  },
-  "database": {
-    "rules": "database.rules.json"
+    ]
   },
   "firestore": {
     "rules": "firestore.rules",
@@ -53,10 +24,18 @@
       }
     ]
   },
-  "storage": {
-    "rules": "storage.rules"
-  },
-  "remoteconfig": {
-    "template": "remoteconfig.template.json"
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "functions": {
+      "port": 5001
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "ui": {
+      "enabled": true
+    }
   }
 }

@@ -2,13 +2,12 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import {GameUtils} from "./game-utils";
 import {GameLogic} from "./game-logic";
-import {QueryDocumentSnapshot} from "firebase-functions/lib/providers/firestore";
 import {Tile} from "./model/tile";
 
 admin.initializeApp(functions.config().firebase);
 export const firestore: FirebaseFirestore.Firestore = admin.firestore();
 
-export const createGame = functions.https.onCall((data, context) => {
+export const createGame = functions.region("europe-central2").https.onCall((data, context) => {
   const playerId: string = GameUtils.checkAuthentication(context.auth?.uid);
   const playerName: string = data.playerName;
   const players: string[] = data.playersSelected;
@@ -29,7 +28,7 @@ export const createGame = functions.https.onCall((data, context) => {
   });
 });
 
-export const searchGame = functions.https.onCall((data, context) => {
+export const searchGame = functions.region("europe-central2").https.onCall((data, context) => {
   const playerId: string = GameUtils.checkAuthentication(context.auth?.uid);
   const playerName: string = data.playerName;
   const size: number = data.playersNumber;
@@ -56,70 +55,66 @@ export const searchGame = functions.https.onCall((data, context) => {
   });
 });
 
-export const addToExistingGame = functions.https.onCall((data, context) => {
+export const addToExistingGame = functions.region("europe-central2").https.onCall( (data, context) => {
   const playerId: string = GameUtils.checkAuthentication(context.auth?.uid);
   const playerName: string = data.playerName;
   const gameId: string = data.gameId;
   const accepted: boolean = data.accepted;
 
   firestore.collection("users").doc(playerId).update({"invitation": admin.firestore.FieldValue.delete()});
+  let isGameFull: boolean;
 
   return firestore.runTransaction((transaction) => {
     return transaction.get(firestore.collection("games").doc(gameId))
         .then((gameResult) => {
-          let isGameFull: boolean;
           if (accepted) {
             const result = GameUtils.addToGame(transaction, playerId, playerName, gameResult);
             isGameFull = result[1];
           } else {
             const availablePlaces: number = gameResult.get("available") - 1;
-            transaction.update(gameResult.ref, {available: availablePlaces});
+            if (availablePlaces > 0) {
+              transaction.update(gameResult.ref, {available: availablePlaces});
+            }
             isGameFull = availablePlaces == 0;
           }
-          if (isGameFull) {
-            GameUtils.startGame(gameId);
-          }
         });
+  }).then(() => {
+    if (isGameFull) {
+      GameUtils.startGame(gameId);
+    }
   });
 });
 
-export const putTiles = functions.https.onCall(async (data, context) => {
+export const putTiles = functions.region("europe-central2").https.onCall(async (data, context) => {
   const playerId: string = GameUtils.checkAuthentication(context.auth?.uid);
   const gameId: string = data.gameId;
   const sets: Record<string, Tile[]> = data.newBoard;
 
   const game: FirebaseFirestore.DocumentSnapshot = await firestore.collection("games").doc(gameId).get();
 
-  const result: [QueryDocumentSnapshot, FirebaseFirestore.QuerySnapshot] =
-      await firestore.runTransaction(async (transaction) => {
-        const playersQueue = await transaction.get(firestore.collection("games/" + gameId + "/playersQueue"));
-        const players = await GameLogic.checkTurn(game, playersQueue, playerId);
-        const currentPlayer: QueryDocumentSnapshot = players[0];
-        const nextPlayer: QueryDocumentSnapshot = players[1];
-        transaction.update(firestore.collection("games").doc(gameId), {currentTurn: nextPlayer.id});
-        return [currentPlayer, playersQueue];
-      });
+  await firestore.runTransaction(async (transaction) => {
+    const playersQueue = await transaction.get(firestore.collection("games/" + gameId + "/playersQueue"));
+    const players = await GameLogic.checkTurn(game, playersQueue, playerId);
+    const currentPlayerRack: FirebaseFirestore.QuerySnapshot =
+        await firestore.collection("games/" + gameId + "/playersRacks/" + players[0].id + "/rack").get();
 
-  const currentPlayer = result[0];
-  const playersQueue = result[1];
-  const currentPlayerRack: FirebaseFirestore.QuerySnapshot =
-       await firestore.collection("games/" + gameId + "/playersRacks/" + currentPlayer.id + "/rack").get();
-
-  GameLogic.addNewTiles(gameId, currentPlayer, currentPlayerRack, sets).then((result) => {
-    if (result === "winner") {
-      GameLogic.endGame(game, [currentPlayer.id], playersQueue);
-    } else if (result === "empty") {
-      GameLogic.getTileFromPool(gameId, playerId).then(async (result) => {
-        if (!result) {
-          const winners = await GameLogic.pointTheWinner(game, playersQueue);
-          GameLogic.endGame(game, winners, playersQueue);
-        }
-      });
-    }
+    await GameLogic.addNewTiles(gameId, players[0], currentPlayerRack, sets).then((result) => {
+      if (result === "winner") {
+        GameLogic.endGame(game, [players[0].id], playersQueue);
+      } else if (result === "empty") {
+        GameLogic.getTileFromPool(gameId, playerId).then(async (result) => {
+          if (!result) {
+            const winners = await GameLogic.pointTheWinner(game, playersQueue);
+            GameLogic.endGame(game, winners, playersQueue);
+          }
+        });
+      }
+    });
+    transaction.update(firestore.collection("games").doc(gameId), {currentTurn: players[1].id});
   });
 });
 
-export const leftGame = functions.https.onCall((data, context) => {
+export const leftGame = functions.region("europe-central2").https.onCall((data, context) => {
   const playerId: string = GameUtils.checkAuthentication(context.auth?.uid);
   const gameId: string = data.gameId;
 
@@ -134,7 +129,7 @@ export const leftGame = functions.https.onCall((data, context) => {
       }
     }
 
-    // w przypadku, gdy po odejściu gracza zostaje tylko jeden oboje wychodzą z gry
+    // w przypadku, gdy po odejściu gracza zostaje tylko jeden, oboje wychodzą z gry
     if (playersQueue.size == 2) {
       await firestore.collection("users").doc(playersQueue.docs[0].id).update({"active": true});
       await firestore.collection("users").doc(playersQueue.docs[1].id).update({"active": true});

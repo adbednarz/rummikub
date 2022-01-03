@@ -9,6 +9,7 @@ class BasicBot extends BotEngine {
   List<dynamic> move(List<TilesSet> boardSets, List<Tile> botRack) {
     var sets = boardSets.map((set) => set.copy()).toList();
     var setsFromRack = _getSetsFromRack(botRack);
+    // jeżeli bot wyłożył swoje pierwsze rozdanie, może modyfikować inne zbiory
     if (initialMeld) {
       _modifySets(sets, botRack);
     }
@@ -20,6 +21,7 @@ class BasicBot extends BotEngine {
           initialMeld = true;
         }
       }
+      // mapowanie kości gracza na kości znajdujące się na planszy (zmiana parametru isMine)
       for (var set in setsFromRack) {
         var tilesToAdd = set.map((tile) => Tile(tile.color, tile.number, false)).toList();
         sets.add(TilesSet(-1, tilesToAdd));
@@ -129,6 +131,7 @@ class BasicBot extends BotEngine {
     }
   }
 
+  // sprawdza, czy joker został w prawidlowy sposób dodany do serii
   bool _checkRun(List<Tile> set) {
     if (set.length < 3) {
       return false;
@@ -163,6 +166,7 @@ class BasicBot extends BotEngine {
     return true;
   }
 
+  // sprawdza, czy joker został w prawidlowy sposób dodany do grupy
   bool _checkGroup(List<Tile> set) {
     if (set.length < 3) {
       return false;

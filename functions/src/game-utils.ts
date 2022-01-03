@@ -1,4 +1,3 @@
-// import * as functions from "firebase-functions";
 import {firestore} from "./index";
 import * as functions from "firebase-functions";
 import {DocumentSnapshot} from "firebase-functions/lib/providers/firestore";
@@ -49,8 +48,12 @@ export class GameUtils {
         {initialMeld: false, name: playerName}
     );
     const availablePlaces: number = gameDoc.get("available") - 1;
-    transaction.update(gameDoc.ref, {available: availablePlaces});
-    return [gameDoc.id, availablePlaces == 0];
+    if (availablePlaces > 0) {
+      transaction.update(gameDoc.ref, {available: availablePlaces});
+      return [gameDoc.id, false];
+    } else {
+      return [gameDoc.id, true];
+    }
   }
 
   static findGame(size: number, timeForMove: number): FirebaseFirestore.Query {
@@ -79,7 +82,7 @@ export class GameUtils {
               counter++;
             }
           }
-          firestore.collection("games/").doc(gameId).update({currentTurn: playersId[0]});
+          firestore.collection("games/").doc(gameId).update({available: 0, currentTurn: playersId[0]});
         });
   }
 }

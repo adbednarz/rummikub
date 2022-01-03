@@ -9,6 +9,10 @@
           "order": "ASCENDING"
         },
         {
+          "fieldPath": "timeForMove",
+          "order": "ASCENDING"
+        },
+        {
           "fieldPath": "available",
           "order": "ASCENDING"
         }

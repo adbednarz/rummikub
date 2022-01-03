@@ -1,8 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animation_progress_bar/flutter_animation_progress_bar.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter/foundation.dart';
 import 'package:rummikub/logic/game_action/game_action_board_cubit.dart';
 import 'package:rummikub/logic/game_action/game_action_panel_cubit.dart';
 import 'package:rummikub/logic/game_action/game_action_rack_cubit.dart';
@@ -26,7 +24,6 @@ class GameActionScreen extends StatelessWidget {
             listeners: [
               _createListenerActionPanel(),
               _createListenerActionBoard(),
-              _createListenerActionRack(),
             ],
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -201,7 +198,7 @@ class GameActionScreen extends StatelessWidget {
       counter++;
     }
 
-    var width = (MediaQuery.of(context).size.width > 500 ? MediaQuery.of(context).size.width / 4 : 40).toDouble();
+    var width = (MediaQuery.of(context).size.width > 500 ? MediaQuery.of(context).size.width / 6 : 40).toDouble();
     return GridView.count(
       padding: EdgeInsets.symmetric(horizontal: width),
       crossAxisCount: 13,
@@ -390,18 +387,6 @@ class GameActionScreen extends StatelessWidget {
             gravity: ToastGravity.TOP,
             msg: state.message,
             backgroundColor: Colors.grey,
-          );
-        }
-      },
-    );
-  }
-
-  BlocListener<GameActionRackCubit, GameActionRackState> _createListenerActionRack() {
-    return BlocListener<GameActionRackCubit, GameActionRackState>(
-      listener: (context, state) {
-        if (state is GameActionRackInitial) {
-          Center(
-              child:  CircularProgressIndicator()
           );
         }
       },

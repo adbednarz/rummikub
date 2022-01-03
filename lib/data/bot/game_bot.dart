@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:rummikub/data/bot/basic_bot.dart';
 import 'package:rummikub/shared/models/player.dart';
 import 'package:rummikub/shared/models/tile.dart';
@@ -120,10 +121,11 @@ class GameBot implements GameRepository {
       final stopwatch = Stopwatch()..start();
       var result = bots[i].move(game.sets, game.botsRacks[i]);
       var time = stopwatch.elapsed.inSeconds;
-      // if (time < 5) {
-      //   await Future.delayed(
-      //       Duration(seconds: 5 + Random().nextInt(timeForMove - 5)));
-      // }
+      // opóźnia ruchu bota, bo upodobnić zachowanie do człowieka
+      if (time < 5) {
+        await Future.delayed(
+            Duration(seconds: 5 + Random().nextInt((timeForMove/3).ceil())));
+      }
       if (result[0].isNotEmpty) {
         List<TilesSet> tilesSets = result[0].cast<TilesSet>();
         tilesSetsController.add(tilesSets.map((set) => set.copy()).toList());
