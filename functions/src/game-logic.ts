@@ -33,6 +33,8 @@ export class GameLogic {
           let boardTiles: Tile[] = [];
           let playerTiles: Tile[] = [];
 
+          // functions.logger.log(playerSets);
+          // functions.logger.log(boardSets);
           // usuwamy niezmienione zbiory kości, różniące się zbiory rozdzielamy na tablicę kości
           for (const key in boardSets) {
             if (_.isEqual(boardSets[key], playerSets[key])) {
@@ -45,12 +47,18 @@ export class GameLogic {
               boardTiles = boardTiles.concat(boardSets[key]);
             }
           }
-
+          // functions.logger.log(playerSets);
+          // functions.logger.log(boardSets);
+          // functions.logger.log(boardTiles);
           // pierwszy ruch gracza składa się tylko z własnych kostek i ich suma musi przekraczać 30
           // zbiory gracza, które się różniły również rozdzielamy na tablicę kości
           if (playerDoc.get("initialMeld") == false) {
             let total = 0;
             for (const key in playerSets) {
+              // pomijamy usunięte zbiory lub zbiory do usunięcia
+              if (!playerSets[key] || !Array.isArray(playerSets[key])) {
+                continue;
+              }
               total += this.validateSetInitialMeld(playerSets[key]);
               playerTiles = playerTiles.concat(playerSets[key]);
             }
@@ -59,8 +67,8 @@ export class GameLogic {
             }
           } else {
             for (const key in playerSets) {
-              // pomijamy usunięte zbiory na skutek modyfikacji gracza
-              if (!playerSets[key]) {
+              // pomijamy usunięte zbiory lub zbiory do usunięcia
+              if (!playerSets[key] || !Array.isArray(playerSets[key])) {
                 continue;
               }
               if (!this.validateSet(playerSets[key])) {

@@ -12,15 +12,21 @@ class GameScreen extends StatelessWidget {
         onWillPop: () {
           return _onWillPop(context);
         },
-        child: BlocListener<AuthCubit, AuthState>(
-          listener: (context, state) {
-            if (state is AuthFailure) {
-              showDialog(context: context, builder: (context) =>
+        child: Scaffold(
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+          ),
+          backgroundColor: Color(0xff18203d),
+          body: BlocListener<AuthCubit, AuthState>(
+            listener: (context, state) {
+              if (state is AuthFailure) {
+                showDialog(context: context, builder: (context) =>
                   CustomErrorDialog('Error', state.errorMessage)
-              );
-            } else if (state is AuthInvited) {
-              final authCubit = BlocProvider.of<AuthCubit>(context);
-              showDialog(
+                );
+              } else if (state is AuthInvited) {
+                final authCubit = BlocProvider.of<AuthCubit>(context);
+                showDialog(
                   context: context,
                   barrierDismissible: false,
                   builder: (context) {
@@ -29,12 +35,12 @@ class GameScreen extends StatelessWidget {
                       child: _buildAlertDialog(context, state, authCubit),
                     );
                   }
-              );
-            } else if (state is AuthLoggedOut) {
-              Navigator.of(context).popUntil(ModalRoute.withName('/'));
-            }
-          },
-          child: Container(
+                );
+              } else if (state is AuthLoggedOut) {
+                Navigator.of(context).popUntil(ModalRoute.withName('/'));
+              }
+            },
+            child: Container(
               color: Color(0xff18203d),
               padding: EdgeInsets.symmetric(horizontal: width),
               child: Column(
@@ -46,6 +52,7 @@ class GameScreen extends StatelessWidget {
                 ],
               )
           ),
+        ),
         ),
     );
   }
